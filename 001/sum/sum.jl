@@ -5,4 +5,4 @@ for i = 1:10
     append!(avg, (time_ns() - start_time))
 end
 
-println("julia: ", sum(avg) / 1000000000 / 10)
+println("Julia: ", sum(avg) / 1000000000 / 10)

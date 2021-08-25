@@ -1,0 +1,2 @@
+C:/Users/colbi/AppData/Local/Programs/Python/Python39/python.exe D:/VSCode/Eurisko/machine-learning-homework/001/gradient_descent_parameter_fitting/gradient_descent_parameter_fitting.py
+julia D:/VSCode/Eurisko/machine-learning-homework/001/gradient_descent_parameter_fitting/gradient_descent_parameter_fitting.jl

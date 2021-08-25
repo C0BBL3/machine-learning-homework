@@ -4,7 +4,7 @@ for i = 1:10
 
     derivatives = Dict('x' => (dx(coords) = 4 * coords['x']), 'y' => (dy(coords) = 6 * coords['y']))
     best_coords = Dict('x' => 0, 'y' => 0) # f(x,y) = 1
-    current_coords = Dict('x' => 0.996, 'y' => 1.992) # f(x,y) = 15
+    current_coords = Dict('x' => 1, 'y' => 2) # f(x,y) = 15
 
     function descend(current_coords, learning_rate = 0.001)
         new_coords = Dict(cart => pos for (cart, pos) in current_coords)

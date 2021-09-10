@@ -3,9 +3,7 @@ from nn_directed_weighted_graph import NNDirectedWeightedGraph
 
 
 class NeuralNetwork(NNDirectedWeightedGraph):
-    def __init__(self, weights, activation_types=None, activation_functions=None, alpha=0.001, debug=False):
-        self.activation_types = activation_types
-        self.activation_functions = activation_functions
+    def __init__(self, weights, alpha=0.001, debug=False):
         self.alpha = alpha
         self.debug = debug
         super().__init__(weights=weights, vertex_values=sorted(set([_ for key in weights.keys() for _ in key])))
@@ -37,11 +35,13 @@ class NeuralNetwork(NNDirectedWeightedGraph):
         return 2 * pred * self.nodes[edge[0]].value
 
     def calc_prediction(self, data_point):
-        for index, value in enumerate(data_point):
+        for index, value in enumerate(data_point['input']):
             self.nodes[index].value = value
             self.fortrack_prediction(index, value)
         # Hopefully should be the output's prediction
-        return self.nodes[-1].value
+        pred = self.nodes[-1].value
+        if data_point['output'](pred): return 0
+        else: return pred
 
     def fortrack_prediction(self, index, value):
         current_node = self.nodes[index]

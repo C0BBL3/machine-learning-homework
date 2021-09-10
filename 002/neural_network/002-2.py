@@ -20,9 +20,9 @@ for i in range(1, 20001):
             nn.update_weight_gradients(data_point, edge)
     nn.update_weights()
     if i < 6 or i % 1000 == 0:
-            print('iteration {}'.format(i))
-            print('\tgradient: {}'.format(nn.weight_gradients))
-            print('\tupdated weights: {}'.format(nn.weights))
-            print()
+        print('iteration {}'.format(i))
+        print('\tgradient: {}'.format(nn.weight_gradients))
+        print('\tupdated weights: {}'.format(nn.weights))
+        print()
     nn.set_weight_gradients()
         

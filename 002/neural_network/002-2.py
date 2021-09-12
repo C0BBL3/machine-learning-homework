@@ -1,4 +1,5 @@
 from neural_network import NeuralNetwork
+import matplotlib.pyplot as plt
 
 weights = {
   (0,2): 1, 
@@ -16,25 +17,37 @@ data_points = [
 
 nn = NeuralNetwork(weights, data_points=data_points, debug = False)
 
-def print_outputs(i, temp, nn):
-    print('iteration {}'.format(i))
-    print('\tgradient: {}'.format(nn.weight_gradients))
-    print('\tmisclassifications: {}'.format(temp))
-    print('\tupdated weights: {}'.format(nn.weights))
-    print()
+def run_neural_network(nn, iterations):
+    for i in range(1, iterations + 1):
+        for edge in weights.keys():
+            for data_point in data_points:
+                nn.update_weight_gradients(data_point, edge)
+        nn.update_weights(print_output=False, iteration=i, plot=True)
+        if list(nn.misclassifications.values()).count(True) < 1:
+            break
+        nn.set_misclassifications()
+        nn.set_weight_gradients()
+        nn.set_predictions()
 
-i = 0
-while True:
-    for edge in weights.keys():
-        for data_point in data_points:
-            nn.update_weight_gradients(data_point, edge)
-    nn.update_weights()
-    temp = list(nn.misclassifications.values()).count(True)
-    if i < 6 or i % 100 == 0:
-        print_outputs(i, temp, nn)
-    nn.set_weight_gradients()
-    if temp < 1:
-        print_outputs(i, temp, nn)
-        break
-    nn.set_misclassifications()
-    i += 1
+    plot_boundry_line(nn)
+    return nn
+
+def boundry_line(weights, x):
+  return -(weights[(0, 2)] / weights[(1, 2)]) * x
+
+def plot_boundry_line(nn):
+    for data_point in data_points:
+        if data_point['output'] is (lambda pred: pred < 0):
+            plt.plot([data_point['input'][0]], [data_point['input'][1]], 'ro')
+        else:
+            plt.plot([data_point['input'][0]], [data_point['input'][1]], 'bo')
+
+    plt.plot([x / 100 for x in range(1000)], [boundry_line(nn.weights, x / 100) for x in range(1000)])
+    plt.axis([0.5, 4.5, 0.5, 4.5])
+    plt.savefig('neural_net.png')
+
+nn1 = run_neural_network(nn, 40)
+
+nn2 = run_neural_network(nn1, 20)
+
+nn3 = run_neural_network(nn2, 856)

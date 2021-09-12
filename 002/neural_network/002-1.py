@@ -1,12 +1,12 @@
 from neural_network import NeuralNetwork
 
 weights = {
-  (0, 2): 1, 
-  (1, 2): 1, 
-  (0, 3): 1, 
-  (1, 3): 1, 
-  (2, 4): 1, 
-  (3, 4): 1
+    (0, 2): 1,
+    (1, 2): 1,
+    (0, 3): 1,
+    (1, 3): 1,
+    (2, 4): 1,
+    (3, 4): 1
 }
 
 data_points = [
@@ -18,27 +18,21 @@ data_points = [
     {'input': [4, 1], 'output': lambda pred: pred < 0}
 ]
 
-nn = NeuralNetwork(weights, data_points=data_points, debug = False)
+nn = NeuralNetwork(weights, data_points=data_points, debug=True)
 
-def print_outputs(i, temp, nn):
-    print('iteration {}'.format(i))
-    print('\tgradient: {}'.format(nn.weight_gradients))
-    print('\tmisclassifications: {}'.format(temp))
-    print('\tupdated weights: {}'.format(nn.weights))
-    print()
+def run_neural_network(nn, iterations):
+    for i in range(1, iterations + 1):
+        for edge in weights.keys():
+            for data_point in data_points:
+                nn.update_weight_gradients(data_point, edge)
+        nn.update_weights(print_output=False, iteration=i, plot=True)
+        if list(nn.misclassifications.values()).count(True) < 1:
+            break
 
-i = 0
-while True:
-    for edge in weights.keys():
-        for data_point in data_points:
-            nn.update_weight_gradients(data_point, edge)
-    nn.update_weights()
-    temp = list(nn.misclassifications.values()).count(True)
-    if i < 6 or i % 100 == 0:
-        print_outputs(i, temp, nn)
-    if temp < 1 or i > 1000:
-        print_outputs(i, temp, nn)
-        break
-    nn.set_weight_gradients()
-    nn.set_misclassifications()
-    i += 1
+run_neural_network(nn, 32)
+
+run_neural_network(nn, 1)
+
+run_neural_network(nn, 1)
+
+run_neural_network(nn, 1)

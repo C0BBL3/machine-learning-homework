@@ -44,8 +44,7 @@ class NeuralNetwork(NNDirectedWeightedGraph):
                 self.paths[input_index] = float(total_weight)
                 del total_weight
             self.predictions[tuple(data_point['input'])] += data_point['input'][input_index] * self.paths[input_index]
-        if not data_point['output'](self.predictions[tuple(data_point['input'])]):
-            self.predictions[tuple(data_point['input'])] = 0.0
+
 
     def update_weight_gradients(self, data_point, edge):
         dE = self.calc_dE(data_point, edge) # Calculate Gradient
@@ -53,16 +52,47 @@ class NeuralNetwork(NNDirectedWeightedGraph):
         if self.predictions[tuple(data_point['input'])] != 0.0:
             self.misclassifications[tuple(data_point['input'])] = True
         if self.debug:
-            self.print_debugging_variables(data_point, edge, pred, dE)
+            self.print_debugging_variables(data_point, edge, dE)
         self.set_node_values() # Reset the values, that are used for prediction, of all the nodes
 
     def calc_dE(self, data_point, edge):
+        if data_point['output'](self.predictions[tuple(data_point['input'])]):
+            return 0.0
+        self.calc_prediction(data_point)
         every_possible_path_containing_edge = self.get_every_possible_path_containing_edge(current_paths=[list(edge)])
         total_weight = 0
         for path in every_possible_path_containing_edge:
             total_weight += math.prod([self.weights[(path[i], path[i + 1])] for i in range(1, len(path) - 1)])
         return 2 * self.predictions[tuple(data_point['input'])] * total_weight * self.nodes[edge[0]].value
         
+    def calc_prediction(self, data_point):
+        # Start and Iterate through input nodes
+        # Using recursion, iterate through the input nodes' children and the children's children
+        # The output node(s)'s value should be the prediction if Python isn't bad
+        for index, value in enumerate(data_point['input']):
+            self.nodes[index].value = value
+            self.fortrack_prediction(index, value)
+        #return self.nodes[-1].value, self.classify(data_point)
+
+    # Backtrack, but forwards | back-wards <-> for-wards = back-track <-> for-track
+    def fortrack_prediction(self, index, value): 
+        # Recursive iteration through the nodes
+        # Updating their predictionvalues along the way
+        current_node_children = self.nodes[index].children
+        if len(current_node_children) > 0.0:
+            for child_index in current_node_children:
+                self.nodes[child_index].value += value * self.weights[(index, child_index)]
+                self.fortrack_prediction(child_index, self.nodes[child_index].value)
+
+    def classify(self, data_point): # Binary Classification
+        pred = float(self.nodes[-1].value)
+        self.nodes[-1].value = 0.0
+        if data_point['output'](pred):
+            self.nodes[-1].value = 0.0
+            return 0.0
+        else:
+            return float(pred)
+
     def print_outputs(self, iteration):
         print('iteration {}'.format(iteration))
         print('\tgradient: {}'.format(self.weight_gradients))
@@ -70,12 +100,9 @@ class NeuralNetwork(NNDirectedWeightedGraph):
         print('\tpredictions: {}'.format(self.predictions))
         print('\tupdated weights: {}'.format(self.weights))
 
-    def print_debugging_variables(self, data_point, edge, pred, dE):
+    def print_debugging_variables(self, data_point, edge, dE):
         print('\nedge', edge)
         print('\tdata_point', data_point['input'])
-        print('\tpred', pred)
-        print('\t2 * pred', 2 * pred)
-        print('\tself.nodes[edge[0]].value', self.nodes[edge[0]].value)
         print('\tdE', dE)
         print('\tmisclassifications', sum([1.0 for classification in self.misclassifications.values() if classification]))
         print('\tself.weight_gradients[edge]', self.weight_gradients[edge])

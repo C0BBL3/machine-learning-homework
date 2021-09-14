@@ -4,8 +4,8 @@ class NNDirectedWeightedGraph:
         self.nodes = [DirectedWeightedNode(index) for index in vertex_values]
         self.make_nodes()
 
-    def make_nodes(self): # Self explanitory
-        for neighbors, weight in self.weights.items(): 
+    def make_nodes(self):  # Self explanitory
+        for neighbors, weight in self.weights.items():
             current_node, child_node = neighbors
             self.nodes[current_node].set_child(self.nodes[child_node], weight)
         for node in self.nodes:
@@ -15,7 +15,8 @@ class NNDirectedWeightedGraph:
         for node in self.nodes:
             node.value = 0
 
-    def get_depth(self, index, current_depth=0): # Utilizes BacktrackingTM to get the depth recursively
+    # Utilizes BacktrackingTM to get the depth recursively
+    def get_depth(self, index, current_depth=0):
         if len(self.nodes[index].parents) == 0:
             # If the given node is the input node or has no parents after backtracking, return the current depth
             return current_depth
@@ -23,6 +24,22 @@ class NNDirectedWeightedGraph:
             # Return the node's first parent's index and increase the current depth count
             first_parent = self.nodes[index].parents[0]
             return self.get_depth(first_parent, current_depth=current_depth + 1)
+
+    def get_every_possible_path_containing_edge(self, current_paths=[]):
+        # Start would be the initial edge
+        # Edge is a tuple of two node indices, for example Edge 0 -> 2 would be denoted as `(0,2)`
+        # Would find every possible path, recursively through each of the start's children to the output node(s)
+        is_output = 0
+        new_paths = []
+        for path in current_paths:
+            if len(self.nodes[path[-1]].children) == 0:
+                is_output += 1
+                continue
+            for node_index in self.nodes[path[-1]].children:
+                new_paths.append(list(path + [node_index]))
+        if is_output == len(current_paths):
+            return current_paths
+        return self.get_every_possible_path_containing_edge(current_paths=new_paths)
 
 
 class DirectedWeightedNode:

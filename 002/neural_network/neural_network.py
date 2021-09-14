@@ -20,7 +20,7 @@ class NeuralNetwork(NNDirectedWeightedGraph):
         self.misclassifications = {tuple(data_point['input']): False for data_point in self.data_points}
 
     def set_predictions(self):
-        self.predictions = {tuple(data_point['input']): float(self.calc_prediction(data_point)) for data_point in self.data_points}
+        self.predictions = {tuple(data_point['input']): float(self.calc_prediction(data_point)[0]) for data_point in self.data_points}
 
     def update_weights(self, print_output=False ,iteration=1, plot=False):
         for edge in self.weights.keys():
@@ -39,15 +39,16 @@ class NeuralNetwork(NNDirectedWeightedGraph):
         if pred != 0.0:
             self.misclassifications[tuple(data_point['input'])] = True
         if self.debug:
-            print_debugging_variables(data_point, edge, pred, dE)
+            self.print_debugging_variables(data_point, edge, pred, dE)
         self.set_node_values() # Reset the values, that are used for prediction, of all the nodes
 
     def calc_dE(self, data_point, edge):
-        pred = self.calc_prediction(data_point) # Calculate Prediction
-        pred2 = float(pred) # Temporary
-        if data_point['output'](pred):
-            pred = 0.0
-        return 2 * pred * self.nodes[edge[0]].value, pred2
+        every_possible_path_containing_edge = self.get_every_possible_path_containing_edge(current_paths=[list(edge)])
+        total_weight = 0
+        for path in every_possible_path_containing_edge:
+            total_weight += math.prod([self.weights[(path[i], path[i + 1])] for i in range(1, len(path) - 1)])
+        pred2, pred = self.calc_prediction(data_point)
+        return 2 * pred * total_weight * self.nodes[edge[0]].value, pred2
 
     def calc_prediction(self, data_point):
         # Start and Iterate through input nodes
@@ -56,9 +57,7 @@ class NeuralNetwork(NNDirectedWeightedGraph):
         for index, value in enumerate(data_point['input']):
             self.nodes[index].value = value
             self.fortrack_prediction(index, value)
-        pred = float(self.nodes[-1].value)
-        self.nodes[-1].value = 0.0
-        return pred
+        return self.nodes[-1].value, self.classify(data_point)
 
     # Backtrack, but forwards | back-wards <-> for-wards = back-track <-> for-track
     def fortrack_prediction(self, index, value): 
@@ -70,8 +69,14 @@ class NeuralNetwork(NNDirectedWeightedGraph):
                 self.nodes[child_index].value += value * self.weights[(index, child_index)]
                 self.fortrack_prediction(child_index, value)
 
-    def get_node_input(self, index): # Gather the parent's node indices, given a specific node index
-        return [parent_index for parent_index in self.nodes[index].parents]
+    def classify(self, data_point): # Binary Classification
+        pred = float(self.nodes[-1].value)
+        self.nodes[-1].value = 0.0
+        if data_point['output'](pred):
+            self.nodes[-1].value = 0.0
+            return 0.0
+        else:
+            return float(pred)
 
     def print_outputs(self, iteration):
         print('iteration {}'.format(iteration))

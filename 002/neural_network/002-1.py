@@ -18,21 +18,18 @@ data_points = [
     {'input': [4, 1], 'output': lambda pred: pred < 0}
 ]
 
-nn = NeuralNetwork(weights, data_points=data_points, debug=True)
+nn = NeuralNetwork(weights, data_points=data_points, debug=False)
 
 def run_neural_network(nn, iterations):
     for i in range(1, iterations + 1):
+        for data_point in data_points:
+            nn.compute_predictions(data_point)
         for edge in weights.keys():
-            for data_point in data_points:
-                nn.update_weight_gradients(data_point, edge)
-        nn.update_weights(print_output=False, iteration=i, plot=True)
+            nn.update_weight_gradients(data_point, edge)
+        nn.update_weights(print_output=True, iteration=i, plot=True)
         if list(nn.misclassifications.values()).count(True) < 1:
             break
 
-run_neural_network(nn, 32)
-
 run_neural_network(nn, 1)
-
-run_neural_network(nn, 1)
-
+print('\n\nnfioefioewbufe[w\n\n')
 run_neural_network(nn, 1)

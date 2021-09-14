@@ -38,7 +38,7 @@ class NeuralNetwork(NNDirectedWeightedGraph):
         if len(current_node_children) > 0.0:
             for child_index in current_node_children:
                 self.nodes[child_index].value += value * self.weights[(index, child_index)]
-                self.fortrack_prediction(child_index, value)
+                self.fortrack_prediction(child_index, self.nodes[child_index].value)
 
     def classify(self, data_point):
         pred = float(self.nodes[-1].value)

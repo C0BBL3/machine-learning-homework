@@ -14,6 +14,7 @@ class NNDirectedWeightedGraph:
     def set_node_values(self):
         for node in self.nodes:
             node.value = 0
+            node.predicted_count = 0
 
     # Utilizes BacktrackingTM to get the depth recursively
     def get_depth(self, index, current_depth=0):
@@ -57,6 +58,7 @@ class DirectedWeightedNode:
         self.parents = []
         self.children_weights = {}
         self.parents_weights = {}
+        self.predicted_count = 0
 
     def set_depth(self, depth):
         self.depth = depth

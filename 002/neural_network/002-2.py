@@ -1,5 +1,4 @@
 from neural_network import NeuralNetwork
-import matplotlib.pyplot as plt
 
 weights = {
     (3, 4): -0.1,
@@ -30,4 +29,4 @@ def run_neural_network(nn, iterations):
             break
         nn.update_weights(print_output=True, iteration=i)
 
-nn1 = run_neural_network(nn, 100000)
+nn1 = run_neural_network(nn, 3)

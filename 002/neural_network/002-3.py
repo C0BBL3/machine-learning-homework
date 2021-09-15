@@ -21,14 +21,16 @@ data_points = [
 
 nn = NeuralNetwork(weights, data_points=data_points, debug = False)
 
-def run_neural_network(nn, iterations):
-    for i in range(1, iterations + 1):
+def run_neural_network(nn, iterations = 10 ** 10):
+    i = 1
+    while True:
         for edge in weights.keys():
             for data_point in data_points:
                 nn.update_weight_gradients(data_point, edge)
-        if list(nn.misclassifications.values()).count(True) < 1:
+        if list(nn.misclassifications.values()).count(True) < 1 or i > iterations:
             break
         nn.update_weights(print_output=False, iteration=i)
+        i += 1
 
     plot_boundry_line(nn)
     return nn
@@ -39,7 +41,7 @@ def boundry_line(weights, x):
 def plot_boundry_line(nn):
     plt.plot([x / 100 for x in range(1000)], [boundry_line(nn.weights, x / 100) for x in range(1000)])
     
-nn1 = run_neural_network(nn, 1000)
+nn1 = run_neural_network(nn, 2373)
 
 plt.scatter([data_point['input'][0] for data_point in data_points], [data_point['input'][1] for data_point in data_points])
 plt.axis([0.5, 4.5, 0.5, 4.5])

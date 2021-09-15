@@ -23,8 +23,11 @@ class NeuralNetwork(NNDirectedWeightedGraph):
         self.predictions = {tuple(data_point['input']): 0.0 for data_point in self.data_points}
 
     def update_weights(self, print_output=False, iteration=1):
+        new_weights = dict(self.weights)
         for edge in self.weights.keys():
-            self.weights[edge] -= self.alpha * self.weight_gradients[edge] # Descent `edge`'s Weight
+            new_weights[edge] -= self.alpha * self.weight_gradients[edge] # Descent `edge`'s Weight
+        self.weights = dict(new_weights)
+        del new_weights
         if print_output and (iteration < 6 or iteration % 1000 == 0):
             self.print_outputs(iteration) # Self explainitory
         self.set_weight_gradients()
@@ -42,7 +45,11 @@ class NeuralNetwork(NNDirectedWeightedGraph):
 
     def calc_dE(self, data_point, edge):
         self.calc_prediction(data_point)
-        return 2 * data_point['output'](self.predictions[tuple(data_point['input'])]) * self.nodes[edge[0]].value
+        every_possible_path_containing_edge = self.get_every_possible_path_containing_edge(current_paths=[list(edge)])
+        total_weight = 0
+        for path in every_possible_path_containing_edge:
+            total_weight += math.prod([self.weights[(path[i], path[i + 1])] for i in range(1, len(path) - 1)])
+        return 2 * data_point['output'](self.predictions[tuple(data_point['input'])]) * self.nodes[edge[0]].value * total_weight
         
     def calc_prediction(self, data_point):
         # Start and Iterate through input nodes

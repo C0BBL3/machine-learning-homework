@@ -3,26 +3,41 @@ import matplotlib.pyplot as plt
 import math
 
 weights = {
-    (0, 3): -1,
+    (0, 3): 1,
     (1, 3): 1,
-    (2, 3): 0
+    (2, 3): 1,
+    (0, 4): 1,
+    (1, 4): 1,
+    (2, 4): 1,
+    (3, 5): 1,
+    (4, 5): 1,
 }
 
 activation_functions = [
-    lambda x: math.atan(x),
-    lambda x: math.atan(x),
-    lambda x: math.atan(x),
-    lambda x: math.atan(x)
+    lambda x: x ** 2,
+    lambda x: x ** 2,
+    lambda x: x ** 2,
+    lambda x: x ** 2,
+    lambda x: x ** 2,
+    lambda x: x ** 2
+]
+
+activation_function_derivatives = [
+    lambda x: 2 * x,
+    lambda x: 2 * x,
+    lambda x: 2 * x,
+    lambda x: 2 * x,
+    lambda x: 2 * x,
+    lambda x: 2 * x
 ]
 
 data_points = [
-    {'input': [0, 3], 'output': lambda pred: 0.0 if pred > 0 else pred},
-    {'input': [2, 3], 'output': lambda pred: 0.0 if pred > 0 else pred},
+    {'input': [1, 0], 'output': lambda pred: 0.0 if pred > 0 else pred},
     {'input': [0, 1], 'output': lambda pred: 0.0 if pred < 0 else pred},
-    {'input': [2, 1], 'output': lambda pred: 0.0 if pred < 0 else pred}
+    {'input': [2, 2], 'output': lambda pred: 0.0 if pred < 0 else pred}
 ]
 
-nn = NeuralNetwork(weights, activation_functions, bias = True, data_points=data_points, debug = True)
+nn = NeuralNetwork(weights, activation_functions, activation_function_derivatives, bias = True, debug = False)
 
 def run_neural_network(nn, iterations):
     for i in range(1, iterations + 1):

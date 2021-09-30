@@ -7,15 +7,12 @@ weights = {
 }
 
 data_points = [
-    {'input': [1, 4], 'output': lambda pred: 0.0 if pred > 0 else pred},
-    {'input': [1, 2], 'output': lambda pred: 0.0 if pred > 0 else pred},
-    {'input': [2, 2], 'output': lambda pred: 0.0 if pred > 0 else pred},
-    {'input': [2, 1], 'output': lambda pred: 0.0 if pred < 0 else pred},
-    {'input': [3, 2], 'output': lambda pred: 0.0 if pred < 0 else pred},
-    {'input': [4, 1], 'output': lambda pred: 0.0 if pred < 0 else pred}
+    {'input': [2, 3], 'output': lambda pred: 0.0 if pred > 0 else pred},
+    {'input': [1, 5], 'output': lambda pred: 0.0 if pred > 0 else pred},
+    {'input': [0, 1], 'output': lambda pred: 0.0 if pred < 0 else pred}
 ]
 
-nn = NeuralNetwork(weights, data_points=data_points, debug = False)
+nn = NeuralNetwork(weights, data_points=data_points, debug = True)
 
 def run_neural_network(nn, iterations):
     for i in range(1, iterations + 1):
@@ -35,7 +32,7 @@ def boundry_line(weights, x):
 def plot_boundry_line(nn):
     plt.plot([x / 100 for x in range(1000)], [boundry_line(nn.weights, x / 100) for x in range(1000)])
     
-nn1 = run_neural_network(nn, 10000)
+nn1 = run_neural_network(nn, 1)
 
 plt.scatter([data_point['input'][0] for data_point in data_points], [data_point['input'][1] for data_point in data_points])
 plt.axis([0.5, 4.5, 0.5, 4.5])

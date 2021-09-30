@@ -17,6 +17,7 @@ class NNDirectedWeightedGraph:
             node.predicted_count = 0
 
     # Utilizes BacktrackingTM to get the depth recursively
+    # For Debugging
     def get_depth(self, index, current_depth=0):
         if len(self.nodes[index].parents) == 0:
             # If the given node is the input node or has no parents after backtracking, return the current depth

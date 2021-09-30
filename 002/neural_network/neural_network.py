@@ -3,9 +3,15 @@ from nn_directed_weighted_graph import NNDirectedWeightedGraph
 
 
 class NeuralNetwork(NNDirectedWeightedGraph):
-    def __init__(self, weights, data_points={}, alpha=0.001, debug=False):
+    def __init__(self, weights, activation_functions = None, bias = False, data_points={}, alpha=0.01, debug=False):
         # Inhereit from a DirectedWeightedGraph to make the net
-        super().__init__(weights=weights, vertex_values=sorted(set([_ for key in weights.keys() for _ in key]))) 
+        vertex_values = sorted(set([_ for key in weights.keys() for _ in key]))
+        super().__init__(weights=weights, vertex_values=vertex_values) 
+        self.bias = bias
+        if activation_functions is not None:
+            self.activation_functions = activation_functions
+        else:
+            self.activation_functions = [lambda x: x for _ in range(0,vertex_values)]
         self.alpha = alpha
         self.debug = debug
         self.data_points = data_points # Temporary
@@ -56,9 +62,12 @@ class NeuralNetwork(NNDirectedWeightedGraph):
         # Using recursion, iterate through the input nodes' children and the children's children
         # The output node(s)'s value should be the prediction if Python isn't bad
         for index, value in enumerate(data_point['input']):
-            self.nodes[index].value = value
+            self.nodes[index].value = self.activation_functions[index](value)
             self.fortrack_prediction(index, value)
-        self.predictions[tuple(data_point['input'])] = self.nodes[-1].value
+        if self.bias:
+            self.nodes[index + 1].value = self.activation_functions[index + 1](1)
+            self.fortrack_prediction(index + 1, 1)
+        self.predictions[tuple(data_point['input'])] = self.activation_functions[-1](self.nodes[-1].value)
 
     # Backtrack, but forwards | back-wards <-> for-wards = back-track <-> for-track
     def fortrack_prediction(self, index, value): 
@@ -66,7 +75,8 @@ class NeuralNetwork(NNDirectedWeightedGraph):
         # Updating their predictionvalues along the way
         if len(self.nodes[index].children) > 0: # If not output node
             for child_index in self.nodes[index].children:
-                self.nodes[child_index].value += value * self.weights[(index, child_index)]
+                self.nodes[child_index].value += self.activation_functions[index](value * self.weights[(index, child_index)])
+                print('\tNode', child_index, 'value', self.nodes[child_index].value)
                 self.nodes[child_index].predicted_count += 1
             for child_index in self.nodes[index].children:
                 if self.nodes[child_index].predicted_count == len(self.nodes[child_index].parents):

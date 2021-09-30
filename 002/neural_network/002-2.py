@@ -10,9 +10,9 @@ weights = {
 }
 
 data_points = [
-    {'input': [1, 4], 'output': lambda pred: 0.0 if pred >= 0 else pred},
-    {'input': [1, 2], 'output': lambda pred: 0.0 if pred >= 0 else pred},
-    {'input': [2, 2], 'output': lambda pred: 0.0 if pred >= 0 else pred},
+    {'input': [1, 4], 'output': lambda pred: 0.0 if pred > 0 else pred},
+    {'input': [1, 2], 'output': lambda pred: 0.0 if pred > 0 else pred},
+    {'input': [2, 2], 'output': lambda pred: 0.0 if pred > 0 else pred},
     {'input': [2, 1], 'output': lambda pred: 0.0 if pred < 0 else pred},
     {'input': [3, 2], 'output': lambda pred: 0.0 if pred < 0 else pred},
     {'input': [4, 1], 'output': lambda pred: 0.0 if pred < 0 else pred}

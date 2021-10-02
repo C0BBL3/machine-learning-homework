@@ -1,5 +1,4 @@
 from neural_network import NeuralNetwork
-import matplotlib.pyplot as plt
 import math
 
 weights = {
@@ -37,12 +36,12 @@ data_points = [
     {'input': [2, 2], 'output': lambda pred: 0.0 if pred < 0 else pred}
 ]
 
-nn = NeuralNetwork(weights, activation_functions, activation_function_derivatives, bias = True, debug = False)
+nn = NeuralNetwork(weights, activation_functions, activation_function_derivatives, bias = True, debug = True)
 
 def run_neural_network(nn, iterations):
     for i in range(1, iterations + 1):
-        for edge in weights.keys():
-            for data_point in data_points:
+        for data_point in data_points:
+            for edge in weights.keys():
                 nn.update_weight_gradients(data_point, edge)
         if list(nn.misclassifications.values()).count(True) < 1:
             break

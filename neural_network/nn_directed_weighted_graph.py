@@ -54,6 +54,7 @@ class NNDirectedWeightedGraph:
 class DirectedWeightedNode:
     def __init__(self, index):
         self.index = index
+        self.input = 0
         self.value = 0
         self.children = []
         self.parents = []

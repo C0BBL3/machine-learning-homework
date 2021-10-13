@@ -38,7 +38,6 @@ def run_neural_network(nn, iterations):
             nn.calc_prediction(data_point)
             for node in nn.nodes[::-1]:
                 nn.update_neuron_gradients(data_point, node.index)
-            print("nn.neuron_gradients", nn.neuron_gradients)
             for edge in weights.keys():
                 nn.update_weight_gradients(data_point, edge)
         if list(nn.misclassifications.values()).count(True) < 1:

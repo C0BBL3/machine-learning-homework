@@ -53,17 +53,17 @@ class NeuralNetwork(NNDirectedWeightedGraph):
 
     def calc_dE(self, data_point, edge):
         self.calc_prediction(data_point)
-        print('\n\n[list(edge)]', [list(edge)])
+        #print('\n\n[list(edge)]', [list(edge)])
         every_possible_path_containing_edge = self.get_every_possible_path_containing_edge(current_paths=[list(edge)])
         total_weight = 0
         for path in every_possible_path_containing_edge:
             total_weight += math.prod([self.weights[(path[i], path[i + 1])] * self.activation_function_derivatives[path[i]](self.get_node_input(path[i])) for i in range(1, len(path) - 1)])
-        print('\tevery_possible_path_containing_edge', every_possible_path_containing_edge)
-        print("\tdata_point['output'](self.predictions[tuple(data_point['input'])])", data_point['output'](self.predictions[tuple(data_point['input'])]))
-        print('\ttotal_weight', total_weight)
-        print("\tself.activation_function_derivatives[edge[0]](self.get_node_input[edge[0]])", self.activation_function_derivatives[edge[0]](self.get_node_input(edge[0])))
-        print("\tedge[0]", edge[0])
-        print("\tself.nodes[edge[0]].value", self.nodes[edge[0]].value)
+        #print('\tevery_possible_path_containing_edge', every_possible_path_containing_edge)
+        #print("\tdata_point['output'](self.predictions[tuple(data_point['input'])])", data_point['output'](self.predictions[tuple(data_point['input'])]))
+        #print('\ttotal_weight', total_weight)
+        #print("\tself.activation_function_derivatives[edge[0]](self.get_node_input[edge[0]])", self.activation_function_derivatives[edge[0]](self.get_node_input(edge[0])))
+        #print("\tedge[0]", edge[0])
+        #print("\tself.nodes[edge[0]].value", self.nodes[edge[0]].value)
         
         return 2 * data_point['output'](self.predictions[tuple(data_point['input'])]) * total_weight * self.activation_function_derivatives[edge[0]](self.get_node_input(edge[0])) * self.nodes[edge[0]].value
         

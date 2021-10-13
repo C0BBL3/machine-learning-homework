@@ -34,7 +34,6 @@ class NNDirectedWeightedGraph:
 
         is_output = 0
         new_paths = []
-        print('current_paths', current_paths)
         for path in current_paths:
             if len(self.nodes[path[-1]].children) == 0:
                 is_output += 1

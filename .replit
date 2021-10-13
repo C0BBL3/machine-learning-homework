@@ -1,2 +1,2 @@
 language = "bash"
-run = "python3 002/neural_network/002-6.py"
+run = "python3 neural_network/003-1.py"

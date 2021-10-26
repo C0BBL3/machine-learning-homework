@@ -1,4 +1,4 @@
-from neural_network import NeuralNetwork
+from neural_network_old import NeuralNetwork
 import matplotlib.pyplot as plt
 
 weights = {

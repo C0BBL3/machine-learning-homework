@@ -1,5 +1,6 @@
-from neural_network_gutted import NeuralNetwork
+from neural_network_old import NeuralNetwork
 import math
+import time
 
 weights = {
     (0, 2): 1,
@@ -30,7 +31,6 @@ data_points = [
     {'input': [1, 2], 'output': lambda pred: 0.0 if pred < 0 else pred},
 ]
 
-nn = NeuralNetwork(weights, activation_functions, activation_function_derivatives, bias = True, debug = True)
 
 def run_neural_network(nn, iterations):
     for i in range(1, iterations + 1):
@@ -42,6 +42,32 @@ def run_neural_network(nn, iterations):
                 nn.update_weight_gradients(data_point, edge)
         if list(nn.misclassifications.values()).count(True) < 1:
             break
-        nn.update_weights(print_output=True, iteration=i)
+        nn.update_weights(print_output=False, iteration=i)
 
-nn1 = run_neural_network(nn, 1)
+def run_neural_network_old(nn, iterations):
+    for i in range(1, iterations + 1):
+        for data_point in data_points:
+            nn.calc_prediction(data_point)
+            for edge in weights.keys():
+                nn.update_weight_gradients(data_point, edge)
+        if list(nn.misclassifications.values()).count(True) < 1:
+            break
+        nn.update_weights(print_output=False, iteration=i)
+
+first = time.time()
+
+nn1 = NeuralNetwork(weights, activation_functions, activation_function_derivatives, debug = False)
+nn2 = run_neural_network(nn1, 1)
+
+second = time.time()
+print("total time new", second - first)
+
+from neural_network_old import NeuralNetwork
+
+third = time.time()
+
+nn3 = NeuralNetwork(weights, activation_functions, activation_function_derivatives, bias = False, debug = False)
+nn4 = run_neural_network_old(nn3, 1)
+
+fourth = time.time()
+print("total time old", fourth - third)

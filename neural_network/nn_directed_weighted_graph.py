@@ -31,7 +31,6 @@ class NNDirectedWeightedGraph:
         # Start would be the initial edge
         # Edge is a tuple of two node indices, for example Edge 0 -> 2 would be denoted as `(0,2)`
         # Would find every possible path, recursively through each of the start's children to the output node(s)
-
         is_output = 0
         new_paths = []
         for path in current_paths:

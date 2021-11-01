@@ -36,4 +36,4 @@ nn1 = run_neural_network(nn, 1)
 
 plt.scatter([data_point['input'][0] for data_point in data_points], [data_point['input'][1] for data_point in data_points])
 plt.axis([0.5, 4.5, 0.5, 4.5])
-plt.savefig('neural_net.png')
+plt.savefig('images/neural_net.png')

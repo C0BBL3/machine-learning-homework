@@ -50,7 +50,7 @@ class NeuralNetwork(NNDirectedWeightedGraph):
         for path in every_possible_path_containing_edge: # Iterate through every path from the `node_index` to the (or a) output node
             intermediate_neuron_gradients_along_path_temp = 1.0
             for i in range(0, len(path) - 1): # Iterate through the current path
-                edge = (path[i], path[i + 1])
+                edge = (path[i], path[i + 1]) # Get Current Edge
                 if self.intermediate_neuron_gradients[edge] is None:
                     self.intermediate_neuron_gradients[edge] = self.weights[edge] * self.derivatives[path[i]](self.nodes[path[i+1]].input) # Update Intermediate Neuron Gradients
                     intermediate_neuron_gradients_along_path_temp *= self.intermediate_neuron_gradients[edge]
@@ -82,7 +82,6 @@ class NeuralNetwork(NNDirectedWeightedGraph):
             else:
                 self.nodes[node_index].input = 1
                 self.nodes[node_index].value = self.functions[node_index](self.nodes[node_index].input)
-            #print('\tNode', node_index, 'value', self.nodes[node_index].value)
         self.fortrack_prediction(1)
         self.predictions[tuple(data_point['input'])] = self.nodes[-1].value
 
@@ -94,7 +93,6 @@ class NeuralNetwork(NNDirectedWeightedGraph):
         for node_index in current_depth_nodes:
             self.nodes[node_index].input = self.get_node_input(node_index)
             self.nodes[node_index].value = self.functions[node_index](self.nodes[node_index].input)
-            #print('\tNode', node_index, 'value', self.nodes[node_index].value)
         if len(self.nodes[node_index].children) > 0: # If not output node
             self.fortrack_prediction(depth + 1)
 
@@ -106,11 +104,13 @@ class NeuralNetwork(NNDirectedWeightedGraph):
         return result
         
     def print_outputs(self, iteration):
-        print('iteration {}'.format(iteration))
-        print('\tgradient: {}'.format(self.weight_gradients))
-        print('\tmisclassifications: {}'.format(list(self.misclassifications.values()).count(True)))
-        print('\tpredictions: {}'.format(self.predictions))
-        print('\tupdated weights: {}'.format(self.weights))
+        print('Iteration {}'.format(iteration))
+        print('\tWeight Gradients (dE/w_xy): {}'.format(self.weight_gradients))
+        print('\tNeuron Gradients (dE/n_x): {}'.format(self.neuron_gradients))
+        print('\tIntermediate Neuron Gradients (dn_x/dn_y): {}'.format(self.intermediate_neuron_gradients))
+        print('\tMisclassifications: {}'.format(list(self.misclassifications.values()).count(True)))
+        print('\tPredictions: {}'.format(self.predictions))
+        print('\tUpdated Weights: {}'.format(self.weights))
 
     def print_debugging_variables(self, data_point, edge, dE):
         print('\nedge', edge)

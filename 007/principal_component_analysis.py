@@ -13,5 +13,5 @@ class PrincipalComponentAnalysis:
         self.transformed_data = self.data @ self.eigenvectors.T
 
     def transform_point(self, point, principal_component):
-        return np.array(point) @ self.eigenvectors[0:principal_component].T
+        return np.array(point) @ self.eigenvectors[principal_component].T
 

@@ -7,6 +7,7 @@ slacks = {
     "x_7": [5, 2, 4, 0, 0, 0, 1, 57],
     "max": [-20, -10, -15, 0, 0, 0, 0, 0]
 }
+
 original_constraint_length = 3
 
 def create_substitution_slack(slack, slack_index, largest_index):
@@ -40,7 +41,7 @@ def update_slacks(slacks, largest_index):
 
     return updated_slacks
 
-while slacks["max"][:original_constraint_length].count(0) <= original_constraint_length:
+while slacks["max"][:original_constraint_length].count(0) < original_constraint_length:
 
     largest_index = slacks["max"].index(min(slacks["max"][:-1]))
 
@@ -53,12 +54,16 @@ while slacks["max"][:original_constraint_length].count(0) <= original_constraint
     variable_change_index = original_constraint_length + list(slacks.keys()).index(harshest_constraint_key)
 
     slack_update = create_substitution_slack(slacks[harshest_constraint_key], variable_change_index, largest_index) # solve for the variable change index, following previous example ^, solving for x_1
-    try: del slacks[harshest_constraint_key] # remove old pre-variable-change function, following previous example ^^, removing the x_7 function from the dictionary
-    except: pass
+
+    try: 
+        del slacks[harshest_constraint_key] # remove old pre-variable-change function, following previous example ^^, removing the x_7 function from the dictionary
+    except:
+        pass
+
     slacks["x_" + str(largest_index + 1)] = slack_update # add the new varaible changed function, following the previous example ^^^, appending the solved for x_1 function
 
     slacks = update_slacks(slacks, largest_index) # substitute the variable change into the other equations, following previous example ^^^^, substitute x_1 into the other equations
-
+    
     continue # and repeat
 
-print("\nBest Prediction:", slacks["max"][-1], '\n') # no more positive coeffs in max function, best prediction has been reached
+print("\nBest Prediction:", slacks["max"][-1], "with coeffs with values of x_1:", slacks["x_1"][-1], "x_2:", slacks["x_2"][-1], "x_3:", slacks["x_3"][-1], '\n') # no more positive coeffs in max function, best prediction has been reached

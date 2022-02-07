@@ -8,6 +8,13 @@ slacks = {
     "max": [-20, -10, -15, 0, 0, 0, 0, 0]
 }
 
+slacks = {
+    "x_4": [2, 1, 1, 1, 0, 0, 14],
+    "x_5": [4, 2, 3, 0, 1, 0, 28],
+    "x_6": [2, 5, 5, 0, 0, 1, 30],
+    "max": [-1, -2, 1, 0, 0, 0, 0]
+}
+
 original_constraint_length = 3
 
 def create_substitution_slack(slack, slack_index, largest_index):
@@ -45,6 +52,9 @@ while slacks["max"][:original_constraint_length].count(0) < original_constraint_
 
     largest_index = slacks["max"].index(min(slacks["max"][:-1]))
 
+    if min(slacks["max"][:-1]) >= 0:
+        break
+
     harshest_constraint = {}
     for slack_key, slack in slacks.items():
         if slack_key != "max" and slack[-1] / slack[largest_index] > 0:
@@ -66,4 +76,4 @@ while slacks["max"][:original_constraint_length].count(0) < original_constraint_
     
     continue # and repeat
 
-print("\nBest Prediction:", slacks["max"][-1], "with coeffs with values of x_1:", slacks["x_1"][-1], "x_2:", slacks["x_2"][-1], "x_3:", slacks["x_3"][-1], '\n') # no more positive coeffs in max function, best prediction has been reached
+print("\nBest Prediction:", slacks["max"][-1])# "with coeffs with values of x_1:", slacks["x_1"][-1], "x_2:", slacks["x_2"][-1], "x_3:", slacks["x_3"][-1], '\n') # no more positive coeffs in max function, best prediction has been reached

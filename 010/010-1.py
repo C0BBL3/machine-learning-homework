@@ -7,21 +7,26 @@ expected_value = lambda state, action: -3 if state > max(table["state"]) else ta
 
 alpha = 0.01
 
-random_numbers = [3, 2, 3, 1, 2, 1, 1, 2]
+#random_numbers = [3, 2, 3, 1, 2, 1, 1, 2]
 
-random_index = 0
+#random_index = 0
 
 s_next = 0
 
 #table[action][state - 1] += alpha * (max(expected_value(s_next, "stop"), expected_value(s_next, "continue")) - expected_value(s_curr, action) # update table value
 
-for game in range(1,5): # game
+for game in range(1,10000): # game
+
+    if (game % 1000 == 0):
+
+        alpha /= 2
 
     print("\nGame:", game)
 
-    s_curr = random_numbers[random_index]
+    s_curr = random.randint(1, 3)
+    #s_curr = random_numbers[random_index]
 
-    random_index += 1
+    #random_index += 1
 
     print("\nWe got a random # of", s_curr, "so our inital state is", s_curr)
 
@@ -35,9 +40,10 @@ for game in range(1,5): # game
 
     while (action == "continue"): # round
 
-        change = random_numbers[random_index]
+        change= random.randint(1, 3)
+        #change = random_numbers[random_index]
 
-        random_index += 1
+        #random_index += 1
 
         s_next = s_curr + change
 

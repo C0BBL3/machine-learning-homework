@@ -8,6 +8,8 @@ table = {
     "mulligan": [1, None, 1, None, 1, None]
 } # initial table
 
+state = {"initial": (0, None), "current": (0, None), "next": (0, None), "result": (0,  None)} # default boi
+
 def expected_value(state, action):
     max_value = max(table["state"])[0]
     if state[0] > max_value:
@@ -22,19 +24,13 @@ random_index = 0
 
 mulligan_index = 0
 
-s_next = 0
-
 action = None
 
 mulligan = False
 
-game = 0
+game = 1
 
-s_curr = (0, None) # default boi
-
-#table[action][state - 1] += alpha * (max(expected_value(s_next, "stop"), expected_value(s_next, "continue")) - expected_value(s_curr, action) # update table value
-
-while (game < 10000): # game
+while (game < 3): # game
 
     #if (game % 1000 == 0):
 
@@ -43,14 +39,16 @@ while (game < 10000): # game
     if (not mulligan):
         print("\nGame:", game)
 
-        #s_curr = (random.randint(1, 3), mulligan)
-        temp = (random_numbers[random_index], mulligan)
+        state = {"initial": (0, None), "current": (0, None), "next": (0, None), "result": (0,  None), "update": (0, None)} # default boi
+
+        #state["initial"] = (random.randint(1, 3), mulligan)
+        state["initial"] = (random_numbers[random_index], mulligan)
         
         random_index += 1
 
-        print("\nWe got a random # of", temp, "so our inital state is", temp)
+        print("\nWe got a random # of", state["initial"], "so our inital state is", state["initial"])
 
-        if (temp[0] < 3):
+        if (state["initial"][0] < 3):
 
             action = ["mulligan", "continue", "mulligan"][mulligan_index] #random.choices(["continue", "mulligan"], [0.5, 0.5])
 
@@ -60,11 +58,15 @@ while (game < 10000): # game
 
                 print("\n\tMulligan mood")
 
+                state["update"] = state["initial"]
+
                 mulligan = True
 
                 continue
 
-            s_curr = temp
+            state["current"] = state["initial"]
+
+            #state["initial"] = (0, None)#?
         
         else:
 
@@ -72,15 +74,15 @@ while (game < 10000): # game
 
     else:
 
-        #s_next = (random.randint(1, 3), mulligan)
-        s_next = (s_curr[0] + random_numbers[random_index], mulligan)
+        #state["next"] = (random.randint(1, 3), mulligan)
+        state["next"] = (state["current"][0] + random_numbers[random_index], mulligan)
         
         random_index += 1
 
-        print("\nWe got a random # of", s_next, "so our inital state is", s_next)
+        print("\nWe got a random # of", state["next"], "so our inital state is", state["next"])
         
 
-        if (s_next[0] < 3):
+        if (state["next"][0] < 3):
 
             action = "continue"
 
@@ -96,9 +98,34 @@ while (game < 10000): # game
 
         random_index += 1
 
-        temp = (s_curr[0] + change, mulligan)
+        state["next"] = (state["current"][0] + change, mulligan)
 
-        print("\tcontinue -> random # =", change, "so state =", temp)
+        state["update"] = state["current"]
+
+        print("\tcontinue -> random # =", change, "so state =", state["next"])
+
+        
+        max_table = max(table["state"])[0]
+
+        if (state["next"][0] > max_table):
+
+            a_max = -3
+        
+        else:
+
+            a_max = max(expected_value(state["next"], "stop"), expected_value(state["next"], "continue"), expected_value(state["next"], "mulligan"))
+
+        print("\tresult =", a_max)
+
+        update = alpha * (a_max - expected_value(state["update"], "continue"))
+
+        table["continue"][table["state"].index(state["update"])] += update
+        
+        print("\tupdate = ", update)
+
+        state["current"] = state["next"]
+
+        state["next"] = (0, None)
 
         if (not mulligan):
 
@@ -110,80 +137,64 @@ while (game < 10000): # game
 
                 print("\n\tMulligan mood")
 
+                state["update"] = state["current"]
+
+                state["current"] = state["initial"]
+
+                state["initial"] = (0, None)#?
+
                 mulligan = True
 
                 continue
-        
-        s_next = temp
 
-        max_table = max(table["state"])[0]
-
-        if (s_next[0] > max_table):
-
-            a_max = -3
-        
-        else:
-
-            a_max = max(expected_value(s_next, "stop"), expected_value(s_next, "continue"), expected_value(s_next, "mulligan"))
-
-        print("\tresult =", a_max)
-
-        update = alpha * (a_max - expected_value(s_curr, "continue"))
-
-        table["continue"][table["state"].index(s_curr)] += update
-        
-        print("\tupdate = ", update)
-
-        s_curr = s_next
-
-        s_next = 0
-
-        print("\n", table)
-
-        if (s_curr[0] >= max_table):
+        if (state["current"][0] >= max_table):
             
             break
 
     if (action == "stop"):
 
-        temp = s_curr
+        state["result"] = state["current"]
         
         if (mulligan):
             
-            temp = s_next
+            state["result"] = state["next"]
 
-            print("\tstop -> state =", temp)
+            print("\tstop -> state =", state["result"])
 
             max_table = max(table["state"])[0]
 
-            if (s_next[0] > max_table):
+            if (state["next"][0] > max_table):
 
                 a_max = -3
             
             else:
 
-                a_max = max(expected_value(s_next, "stop"), expected_value(s_next, "continue"))
+                a_max = max(expected_value(state["next"], "stop"), expected_value(state["next"], "continue"))
 
             #print("\tresult =", a_max)
 
-            update = alpha * (a_max - expected_value(s_curr, "mulligan"))
+            expected_value_temp = expected_value(state["update"], "mulligan") #initial
 
-            table["mulligan"][table["state"].index(s_curr)] += update
+            update = alpha * (a_max - expected_value_temp)
+
+            table["mulligan"][table["state"].index(state["update"])] += update
             
             print("\tupdate = ", update)
 
         mulligan = False
         
-        if (temp[0] > max(table["state"])[0]):
+        if (state["result"][0] > max(table["state"])[0]):
 
             a_max = -3
         
         else:
 
-            a_max = expected_value(temp, "stop")
+            a_max = expected_value(state["result"], "stop")
 
         print("\tresult =", a_max)
 
         game += 1
 
         continue
+
+print("\n", table)

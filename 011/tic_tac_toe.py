@@ -1,23 +1,24 @@
+import random
+
 class Game:
     def __init__(self, strategy_one, strategy_two):
         self.board = [0 for _ in range(9)]
+
         if isinstance(strategy_one, list): strategy_one = strategy_one[0]
         if isinstance(strategy_two, list): strategy_two = strategy_two[0]
-
         self.strategies = [strategy_one, strategy_two]
 
     def play(self):
         current_player = 0
+        new_possible_moves = [{}, {}]
         while not self.game_finished()[0] and self.board.count(0) > 0:
             current_state = self.state()
             if current_state in self.strategies[current_player].keys():
                 current_move = self.strategies[current_player][current_state]
             else:
-                for i, space in enumerate(self.board):
-                    if space == 0:
-                        current_move = i
-                        self.strategies[current_player][current_state] = current_move
-                        break
+                choices = [i for i in range(9) if self.board[i] == 0]
+                current_move = random.choices(choices)[0]
+                new_possible_moves[current_player][current_state] = current_move
             self.place(current_player, current_move)
             if current_player == 0: 
                 current_player = 1
@@ -28,16 +29,21 @@ class Game:
 
         winner = self.game_finished()
 
+        for current_player, new_moves in enumerate(new_possible_moves):
+            if current_player + 1 == winner[1]:
+                for state, move in new_moves.items():
+                    self.strategies[current_player][state] = move
+
         if winner[1] == None and self.board.count(0) == 0:
             #print("\tDraw")
             #print("\tBoard State", self.state())
 
-            return (False, "Draw", winner[2])
+            return ((False, "Draw", winner[2]), self.strategies)
 
         #print("\tPlayer", winner[1], "Wins")
         #print("\tBoard State", self.state())
 
-        return winner
+        return (winner, self.strategies)
         
     def place(self, player, index): # 1 or 2 for player, and index is 0-9
         try:

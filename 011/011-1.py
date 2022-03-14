@@ -1,163 +1,253 @@
 from numpy import random
 import math
 from tic_tac_toe import Game
+import time
+import matplotlib.pyplot as plt
 
-def generate_strategy(num_of_branches = 3, depth = 0, max_depth = 9, strategy = {}, strings = [{'board':[0 for _ in range(9)], 'space': None}]): # depth is also turn number
+def evaluate_board(board):
+    # horizontal
+    if board[0] == board[1] == board[2] != 0: 
+        return (True, board[0]) 
+    if board[3] == board[4] == board[5] != 0: 
+        return (True, board[3])
+    if board[6] == board[7] == board[8] != 0: 
+        return (True, board[6])
+    # vertical
+    if board[0] == board[3] == board[6] != 0: 
+        return (True, board[0])
+    if board[1] == board[4] == board[7] != 0: 
+        return (True, board[1])
+    if board[2] == board[5] == board[8] != 0: 
+        return (True, board[2])
+    # diagonal
+    if board[0] == board[4] == board[8] != 0: 
+        return (True, board[0]) 
+    # backwards diagonal
+    if board[2] == board[4] == board[6] != 0: 
+        return (True, board[2]) 
 
-    if depth == max_depth: return strategy
+    if board.count(0) == 0: 
+        return (False, None)
 
-    player = (depth % 2) + 1
-    
-    new_strings = build_new_strings(strings, player, num_of_branches)
+    return (False, None)
 
-    random.shuffle(new_strings)
-        
-    for string in new_strings:
-    
-        temp = string['board'][:string['space']] + [0] + string['board'][string['space'] + 1:]
-        state = ''.join([str(item) for item in temp])
-
-        if state in strategy.keys(): continue
-        
-        strategy[state] = string['space']
-
-    random.shuffle(new_strings)
-    return generate_strategy(num_of_branches, depth = depth + 1, strategy = strategy, strings = new_strings[:num_of_branches])
-
-    # strategy = {}
-    
-    # for _ in range(100):
-
-    #     string = [0 for _ in range(9)]
-
-    #     for i in range(9):
-
-    #         player = (i % 2) + 1
-    #         choices = [i for i in range(9) if string[i] == 0]
-    #         space = random.choice(choices)
-    #         strategy[''.join([str(item) for item in string])] = space
-    #         string[space] = player
+def generate_board_states():
+    temp = []
+    for a in [0, 1, 2]: # 
+        for b in [0, 1, 2]:
+            for c in [0, 1, 2]:
+                for d in [0, 1, 2]:
+                    for e in [0, 1, 2]: # 
+                        for f in [0, 1, 2]:
+                            for g in [0, 1, 2]:
+                                for h in [0, 1, 2]:
+                                    for i in [0, 1, 2]:
+                                        board = [a, b, c, d, e, f, g, h, i]
+                                        if evaluate_board(board)[0]: continue
+                                        temp.append(board)
+    return temp
             
-    # return strategy
+all_possible_board_states = generate_board_states()
+print(len(all_possible_board_states))
 
-def build_new_strings(strings, player, num_of_branches):
+def get_random_move(board_state):
+    return random.choice([j for j in range(9) if board_state[j] == 0])
 
-    new_strings = []
-    
-    for string in strings:
+def generate_strategy(all_possible_board_states):
 
-        for i in range(num_of_branches):
-                            
-            choices = [j for j in range(9) if string['board'][j] == 0]
-            space = random.choice(choices)
-            temp = string['board'][:space] + [player] + string['board'][space + 1:]
-            new_strings.append({'board': temp, 'space': space})
+    strategy = {}
 
-    return new_strings
+    for board_state in all_possible_board_states:
 
-def fight(i, strategy_one, strategy_two, count_score = True):
+        if board_state.count(0) == 0: continue
+
+        move = get_random_move(board_state)
+        string_board_state = ''.join([str(space) for space in board_state])
+        strategy[string_board_state] = move
+
+    return strategy
+
+def fight(strategy_one, strategy_two, count_score = True):
     game = Game(strategy_one['strategy'], strategy_two['strategy'])
     result = game.play()
-    strategy_one['strategy'], strategy_two['strategy'] = result[1][0], result[1][1]
-
     if not count_score: return strategy_one, strategy_two
     
-    if result[0][1] != 'Draw':
+    if result[1] != 'Draw':
 
-        if result[0][1] == 1: # player 1
+        if result[1] == 1: # player 1
 
             strategy_one['score'] += 1
             strategy_two['score'] -= 1
 
-        elif result[0][1] == 2: # player 2
+        elif result[1] == 2: # player 2
 
             strategy_one['score'] -= 1
-            strategy_two['score'] += 1
-        
-    # else: # draw
-
-    #     strategy_one['score'] += 1
-    #     strategy_two['score'] -= 1            
+            strategy_two['score'] += 1         
 
     return strategy_one, strategy_two
 
 def breed(strategy_one, strategy_two):
-    baby_strategy = {'strategy': {}, 'score': 0}
+    baby_strategy_one = {'strategy': {}, 'score': 0}
+    baby_strategy_two = {'strategy': {}, 'score': 0}
 
-    for (key_1, value_1), (key_2, value_2) in zip(strategy_one['strategy'].items(), strategy_two['strategy'].items()):
-        
-        if key_1 != key_2:
+    for key in strategy_one['strategy'].keys():
 
-            baby_strategy['strategy'][key_1] = value_1
-            baby_strategy['strategy'][key_2] = value_2
+        values = [strategy_one['strategy'][key], strategy_two['strategy'][key]]
+        random.shuffle(values)
 
-        else:
+        baby_strategy_one['strategy'][key] = values[0]
+        baby_strategy_two['strategy'][key] = values[1]
 
-            baby_strategy['strategy'][key_1] = random.choice([value_1, value_2])
+    return baby_strategy_one, baby_strategy_two
 
-    return baby_strategy
-
-def calculate_score(best_five, strategies):
-
-    for i, strategy_one in enumerate(best_five[:5]):
-
-        for strategy_two in strategies[:5]:
-
-            best_five[i], _ = fight(i, strategy_one, strategy_two, False)
-
-    return sum([strategy['score'] / len(best_five) for strategy in best_five])
-
-strategies = []
-original_average_score = []
-previous_average_score = []
-
-for i in range(25):
-    random.seed(i)
-    new_strategy = generate_strategy(num_of_branches=9)
-    strategies.append({'strategy': new_strategy, 'score': 0})
-    del new_strategy
-
-original_strategies = [strategy for strategy in strategies]
-previous_strategies = [strategy for strategy in strategies]
-
-for generation in range(1, 101):
-
-    if generation < 6 or generation % 10 == 0: print('\nGeneration:', generation)
-
-    for i, strategy_one in enumerate(strategies):
-
-        for j, strategy_two in enumerate(strategies[:i] + strategies[i + 1:]):
-
-            strategies[i], strategies[j] = fight(i, strategy_one, strategy_two)
-
-    strategies.sort(key = lambda strategy: strategy['score'], reverse = True)
-    print("bad", strategies.count(strategies[-1]))
-    best_five = [strategy for strategy in strategies[:5]]
-
-    for strategy in best_five: strategy['score'] = 0
-
-    previous_average_score.append(calculate_score(best_five, previous_strategies))
-    original_average_score.append(calculate_score(best_five, original_strategies))
-    new_strategies = [strategy for strategy in strategies]
+def calculate_score(best_five, population):
 
     for i, strategy_one in enumerate(best_five):
 
-        for strategy_two in best_five[:i] + best_five[i + 1:5]:
+        for strategy_two in population:
 
-            new_strategy = breed(strategy_one, strategy_two)
-            new_strategies.append(new_strategy)
+            best_five[i], _ = fight(strategy_one, strategy_two)
+            _, best_five[i] = fight(strategy_two, strategy_one)
 
-    previous_strategies = [strategy for strategy in strategies]
-    strategies = best_five
+    return sum([strategy['score'] / len(best_five) for strategy in best_five])
+
+def plots_3_and_4(board_state, player):
+
+    moves = []
+
+    #horizontal
+    if board_state[1] == board_state[2] == player and board_state[0] == 0: moves.append(0)
+    if board_state[0] == board_state[2] == player and board_state[1] == 0: moves.append(1)
+    if board_state[0] == board_state[1] == player and board_state[2] == 0: moves.append(2)
+
+    if board_state[4] == board_state[5] == player and board_state[3] == 0: moves.append(3)
+    if board_state[3] == board_state[5] == player and board_state[4] == 0: moves.append(4)
+    if board_state[3] == board_state[4] == player and board_state[5] == 0: moves.append(5)
+
+    if board_state[7] == board_state[8] == player and board_state[6] == 0: moves.append(6)
+    if board_state[6] == board_state[8] == player and board_state[7] == 0: moves.append(7)
+    if board_state[6] == board_state[7] == player and board_state[8] == 0: moves.append(8)
+
+    #vertical
+    if board_state[3] == board_state[6] == player and board_state[0] == 0: moves.append(0)
+    if board_state[4] == board_state[7] == player and board_state[1] == 0: moves.append(1)
+    if board_state[5] == board_state[8] == player and board_state[1] == 0: moves.append(2)
+
+    if board_state[0] == board_state[6] == player and board_state[0] == 0: moves.append(3)
+    if board_state[1] == board_state[7] == player and board_state[1] == 0: moves.append(4)
+    if board_state[2] == board_state[8] == player and board_state[1] == 0: moves.append(5)
+
+    if board_state[0] == board_state[3] == player and board_state[0] == 0: moves.append(6)
+    if board_state[1] == board_state[4] == player and board_state[1] == 0: moves.append(7)
+    if board_state[2] == board_state[5] == player and board_state[1] == 0: moves.append(8)
+
+    #diagonal
+    if board_state[4] == board_state[8] == player and board_state[0] == 0: moves.append(0)
+    if board_state[0] == board_state[8] == player and board_state[4] == 0: moves.append(4)
+    if board_state[0] == board_state[4] == player and board_state[8] == 0: moves.append(8)
+
+    #backwards diagonal
+    if board_state[4] == board_state[6] == player and board_state[2] == 0: moves.append(2)
+    if board_state[2] == board_state[6] == player and board_state[4] == 0: moves.append(4)
+    if board_state[2] == board_state[4] == player and board_state[6] == 0: moves.append(6)
+
+    return len(moves) > 0, moves
+    
+
+population = []
+
+random.seed(int(time.time()))
+for i in range(25):
+    strategy = generate_strategy(all_possible_board_states)
+    population.append({'strategy': strategy, 'score': 0})
+
+original_average_score = []
+previous_average_score = []
+win_capture_score = []
+loss_prevention_score = [] # | || || |_
+
+original_population = [{key: value for key, value in strategy.items()} for strategy in population]
+previous_population = [{key: value for key, value in strategy.items()} for strategy in population]
+
+num_generations = 100
+
+for generation in range(1, num_generations + 1):
+
+    if generation < 6 or generation % 10 == 0: print('\nGeneration:', generation)
+
+    for i, strategy_one in enumerate(population):
+
+        for j, strategy_two in enumerate(population[i + 1:]):
+
+            strategy_one, strategy_two = fight(strategy_one, strategy_two)
+
+    population.sort(key = lambda strategy: strategy['score'], reverse = True)
+    best_five = [strategy for strategy in population[:5]]
+    print([strategy['score'] for strategy in best_five])
+
+    for strategy in best_five: strategy['score'] = 0
+
+    previous_population_score = calculate_score(best_five, previous_population)
+
+    for strategy in previous_population: strategy['score'] = 0
+    for strategy in best_five: strategy['score'] = 0
+
+    original_population_score = calculate_score(best_five, original_population)
+
+    for strategy in original_population: strategy['score'] = 0
+    for strategy in best_five: strategy['score'] = 0
+
+    previous_average_score.append(previous_population_score)
+    original_average_score.append(original_population_score)
+
+    can_win_score = 0
+    can_block_score = 0
+    will_win_score = 0
+    will_block_score = 0
+
+    for strategy in best_five:
+        for board_state in strategy['strategy']:
+            temp = [int(space) for space in board_state]
+            win_capture = plots_3_and_4(temp, 1) # win capture
+            if win_capture[0]:
+                can_win_score += 1
+                if strategy['strategy'][board_state] in win_capture[1]:
+                    will_win_score += 1
+            loss_prevention = plots_3_and_4(temp, 2) # loss prevention
+            if loss_prevention[0]:
+                can_block_score += 1
+                if strategy['strategy'][board_state] in loss_prevention[1]:
+                    will_block_score += 1 
+
+    win_capture_score.append(will_win_score / can_win_score)
+    loss_prevention_score.append(will_block_score / can_block_score)
+
+    new_population = [strategy for strategy in best_five]
+
+    for i, strategy_one in enumerate(best_five):
+
+        for j, strategy_two in enumerate(best_five[i + 1:]):
+
+            baby_strategy_one, baby_strategy_two = breed(strategy_one, strategy_two)
+            new_population.append(baby_strategy_one)
+            new_population.append(baby_strategy_two)
+
+    previous_population = [strategy for strategy in population]
+    population = new_population
     del best_five
 
-import matplotlib.pyplot as plt
-
-plt.plot(list(range(100)), previous_average_score)
-plt.plot(list(range(100)), original_average_score)
+plt.plot(list(range(num_generations)), original_average_score)
+plt.plot(list(range(num_generations)), previous_average_score)
 plt.legend(['Original', 'Previous'])
 plt.savefig('images/011-1.png')
 
+plt.clf()
+
+plt.plot(list(range(num_generations)), win_capture_score)
+plt.plot(list(range(num_generations)), loss_prevention_score)
+plt.legend(['Win Capture', 'Loss Prevention'])
+plt.savefig('images/011-2.png')
+
 print("\nTraining Complete")
 
-print("\nBest Strategy\n\n", strategies[0]['strategy'], "\n\n")
+print("\nBest Strategy\n\n", population[0]['strategy'], "\n\n")

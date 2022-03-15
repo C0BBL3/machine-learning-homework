@@ -10,16 +10,6 @@ class GeneticAlgorithm:
         self.board_states = board_states
         self.population = []
 
-    def read_cells(self, ttc_cell_chromosomes_file): # the ttc_cell_chromosomes_file is a readlines() file
-        
-        for line in ttc_cell_chromosomes_file:
-
-            chromosomes = ast.literal_eval(line)
-            new_cell = {'chromosomes': chromosomes, 'score': 0}
-            self.population.append(new_cell)
-            self.original_population = self.copy_population(self.population)
-
-
     def determine_fitness(self, fittest_cells_size = 5, random_selection_size = 3):
 
         self.fittest_cells = []
@@ -46,22 +36,8 @@ class GeneticAlgorithm:
             self.population.pop(self.population.index(fittest_cell))
             current_heat.pop(current_heat.index(fittest_cell))
 
-    def compete(self, cell_one, cell_two):
-
-        game = Game(cell_one['chromosomes'], cell_two['chromosomes'])
-        result = game.play()
-
-        if result[1] == 1: # cell 1 won
-            cell_one['score'] += 1
-            cell_two['score'] -= 1
-        elif result[1] == 2: # cell 2 won
-            cell_one['score'] -= 1
-            cell_two['score'] += 1  
-
     def breed(self):
 
-        #self.population.sorted(key = lambda cell: cell['score'], reverse = True)
-        #self.fittest_cells = self.copy_population(self.population[:5])
         offspring = []
 
         for i, cell_one in enumerate(self.fittest_cells):
@@ -83,6 +59,28 @@ class GeneticAlgorithm:
 
         self.previous_population = self.copy_population(self.population)
         self.population = self.fittest_cells + offspring  
+
+    def compete(self, cell_one, cell_two):
+
+        game = Game(cell_one['chromosomes'], cell_two['chromosomes'])
+        result = game.play()
+
+        if result[1] == 1: # cell 1 won
+            cell_one['score'] += 1
+            cell_two['score'] -= 1
+        elif result[1] == 2: # cell 2 won
+            cell_one['score'] -= 1
+            cell_two['score'] += 1  
+
+    def read_cells(self, ttc_cell_chromosomes_file): # the ttc_cell_chromosomes_file is a readlines() file
+        
+        for line in ttc_cell_chromosomes_file:
+
+            chromosomes = ast.literal_eval(line) # parse string dictionary
+            new_cell = {'chromosomes': chromosomes, 'score': 0}
+            self.population.append(new_cell)
+        
+        self.original_population = self.copy_population(self.population) # create a copy of population for original population
 
     @staticmethod
     def copy_population(population):

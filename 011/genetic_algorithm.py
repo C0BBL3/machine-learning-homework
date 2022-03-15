@@ -6,11 +6,17 @@ import filecmp
 
 
 class GeneticAlgorithm:
-    def __init__(self, board_states, total_amount = 25):
+    def __init__(self, board_states):
         self.board_states = board_states
         self.population = []
-        self.generate_population(total_amount)
-        self.original_population = self.copy_population(self.population)        
+
+    def read_cells(self, ttc_cell_chromosomes_file): # the ttc_cell_chromosomes_file is a readlines() file
+        
+        for line in ttc_cell_chromosomes_file:
+
+            new_cell = {'chromosomes': dict(line), 'score': 0}
+            self.population.append(new_cell)
+            self.original_population = self.copy_population(self.population)
 
     def generate_population(self, total_amount = 25):
 
@@ -27,8 +33,6 @@ class GeneticAlgorithm:
         chromosomes = {}
 
         for board_state in self.board_states:
-
-            board_state = board_state[:-1] # remove the \n and make it dumpy with numpy
 
             list_board_state = [int(space) for space in board_state]
 

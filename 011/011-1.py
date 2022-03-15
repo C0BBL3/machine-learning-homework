@@ -195,14 +195,14 @@ for generation in range(1, num_generations + 1):
 plt.plot(list(range(num_generations)), original_average_score)
 plt.plot(list(range(num_generations)), previous_average_score)
 plt.legend(['Original', 'Previous'])
-plt.savefig('images/011-1.png')
+plt.savefig('images/011-1-1.png')
 
 plt.clf()
 
 plt.plot(list(range(num_generations)), win_capture_score)
 plt.plot(list(range(num_generations)), loss_prevention_score)
 plt.legend(['Win Capture', 'Loss Prevention'])
-plt.savefig('images/011-2.png')
+plt.savefig('images/011-1-2.png')
 
 print("\nTraining Complete")
 

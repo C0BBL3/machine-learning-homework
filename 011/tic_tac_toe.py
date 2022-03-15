@@ -15,19 +15,12 @@ class Game:
         new_possible_moves = [{}, {}]
         while not self.game_finished()[0] and self.board.count(0) > 0:
             current_state = self.state(current_player)
-            if current_state in self.strategies[current_player].keys():
-                current_move = self.strategies[current_player][current_state]
-            else:
-                current_move = random.choice([i for i in range(9) if self.board[i] == 0]) # random open spot if key bad
-                new_possible_moves[current_player][current_state] = current_move
+            current_move = self.strategies[current_player][current_state]
             self.place(current_player, current_move)
             
             current_player = 1 if current_player == 0 else 0
 
         winner = self.game_finished()
-
-        if winner[0]:
-            self.strategies[winner[1] - 1] = {**self.strategies[winner[1] - 1], **new_possible_moves[winner[1] - 1]}
 
         if winner[1] == None and self.board.count(0) == 0:
             #print("\tDraw")
@@ -81,3 +74,45 @@ class Game:
             return (False, None)
 
         return (False, None)
+
+def plots_3_and_4(board_state, player):
+
+    moves = []
+
+    #horizontal
+    if board_state[1] == board_state[2] == player and board_state[0] == 0: moves.append(0)
+    if board_state[0] == board_state[2] == player and board_state[1] == 0: moves.append(1)
+    if board_state[0] == board_state[1] == player and board_state[2] == 0: moves.append(2)
+
+    if board_state[4] == board_state[5] == player and board_state[3] == 0: moves.append(3)
+    if board_state[3] == board_state[5] == player and board_state[4] == 0: moves.append(4)
+    if board_state[3] == board_state[4] == player and board_state[5] == 0: moves.append(5)
+
+    if board_state[7] == board_state[8] == player and board_state[6] == 0: moves.append(6)
+    if board_state[6] == board_state[8] == player and board_state[7] == 0: moves.append(7)
+    if board_state[6] == board_state[7] == player and board_state[8] == 0: moves.append(8)
+
+    #vertical
+    if board_state[3] == board_state[6] == player and board_state[0] == 0: moves.append(0)
+    if board_state[4] == board_state[7] == player and board_state[1] == 0: moves.append(1)
+    if board_state[5] == board_state[8] == player and board_state[1] == 0: moves.append(2)
+
+    if board_state[0] == board_state[6] == player and board_state[0] == 0: moves.append(3)
+    if board_state[1] == board_state[7] == player and board_state[1] == 0: moves.append(4)
+    if board_state[2] == board_state[8] == player and board_state[1] == 0: moves.append(5)
+
+    if board_state[0] == board_state[3] == player and board_state[0] == 0: moves.append(6)
+    if board_state[1] == board_state[4] == player and board_state[1] == 0: moves.append(7)
+    if board_state[2] == board_state[5] == player and board_state[1] == 0: moves.append(8)
+
+    #diagonal
+    if board_state[4] == board_state[8] == player and board_state[0] == 0: moves.append(0)
+    if board_state[0] == board_state[8] == player and board_state[4] == 0: moves.append(4)
+    if board_state[0] == board_state[4] == player and board_state[8] == 0: moves.append(8)
+
+    #backwards diagonal
+    if board_state[4] == board_state[6] == player and board_state[2] == 0: moves.append(2)
+    if board_state[2] == board_state[6] == player and board_state[4] == 0: moves.append(4)
+    if board_state[2] == board_state[4] == player and board_state[6] == 0: moves.append(6)
+
+    return len(moves) > 0, moves

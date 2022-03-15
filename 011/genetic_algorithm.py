@@ -1,16 +1,16 @@
 from numpy import random
+import numpy as np
 from tic_tac_toe import Game
 import time
 import filecmp
 
 
 class GeneticAlgorithm:
-    def __init__(self, aboard_states, total_amount = 25):
+    def __init__(self, board_states, total_amount = 25):
         self.board_states = board_states
         self.population = []
         self.generate_population(total_amount)
-        self.original_population = self.copy_population(self.population)
-        
+        self.original_population = self.copy_population(self.population)        
 
     def generate_population(self, total_amount = 25):
 
@@ -18,7 +18,7 @@ class GeneticAlgorithm:
 
         for i in range(total_amount):
             
-            chromosomes = generate_random_chromosomes() # strategy for cell
+            chromosomes = self.generate_random_chromosomes() # strategy for cell
             cell = {'chromosomes': chromosomes, 'score': 0} # individual strategy
             self.population.append(cell)
     
@@ -28,7 +28,7 @@ class GeneticAlgorithm:
 
         for board_state in self.board_states:
 
-            board_state = board_state[:-1] # remove the \n
+            board_state = board_state[:-1] # remove the \n and make it dumpy with numpy
 
             list_board_state = [int(space) for space in board_state]
 
@@ -39,17 +39,33 @@ class GeneticAlgorithm:
 
         return chromosomes
 
-    def determine_fitness(self):
+    def determine_fitness(self, fittest_cells_size = 5, random_selection_size = 3):
 
-        for i, cell_one in enumerate(self.population):
+        self.fittest_cells = []
 
-            for cell_two in self.population[:i] + self.population[i + 1:]:
+        while len(self.fittest_cells) < fittest_cells_size:
 
-                self.fight(cell_one, cell_two)  
+            past_matchups = []
+            current_heat = self.heat_selection(self.population, random_selection_size = random_selection_size)
 
-        self.population.sort(key = lambda cell: cell['score'], reverse = True)
+            for i, cell_one in enumerate(current_heat):
 
-    def fight(self, cell_one, cell_two):
+                for j, cell_two in enumerate(current_heat):
+
+                    if i != j and [i, j] not in past_matchups:
+                        
+                        past_matchups.append([i, j])
+                        self.compete(cell_one, cell_two)
+            
+            fittest_cell = max(current_heat, key = lambda cell: cell['score'])
+            
+            for cell in current_heat: cell['score'] = 0
+
+            self.fittest_cells.append(fittest_cell)
+            self.population.pop(self.population.index(fittest_cell))
+            current_heat.pop(current_heat.index(fittest_cell))
+
+    def compete(self, cell_one, cell_two):
 
         game = Game(cell_one['chromosomes'], cell_two['chromosomes'])
         result = game.play()
@@ -63,8 +79,9 @@ class GeneticAlgorithm:
 
     def breed(self):
 
-        self.fittest_cells = self.find_fittest_cells(self.population)
-        self.offspring = []
+        #self.population.sorted(key = lambda cell: cell['score'], reverse = True)
+        #self.fittest_cells = self.copy_population(self.population[:5])
+        offspring = []
 
         for i, cell_one in enumerate(self.fittest_cells):
 
@@ -80,33 +97,23 @@ class GeneticAlgorithm:
                     baby_cell_one['chromosomes'][key] = values[0]
                     baby_cell_two['chromosomes'][key] = values[1]
 
-                self.offspring.append(baby_cell_one)
-                self.offspring.append(baby_cell_two)
+                offspring.append(baby_cell_one)
+                offspring.append(baby_cell_two)
 
         self.previous_population = self.copy_population(self.population)
-        self.population = self.fittest_cells + self.offspring  
+        self.population = self.fittest_cells + offspring  
 
     @staticmethod
     def copy_population(population):
-        return [{'chromosomes': cell['chromosomes'], 'score': 0} for cell in population] # array of cells w/o scores, [{'00000000': 1, '000000001': 3, ...}, {'00000000': 4, '000000001': 2, ...}, ...]
+        return list(population)
 
     @staticmethod
     def get_random_move(board_state):
         return random.choice([j for j in range(9) if board_state[j] == 0])
 
     @staticmethod
-    def find_fittest_cells(population, total_amount = 5, random_selection_size = 3):
+    def heat_selection(population, random_selection_size = 3):
+        random.shuffle(population)
+        return population[:random_selection_size]
         
-        fittest_cells = []
-
-        while len(fittest_cells) < total_amount:
-            
-            random.shuffle(population)
-            random_selection = population[:random_selection_size]
-            fittest_cell = max(random_selection, key=lambda cell: cell['score'])
-            fittest_cell_index = population.index(fittest_cell)
-            population.pop(fittest_cell_index)
-            fittest_cells.append(fittest_cell)
-
-        return fittest_cells
         

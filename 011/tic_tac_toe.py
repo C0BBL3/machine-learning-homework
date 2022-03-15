@@ -12,14 +12,22 @@ class Game:
 
     def play(self):
         current_player = 0
+        new_possible_moves = [{}, {}]
         while not self.game_finished()[0] and self.board.count(0) > 0:
             current_state = self.state(current_player)
-            current_move = self.strategies[current_player][current_state]
+            if current_state in self.strategies[current_player].keys():
+                current_move = self.strategies[current_player][current_state]
+            else:
+                current_move = random.choice([i for i in range(9) if self.board[i] == 0]) # random open spot if key bad
+                new_possible_moves[current_player][current_state] = current_move
             self.place(current_player, current_move)
             
             current_player = 1 if current_player == 0 else 0
 
         winner = self.game_finished()
+
+        if winner[0]:
+            self.strategies[winner[1] - 1] = {**self.strategies[winner[1] - 1], **new_possible_moves[winner[1] - 1]}
 
         if winner[1] == None and self.board.count(0) == 0:
             #print("\tDraw")

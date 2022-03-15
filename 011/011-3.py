@@ -41,7 +41,7 @@ for generation in range(num_generations):
     if generation < 5 or generation % 10 == 9: 
         print('\nGeneration:', generation + 1)
 
-    GA.determine_fitness(fittest_cells_size=25, random_selection_size=20)
+    GA.determine_fitness(fittest_cells_size=20, random_selection_size=10)
     GA.breed()
 
     original_average_score.append(calculate_score(GA.fittest_cells, GA.original_population))

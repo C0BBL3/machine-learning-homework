@@ -6,7 +6,7 @@ random.seed(int(time.time()))
 board_states = [line.strip('\n') for line in open('011/board_states.txt', 'r').readlines()]
 ttc_cell_chromosomes_file = open('011/ttc_cell_chromosomes.txt', 'w')
 
-for _ in range(625):
+for _ in range(400):
 
     chromosomes = {}
 

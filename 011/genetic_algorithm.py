@@ -2,7 +2,7 @@ from numpy import random
 import numpy as np
 from tic_tac_toe import Game
 import time
-import filecmp
+import ast
 
 
 class GeneticAlgorithm:
@@ -14,34 +14,11 @@ class GeneticAlgorithm:
         
         for line in ttc_cell_chromosomes_file:
 
-            new_cell = {'chromosomes': dict(line), 'score': 0}
+            chromosomes = ast.literal_eval(line)
+            new_cell = {'chromosomes': chromosomes, 'score': 0}
             self.population.append(new_cell)
             self.original_population = self.copy_population(self.population)
 
-    def generate_population(self, total_amount = 25):
-
-        random.seed(int(time.time()))
-
-        for i in range(total_amount):
-            
-            chromosomes = self.generate_random_chromosomes() # strategy for cell
-            cell = {'chromosomes': chromosomes, 'score': 0} # individual strategy
-            self.population.append(cell)
-    
-    def generate_random_chromosomes(self):
-
-        chromosomes = {}
-
-        for board_state in self.board_states:
-
-            list_board_state = [int(space) for space in board_state]
-
-            if list_board_state.count(0) == 0: continue
-
-            move = self.get_random_move(list_board_state)
-            chromosomes[board_state] = move
-
-        return chromosomes
 
     def determine_fitness(self, fittest_cells_size = 5, random_selection_size = 3):
 

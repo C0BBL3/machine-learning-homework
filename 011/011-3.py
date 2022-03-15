@@ -33,7 +33,7 @@ num_generations = 100
 board_states = [line.strip('\n') for line in open('011/board_states.txt', 'r').readlines()]
 ttc_cell_chromosomes = [line.strip('\n') for line in open('011/ttc_cell_chromosomes.txt', 'r').readlines()]
 
-GA = GeneticAlgorithm()
+GA = GeneticAlgorithm(board_states)
 GA.read_cells(ttc_cell_chromosomes)
 
 for generation in range(num_generations):

@@ -59,26 +59,48 @@ for game in range(5):
                 if isinstance(board[current_move], int): board[current_move] = 'X'
                 print('\nYou placed an X on space', current_move)
 
-            for index, space in enumerate(board):
+            # horizontal
+            if board[0] == board[1] == board[2] != 0: 
+                horizontal = True
+                space = board[0] 
+            if board[3] == board[4] == board[5] != 0: 
+                horizontal = True
+                space = board[3] 
+            if board[6] == board[7] == board[8] != 0: 
+                horizontal = True
+                space = board[6] 
+            # vertical
+            if board[0] == board[3] == board[6] != 0: 
+                vertical = True
+                space = board[0] 
+            if board[1] == board[4] == board[7] != 0: 
+                vertical = True
+                space = board[1] 
+            if board[2] == board[5] == board[8] != 0: 
+                vertical = True
+                space = board[2] 
+            # diagonal
+            if board[0] == board[4] == board[8] != 0: 
+                diagonal = True
+                space = board[0] 
+            # backwards diagonal
+            if board[2] == board[4] == board[6] != 0: 
+                backward_diagonal = True
+                space = board[2] 
                 
-                horizontal = index in [0, 3, 6] and not isinstance(board[index], int) and board[index + 1] == space and board[index + 2] == space
-                vertical = index in [0, 1, 2] and not isinstance(board[index], int) and board[index + 3] == space and board[index + 6] == space
-                forward_diagonal = index in [0, 4, 8] and not isinstance(board[index], int) and board[0] == space and board[4] == space and board[8] == space
-                backward_diagonal = index in [2, 4, 6] and not isinstance(board[index], int) and board[2] == space and board[4] == space and board[6] == space
-                
-                if [horizontal, vertical, forward_diagonal, backward_diagonal].count(True) > 0:
-                    if space == 'O':
-                        print('\nThe Best Strategy Won!')
-                        for state, move in new_possible_moves.items():
-                            best_strategy[state] = move
-                        print_board(board)
-                        order = 0
-                    elif space == 'X':
-                        print('\nYou won!')
-                        print_board(board)
-                        order = 1
-                        best_strategy[current_state] = current_move
-                    raise Exception('win')
+            if [horizontal, vertical, forward_diagonal, backward_diagonal].count(True) > 0:
+                if space == 'O':
+                    print('\nThe Best Strategy Won!')
+                    for state, move in new_possible_moves.items():
+                        best_strategy[state] = move
+                    print_board(board)
+                    order = 0
+                elif space == 'X':
+                    print('\nYou won!')
+                    print_board(board)
+                    order = 1
+                    best_strategy[current_state] = current_move
+                raise Exception('win')
 
         raise Exception('draw')
 

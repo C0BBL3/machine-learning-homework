@@ -1,54 +1,10 @@
 from numpy import random
-import math
 from tic_tac_toe import Game
 import time
 import matplotlib.pyplot as plt
+import filecmp
 
-def evaluate_board(board):
-    # horizontal
-    if board[0] == board[1] == board[2] != 0: 
-        return (True, board[0]) 
-    if board[3] == board[4] == board[5] != 0: 
-        return (True, board[3])
-    if board[6] == board[7] == board[8] != 0: 
-        return (True, board[6])
-    # vertical
-    if board[0] == board[3] == board[6] != 0: 
-        return (True, board[0])
-    if board[1] == board[4] == board[7] != 0: 
-        return (True, board[1])
-    if board[2] == board[5] == board[8] != 0: 
-        return (True, board[2])
-    # diagonal
-    if board[0] == board[4] == board[8] != 0: 
-        return (True, board[0]) 
-    # backwards diagonal
-    if board[2] == board[4] == board[6] != 0: 
-        return (True, board[2]) 
-
-    if board.count(0) == 0: 
-        return (False, None)
-
-    return (False, None)
-
-def generate_board_states():
-    temp = []
-    for a in [0, 1, 2]: # 
-        for b in [0, 1, 2]:
-            for c in [0, 1, 2]:
-                for d in [0, 1, 2]:
-                    for e in [0, 1, 2]: # 
-                        for f in [0, 1, 2]:
-                            for g in [0, 1, 2]:
-                                for h in [0, 1, 2]:
-                                    for i in [0, 1, 2]:
-                                        board = [a, b, c, d, e, f, g, h, i]
-                                        if evaluate_board(board)[0]: continue
-                                        temp.append(board)
-    return temp
-            
-all_possible_board_states = generate_board_states()
-print(len(all_possible_board_states))
+all_possible_board_states = open('011/board_states.txt', 'r').readlines()
 
 def get_random_move(board_state):
     return random.choice([j for j in range(9) if board_state[j] == 0])
@@ -59,11 +15,12 @@ def generate_strategy(all_possible_board_states):
 
     for board_state in all_possible_board_states:
 
-        if board_state.count(0) == 0: continue
+        list_board_state = [int(space) for space in board_state[:-1]]
 
-        move = get_random_move(board_state)
-        string_board_state = ''.join([str(space) for space in board_state])
-        strategy[string_board_state] = move
+        if list_board_state.count(0) == 0: continue
+
+        move = get_random_move(list_board_state)
+        strategy[board_state[:-1]] = move
 
     return strategy
 
@@ -183,7 +140,6 @@ for generation in range(1, num_generations + 1):
 
     population.sort(key = lambda strategy: strategy['score'], reverse = True)
     best_five = [strategy for strategy in population[:5]]
-    print([strategy['score'] for strategy in best_five])
 
     for strategy in best_five: strategy['score'] = 0
 

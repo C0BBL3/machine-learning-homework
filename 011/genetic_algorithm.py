@@ -10,89 +10,90 @@ class GeneticAlgorithm:
         self.board_states = board_states
         self.population = []
 
-    def determine_fitness(self, fittest_cells_size = 5, random_selection_size = 3):
+    def determine_fitness(self, fittest_chromosomes_size = 5, random_selection_size = 3):
 
-        self.fittest_cells = []
+        self.fittest_chromosomes = []
 
-        while len(self.fittest_cells) < fittest_cells_size:
+        while len(self.fittest_chromosomes) < fittest_chromosomes_size:
 
             past_matchups = []
-            current_heat = self.heat_selection(self.population, random_selection_size = random_selection_size)
+            current_heat = heat_selection(self.population, random_selection_size = random_selection_size)
 
-            for i, cell_one in enumerate(current_heat):
+            for i, chromosome_one in enumerate(current_heat):
 
-                for j, cell_two in enumerate(current_heat):
+                for j, chromosome_two in enumerate(current_heat):
 
                     if i != j and [i, j] not in past_matchups:
                         
                         past_matchups.append([i, j])
-                        self.compete(cell_one, cell_two)
+                        self.compete(chromosome_one, chromosome_two)
             
-            fittest_cell = max(current_heat, key = lambda cell: cell['score'])
+            fittest_chromosome = max(current_heat, key = lambda chromosome: chromosome['score'])
             
-            for cell in current_heat: cell['score'] = 0
+            for chromosome in current_heat: chromosome['score'] = 0
 
-            self.fittest_cells.append(fittest_cell)
-            self.population.pop(self.population.index(fittest_cell))
-            current_heat.pop(current_heat.index(fittest_cell))
+            self.fittest_chromosomes.append(fittest_chromosome)
+            self.population.pop(self.population.index(fittest_chromosome))
+            current_heat.pop(current_heat.index(fittest_chromosome))
 
-    def breed(self):
+    def breed(self, mutation_rate = 0.01):
 
         offspring = []
 
-        for i, cell_one in enumerate(self.fittest_cells):
+        for i, chromosome_one in enumerate(self.fittest_chromosomes):
 
-            for cell_two in self.fittest_cells[i + 1:]:
+            for chromosome_two in self.fittest_chromosomes[i + 1:]:
         
-                baby_cell_one = {'chromosomes': {}, 'score': 0}
-                baby_cell_two = {'chromosomes': {}, 'score': 0}
+                baby_chromosome_one = {'genes': {}, 'score': 0}
+                baby_chromosome_two = {'genes': {}, 'score': 0}
 
-                for key in cell_one['chromosomes'].keys():
+                for key in chromosome_one['genes'].keys():
 
-                    values = [cell_one['chromosomes'][key], cell_two['chromosomes'][key]]
-                    random.shuffle(values)
-                    baby_cell_one['chromosomes'][key] = values[0]
-                    baby_cell_two['chromosomes'][key] = values[1]
+                    genes = [chromosome_one['genes'][key], chromosome_two['genes'][key]]
+                    mutated_genes = [check_mutation(key, gene, mutation_rate = mutation_rate) for gene in genes]
+                    random.shuffle(mutated_genes) # shuffle genes
+                    baby_chromosome_one['genes'][key] = mutated_genes[0]
+                    baby_chromosome_two['genes'][key] = mutated_genes[1]
 
-                offspring.append(baby_cell_one)
-                offspring.append(baby_cell_two)
+                offspring.append(baby_chromosome_one)
+                offspring.append(baby_chromosome_two)
 
-        self.previous_population = self.copy_population(self.population)
-        self.population = self.fittest_cells + offspring  
+        self.previous_population = copy_population(self.population)
+        self.population = self.fittest_chromosomes + offspring  
 
-    def compete(self, cell_one, cell_two):
+    def compete(self, chromosome_one, chromosome_two):
 
-        game = Game(cell_one['chromosomes'], cell_two['chromosomes'])
+        game = Game(chromosome_one['genes'], chromosome_two['genes'])
         result = game.play()
 
-        if result[1] == 1: # cell 1 won
-            cell_one['score'] += 1
-            cell_two['score'] -= 1
-        elif result[1] == 2: # cell 2 won
-            cell_one['score'] -= 1
-            cell_two['score'] += 1  
+        if result[1] == 1: # chromosome 1 won
+            chromosome_one['score'] += 1
+            chromosome_two['score'] -= 1
+        elif result[1] == 2: # chromosome 2 won
+            chromosome_one['score'] -= 1
+            chromosome_two['score'] += 1  
 
-    def read_cells(self, ttc_cell_chromosomes_file): # the ttc_cell_chromosomes_file is a readlines() file
+    def read_chromosomes(self, ttc_chromosome_genes_file): # the ttc_chromosome_genes_file is a readlines() file
         
-        for line in ttc_cell_chromosomes_file:
+        for line in ttc_chromosome_genes_file:
 
-            chromosomes = ast.literal_eval(line) # parse string dictionary
-            new_cell = {'chromosomes': chromosomes, 'score': 0}
-            self.population.append(new_cell)
+            genes = ast.literal_eval(line) # parse string dictionary
+            new_chromosome = {'genes': genes, 'score': 0}
+            self.population.append(new_chromosome)
         
-        self.original_population = self.copy_population(self.population) # create a copy of population for original population
+        self.original_population = copy_population(self.population) # create a copy of population for original population
 
-    @staticmethod
-    def copy_population(population):
-        return list(population)
+def check_mutation(board_state, gene, mutation_rate = 0.01):
+    return random.choice([get_random_move(board_state), gene], p = [mutation_rate, 1 - mutation_rate])
 
-    @staticmethod
-    def get_random_move(board_state):
-        return random.choice([j for j in range(9) if board_state[j] == 0])
+def copy_population(population):
+    return list(population)
 
-    @staticmethod
-    def heat_selection(population, random_selection_size = 3):
-        random.shuffle(population)
-        return population[:random_selection_size]
-        
+def get_random_move(board_state):
+    return random.choice([j for j in range(9) if int(board_state[j]) == 0])
+
+def heat_selection(population, random_selection_size = 3):
+    random.shuffle(population)
+    return population[:random_selection_size]
+    
         

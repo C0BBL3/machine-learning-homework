@@ -1,4 +1,4 @@
-import random
+from numpy import random
 import math
 
 table = {
@@ -47,7 +47,7 @@ while (game < 10000): # game
 
         if (state["initial"][0] < 3):
 
-            action = random.choices(["continue", "mulligan"], [0.5, 0.5])[0]
+            action = random.choice(["continue", "mulligan"], [0.5, 0.5])
         
             if (action == "mulligan"):
 
@@ -118,7 +118,7 @@ while (game < 10000): # game
 
         if (not mulligan):
 
-            action = ["mulligan", "continue", "mulligan"][mulligan_index] #random.choices(["continue", "mulligan"], [0.5, 0.5])
+            action = ["mulligan", "continue", "mulligan"][mulligan_index] #random.choice(["continue", "mulligan"], [0.5, 0.5])
 
             mulligan_index += 1
         

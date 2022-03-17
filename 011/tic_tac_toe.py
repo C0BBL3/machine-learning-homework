@@ -1,5 +1,3 @@
-from numpy import random
-
 class Game:
     def __init__(self, strategy_one, strategy_two):
         self.board = [0 for _ in range(9)]
@@ -42,7 +40,7 @@ class Game:
             print("Board state", self.state())
             exit()
 
-    def state(self, current_player):
+    def state(self, current_player = 1):
         switcher = { 0: 0, 1: 1, 2: 2 }
         if current_player == 2: 
             switcher = { 0: 0, 1: 2, 2: 1 }

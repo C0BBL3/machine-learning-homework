@@ -9,7 +9,7 @@ class GeneticAlgorithm:
     def __init__( self ):
         self.population = list()
 
-    def determine_fitness( self, fitness_score = 'round robin', current_bracket = None, round_number = 1 ):
+    def determine_fitness( self, fitness_score = 'round robin', get_fittest_chromosomes_function = None, current_bracket = None, round_number = 1 ):
 
         self.fittest_chromosomes = list()
 
@@ -47,8 +47,13 @@ class GeneticAlgorithm:
                 round_number = round_number + 1 
             )
 
-        self.population.sort( key = lambda chromosome: chromosome[ 'score' ], reverse = True )
-        self.fittest_chromosomes = self.population[ : self.breedable_population_size ]
+        if get_fittest_chromosomes_function is None:
+            get_fittest_chromosomes_function = get_fittest_chromosomes
+
+        self.fittest_chromosomes = get_fittest_chromosomes_function( 
+            self.population,
+            self.breedable_population_size
+        )
 
     def determine_matchups(self, fitness_score, current_bracket = None):
 
@@ -141,6 +146,10 @@ class GeneticAlgorithm:
 
         self.number_of_genes = len( genes )
         self.original_population = copy_population( self.population ) # create a copy of population for original population
+
+def get_fittest_chromosomes( population, breedable_population_size ):
+    population.sort( key = lambda chromosome: chromosome[ 'score' ], reverse = True )
+    return population[ : breedable_population_size ]
 
 def check_mutation( board_state, gene, gene_index, mutated_genes ):
     return get_random_move( board_state ) if gene_index in mutated_genes else gene

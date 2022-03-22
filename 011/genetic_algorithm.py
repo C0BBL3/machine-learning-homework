@@ -1,4 +1,4 @@
-from numpy import random
+import random
 import numpy as np
 import time
 import ast
@@ -9,36 +9,43 @@ class GeneticAlgorithm:
     def __init__( self ):
         self.population = list()
 
-    def determine_fitness( self, fitness_score = 'round robin' ):
+    def determine_fitness( self, fitness_score = 'round robin', current_bracket = None, round_number = 1 ):
 
         self.fittest_chromosomes = list()
 
-        if fitness_score == 'round robin': # n ^ 2 matchups more accurate
+        if current_bracket is None: 
+            current_bracket = self.population
 
-            matchups = self.determine_matchups( fitness_score )
+        matchups = self.determine_matchups( fitness_score, current_bracket = current_bracket )
 
-            for ( i, j ) in matchups: 
-                
-                self.compete( self.population[ i ], self.population[ j ] )
+        for ( i, j ) in matchups: 
             
-        elif fitness_score == 'bracket': # n/2 + n/4 + n/8 = 7n/8 total matchups less accurate but faster
+            result = self.compete( 
+                current_bracket[ i ],
+                current_bracket[ j ] 
+            )
 
-            round_population = self.population # initial population
-            matchups = self.determine_matchups( fitness_score, round_population )
-            round_ = 1
+            if fitness_score == 'bracket':
 
-            while matchups is not []:
+                if result[0] is False or result[1] == 'Draw':
+                    self.compete( 
+                        current_bracket[ j ], 
+                        current_bracket[ i ] 
+                    ) # reverse matchup and if its still a draw these two dont move on
 
-                for ( i, j ) in matchups: 
+        if fitness_score == 'bracket' and len( matchups ) > 1:
 
-                    result = self.compete( self.population[ i ], self.population[ j ] )
-                    
-                    if result[1] is False:
-                        _ = self.compete( self.population[ j ], self.population[ i ] ) # reverse matchup and if its still a draw these two dont move on
+            next_round_population = list()
 
-                round_population = [ chromosome for chromosome in round_population if chromosome[ 'score' ] == round_ ]
-                matchups = self.determine_matchups( fitness_score, round_population )
-                round_ += 1
+            for chromosome in current_bracket:
+                if chromosome[ 'score' ] == round_number:
+                    next_round_population.append(chromosome)
+
+            self.determine_fitness( 
+                fitness_score = fitness_score, 
+                current_bracket = next_round_population, 
+                round_number = round_number + 1 
+            )
 
         self.population.sort( key = lambda chromosome: chromosome[ 'score' ], reverse = True )
         self.fittest_chromosomes = self.population[ : self.breedable_population_size ]
@@ -49,9 +56,9 @@ class GeneticAlgorithm:
 
         if fitness_score == 'round robin':
 
-            for i in range( self.population_size ):
+            for i in range( len( current_bracket ) ):
 
-                for j in range( self.population_size ):
+                for j in range( len( current_bracket ) ):
 
                     if i != j and [ i, j ] not in matchups:
 
@@ -60,8 +67,6 @@ class GeneticAlgorithm:
             return matchups
 
         elif fitness_score == 'bracket':
-
-            if current_bracket is None: current_bracket = copy_population( self.population )
 
             for i in range( 0,  len( current_bracket ) - 1, 2 ):
 
@@ -72,25 +77,30 @@ class GeneticAlgorithm:
 
     def breed( self, mutation_rate = 0.001 ):
 
-        number_of_mutated_genes = int( 1 / mutation_rate ) if mutation_rate != 0 else 0
         offspring = list()
 
         for i, chromosome_one in enumerate( self.fittest_chromosomes ):
-
-            chromosome_one_mutated_genes = random.randint( self.number_of_genes, size = number_of_mutated_genes ).tolist()
-
             for chromosome_two in self.fittest_chromosomes[ i + 1 : ]:
 
-                chromosome_two_mutated_genes = random.randint( self.number_of_genes, size = number_of_mutated_genes ).tolist()
-                temp = [ chromosome_one_mutated_genes, chromosome_two_mutated_genes ] # for iterating over
+                mutated_genes_indices = get_mutated_chromosomes( 
+                    self.number_of_genes, 
+                    mutation_rate 
+                ) 
 
                 baby_chromosome_one = {'genes': {}, 'score': 0}
                 baby_chromosome_two = {'genes': {}, 'score': 0}
                 
                 for gene_index, board_state in enumerate( chromosome_one[ 'genes' ].keys() ):
 
-                    genes = [ chromosome_one[ 'genes' ][ board_state ], chromosome_two[ 'genes' ][ board_state ] ]
-                    mutated_genes = [ check_mutation( board_state, gene, gene_index, mutated_genes ) for gene, mutated_genes in zip( genes, temp ) ]
+                    genes = [ 
+                        chromosome_one[ 'genes' ][ board_state ], 
+                        chromosome_two[ 'genes' ][ board_state ] 
+                    ]
+                    mutated_genes = [ 
+                        check_mutation( board_state, genes[0], gene_index, mutated_genes_indices[0] ),
+                        check_mutation( board_state, genes[1], gene_index, mutated_genes_indices[1] ) 
+                    ]
+                    
                     random.shuffle( mutated_genes ) # shuffle genes
                     baby_chromosome_one[ 'genes' ][ board_state ] = mutated_genes[ 0 ]
                     baby_chromosome_two[ 'genes' ][ board_state ] = mutated_genes[ 1 ]
@@ -117,11 +127,12 @@ class GeneticAlgorithm:
 
     def read_chromosomes( self, ttc_chromosome_genes_file, population_size = 64 ): # the ttc_chromosome_genes_file is a readlines() file
         
+        if population_size % 2 != 0: # adjust so population size is even
+            population_size = int( 2 ** ( math.floor( math.log( population_size, 2 ) ) ) ) 
+        self.breedable_population_size = math.floor( math.sqrt( population_size ) )
+        self.population_size = math.floor( self.breedable_population_size ** 2 )
         random.shuffle( ttc_chromosome_genes_file )
-
-        self.population_size = int( 2 ** ( math.floor( math.log( population_size, 2 ) ) ) ) # what the fuck
-        self.breedable_population_size = int( math.sqrt( self.population_size ) )
-
+        
         for line in ttc_chromosome_genes_file[ : self.population_size ]:
 
             genes = ast.literal_eval( line ) # parse string dictionary
@@ -138,9 +149,13 @@ def get_valid_move( board_state ):
     return [ i for i in range( 9 ) if board_state[ i ] in [ '0', 0 ] ]
 
 def get_random_move( board_state ):
-    return random.choice( get_valid_move( board_state ) )
+    return random.choices( get_valid_move( board_state ) )[0]
 
 def copy_population( population ):
     return list( population )
     
-        
+def get_mutated_chromosomes( number_of_genes, mutation_rate ):
+    number_of_mutated_genes = math.ceil( number_of_genes * mutation_rate )
+    chromosome_one_mutated_genes = random.sample( range( number_of_genes ), number_of_mutated_genes )
+    chromosome_two_mutated_genes = random.sample( range( number_of_genes ), number_of_mutated_genes )
+    return [ chromosome_one_mutated_genes, chromosome_two_mutated_genes ]

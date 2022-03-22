@@ -1,4 +1,3 @@
-from numpy import random
 import matplotlib.pyplot as plt
 from tic_tac_toe import Game, plots_3_and_4
 from genetic_algorithm import GeneticAlgorithm

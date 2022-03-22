@@ -1,4 +1,3 @@
-from numpy import random
 import matplotlib.pyplot as plt
 from tic_tac_toe import Game, plots_3_and_4
 from genetic_algorithm import GeneticAlgorithm
@@ -34,7 +33,7 @@ ttc_chromosome_genes = [ line.strip( '\n' ) for line in open( '011/ttc_chromosom
 # ^^^^^ tic tac toe chromosome genes
 
 GA = GeneticAlgorithm()
-GA.read_chromosomes( ttc_chromosome_genes, population_size = 128 )
+GA.read_chromosomes( ttc_chromosome_genes, population_size = 64 )
 
 for generation in range( num_generations ):
     
@@ -42,7 +41,7 @@ for generation in range( num_generations ):
         print( '\nGeneration:', generation + 1 )
 
     GA.determine_fitness( fitness_score = 'bracket' )
-    GA.breed( mutation_rate = 0.01 )
+    GA.breed( mutation_rate = 0.001 )
 
     original_average_score.append( calculate_score( GA.fittest_chromosomes, GA.original_population ) )
     previous_average_score.append( calculate_score( GA.fittest_chromosomes, GA.previous_population ) )

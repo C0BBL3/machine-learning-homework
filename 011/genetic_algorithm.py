@@ -25,16 +25,20 @@ class GeneticAlgorithm:
 
             round_population = self.population # initial population
             matchups = self.determine_matchups( fitness_score, round_population )
+            round_ = 1
 
-            while len(matchups) > 1:
+            while matchups is not []:
 
-                for matchup in matchups: 
+                for ( i, j ) in matchups: 
 
-                    self.compete( self.population[ i ], self.population[ j ] )
+                    result = self.compete( self.population[ i ], self.population[ j ] )
+                    
+                    if result[1] is False:
+                        _ = self.compete( self.population[ j ], self.population[ i ] ) # reverse matchup and if its still a draw these two dont move on
 
-                round_population = [ chromosome for chromosome in round_population if chromosome[ 'score' ] == round_ + 1 ]
-
+                round_population = [ chromosome for chromosome in round_population if chromosome[ 'score' ] == round_ ]
                 matchups = self.determine_matchups( fitness_score, round_population )
+                round_ += 1
 
         self.population.sort( key = lambda chromosome: chromosome[ 'score' ], reverse = True )
         self.fittest_chromosomes = self.population[ : self.breedable_population_size ]
@@ -59,7 +63,7 @@ class GeneticAlgorithm:
 
             if current_bracket is None: current_bracket = copy_population( self.population )
 
-            for i in range( len( current_bracket ),  len( current_bracket ) - 1, 2 ):
+            for i in range( 0,  len( current_bracket ) - 1, 2 ):
 
                 matchups.append( [ i, i + 1 ] )
 
@@ -68,7 +72,7 @@ class GeneticAlgorithm:
 
     def breed( self, mutation_rate = 0.001 ):
 
-        number_of_mutated_genes = int( 1 / mutation_rate )
+        number_of_mutated_genes = int( 1 / mutation_rate ) if mutation_rate != 0 else 0
         offspring = list()
 
         for i, chromosome_one in enumerate( self.fittest_chromosomes ):
@@ -83,13 +87,13 @@ class GeneticAlgorithm:
                 baby_chromosome_one = {'genes': {}, 'score': 0}
                 baby_chromosome_two = {'genes': {}, 'score': 0}
                 
-                for gene_index, key in enumerate( chromosome_one[ 'genes' ].keys() ):
+                for gene_index, board_state in enumerate( chromosome_one[ 'genes' ].keys() ):
 
-                    genes = [ chromosome_one[ 'genes' ][ key ], chromosome_two[ 'genes' ][ key ] ]
-                    mutated_genes = [ check_mutation( key, gene, gene_index, mutated_genes ) for gene, mutated_genes in enumerate( zip( genes, temp ) ) ]
+                    genes = [ chromosome_one[ 'genes' ][ board_state ], chromosome_two[ 'genes' ][ board_state ] ]
+                    mutated_genes = [ check_mutation( board_state, gene, gene_index, mutated_genes ) for gene, mutated_genes in zip( genes, temp ) ]
                     random.shuffle( mutated_genes ) # shuffle genes
-                    baby_chromosome_one[ 'genes' ][ key ] = mutated_genes[ 0 ]
-                    baby_chromosome_two[ 'genes' ][ key ] = mutated_genes[ 1 ]
+                    baby_chromosome_one[ 'genes' ][ board_state ] = mutated_genes[ 0 ]
+                    baby_chromosome_two[ 'genes' ][ board_state ] = mutated_genes[ 1 ]
 
                 offspring.append( baby_chromosome_one )
                 offspring.append( baby_chromosome_two )
@@ -109,12 +113,14 @@ class GeneticAlgorithm:
             chromosome_one[ 'score' ] -= 1
             chromosome_two[ 'score' ] += 1  
 
+        return result
+
     def read_chromosomes( self, ttc_chromosome_genes_file, population_size = 64 ): # the ttc_chromosome_genes_file is a readlines() file
         
         random.shuffle( ttc_chromosome_genes_file )
 
         self.population_size = int( 2 ** ( math.floor( math.log( population_size, 2 ) ) ) ) # what the fuck
-        self.breedable_population_size = int(math.sqrt( self.population_size ) )
+        self.breedable_population_size = int( math.sqrt( self.population_size ) )
 
         for line in ttc_chromosome_genes_file[ : self.population_size ]:
 
@@ -128,14 +134,13 @@ class GeneticAlgorithm:
 def check_mutation( board_state, gene, gene_index, mutated_genes ):
     return get_random_move( board_state ) if gene_index in mutated_genes else gene
 
-def copy_population( population ):
-    return list( population )
+def get_valid_move( board_state ):
+    return [ i for i in range( 9 ) if board_state[ i ] in [ '0', 0 ] ]
 
 def get_random_move( board_state ):
-    return random.choice( [ j for j in range( 9 ) if int( board_state[ j ] ) == 0 ] )
+    return random.choice( get_valid_move( board_state ) )
 
-def heat_selection( population, random_selection_size = 3 ):
-    random.shuffle( population )
-    return population[ :random_selection_size ]
+def copy_population( population ):
+    return list( population )
     
         

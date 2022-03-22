@@ -36,7 +36,7 @@ class Game:
             else: 
                 raise ValueError
         except ValueError as va:
-            print("Player", player, "tried to cheat by placing a piece on space", index)
+            print("Player", player, "tried to cheat by placing a piece on space", player)
             print("Board state", self.state())
             exit()
 

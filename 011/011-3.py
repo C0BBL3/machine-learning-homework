@@ -40,7 +40,7 @@ for generation in range( num_generations ):
     if generation < 5 or generation % 10 == 9: 
         print( '\nGeneration:', generation + 1 )
 
-    GA.determine_fitness( fitness_score = 'bracket' )
+    GA.determine_fitness( fitness_score = 'round robin' )
     GA.breed( mutation_rate = 0 )
 
     original_average_score.append( calculate_score( GA.fittest_chromosomes, GA.original_population ) )

@@ -9,7 +9,7 @@ class GeneticAlgorithm:
     def __init__( self ):
         self.population = list()
 
-    def determine_fitness( self, fitness_score = 'round robin', get_fittest_chromosomes_function = None, current_bracket = None, round_number = 1 ):
+    def determine_fitness( self, fitness_score = 'round robin', cutoff_type = 'hard cutoff', current_bracket = None, round_number = 1 ):
 
         self.fittest_chromosomes = list()
 
@@ -47,14 +47,22 @@ class GeneticAlgorithm:
                 round_number = round_number + 1 
             )
 
-        if get_fittest_chromosomes_function is None:
-            get_fittest_chromosomes_function = get_fittest_chromosomes
-
-        self.fittest_chromosomes = get_fittest_chromosomes_function( 
+        if cutoff_type == 'hard cutoff':
+            self.fittest_chromosomes = hard_cutoff( 
             self.population,
             self.breedable_population_size
-        )
-
+            ) 
+        elif cutoff_type == 'stochastic':
+            self.fittest_chromosomes = stochastic( 
+            self.population,
+            self.breedable_population_size
+            )
+        elif cutoff_type == 'tournament':
+            self.fittest_chromosomes = tournament( 
+            self.population,
+            self.breedable_population_size
+            )
+        
     def determine_matchups(self, fitness_score, current_bracket = None):
 
         matchups = list()
@@ -147,9 +155,55 @@ class GeneticAlgorithm:
         self.number_of_genes = len( genes )
         self.original_population = copy_population( self.population ) # create a copy of population for original population
 
-def get_fittest_chromosomes( population, breedable_population_size ):
+def hard_cutoff( population, breedable_population_size ):
     population.sort( key = lambda chromosome: chromosome[ 'score' ], reverse = True )
     return population[ : breedable_population_size ]
+
+def stochastic( population, breedable_population_size ): 
+    fittest_chromosomes = []
+    
+    while len( fittest_chromosomes ) < breedable_population_size:
+        
+        heat = random.sample( population, math.floor( breedable_population_size / 2 ) )
+        fittest_chromosome = max( heat, key = lambda chromosome: chromosome[ 'score' ] )
+        fittest_chromosomes.append( fittest_chromosome )
+        fittest_chromosome_index = population.index( fittest_chromosome )
+        population.pop( fittest_chromosome_index )
+
+    return fittest_chromosomes
+
+def tournament( population, breedable_population_size ): 
+    fittest_chromosomes = []
+    
+    for chromosome in population:
+        chromosome[ 'score' ] = 0
+
+    while len( fittest_chromosomes ) < breedable_population_size:
+        
+        heat = random.sample( population, math.floor( breedable_population_size / 2 ) )
+
+        for i, chromosome_one in enumerate( heat ):
+            for j, chromosome_two in enumerate( heat ):
+                if i != j:
+                    game = Game( chromosome_one[ 'genes' ], chromosome_two[ 'genes' ] )
+                    result = game.play()
+
+                    if result[ 1 ] == 1: # chromosome 1 won
+                        chromosome_one[ 'score' ] += 1
+                        chromosome_two[ 'score' ] -= 1
+                    elif result[ 1 ] == 2: # chromosome 2 won
+                        chromosome_one[ 'score' ] -= 1
+                        chromosome_two[ 'score' ] += 1  
+                    
+        fittest_chromosome = max( heat, key = lambda chromosome: chromosome[ 'score' ] )
+        fittest_chromosomes.append( fittest_chromosome )
+        fittest_chromosome_index = population.index( fittest_chromosome )
+        population.pop( fittest_chromosome_index )
+
+        for chromosome in heat:
+            chromosome[ 'score' ] = 0
+
+    return fittest_chromosomes
 
 def check_mutation( board_state, gene, gene_index, mutated_genes ):
     return get_random_move( board_state ) if gene_index in mutated_genes else gene

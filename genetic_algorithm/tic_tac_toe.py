@@ -1,4 +1,5 @@
 class Game:
+    
     def __init__( self, strategy_one, strategy_two ):
         self.board = [ 0 for _ in range( 9 ) ]
 
@@ -29,11 +30,17 @@ class Game:
         
     def place( self, player, index ): # 1 or 2 for player, and index is 0-9
         try:
+
             if self.board[ index ] == 0: 
+
                 self.board[ index ] = player + 1
+
             else: 
+
                 raise ValueError
+
         except ValueError as va:
+
             print( "Player", player, "tried to cheat by placing a piece on space", player )
             print( "Board state", self.state() )
             exit()
@@ -91,7 +98,15 @@ class Game:
 
         return ( False, None )
 
-def plots_3_and_4( board_state, player ):
+    def evaluate( self, board_state, player ):
+
+        win = len( plots_3_and_4( board_state, player )[ 1 ] )
+        lose = len( plots_3_and_4( board_state, self.get_next_player( player ) )[ 1 ] )
+
+        # total possible wins - total possible losses
+        return win - lose
+
+def plots_3_and_4( board_state, player ): # cringe
 
     moves = list()
 

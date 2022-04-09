@@ -88,12 +88,19 @@ class GeneticAlgorithm:
             return matchups
 
 
-    def breed( self, mutation_rate = 0.001 ):
+    def breed( self, mutation_rate = 0.001, crossover_type = str(), crossover_genes_indices = list() ):
 
         offspring = list()
 
         for i, chromosome_one in enumerate( self.fittest_chromosomes ):
+            
             for chromosome_two in self.fittest_chromosomes[ i + 1 : ]:
+
+                crossover_genes_indices = get_crossover_indices( 
+                    self.number_of_genes,
+                    crossover_type,
+                    crossover_genes_indices
+                )
 
                 mutated_genes_indices = get_mutated_chromosomes( 
                     self.number_of_genes, 
@@ -114,7 +121,10 @@ class GeneticAlgorithm:
                         check_mutation( board_state, genes[1], gene_index, mutated_genes_indices[1] ) 
                     ]
                     
-                    random.shuffle( mutated_genes ) # shuffle genes
+                    if gene_index in crossover_genes_indices:
+
+                        mutated_genes = mutated_genes[ : : -1 ]
+
                     baby_chromosome_one[ 'genes' ][ board_state ] = mutated_genes[ 0 ]
                     baby_chromosome_two[ 'genes' ][ board_state ] = mutated_genes[ 1 ]
 
@@ -141,7 +151,8 @@ class GeneticAlgorithm:
     def read_chromosomes( self, ttc_chromosome_genes_file, population_size = 64 ): # the ttc_chromosome_genes_file is a readlines() file
         
         if population_size % 2 != 0: # adjust so population size is even
-            population_size = int( 2 ** ( math.floor( math.log( population_size, 2 ) ) ) ) 
+            population_size = int( 2 ** ( math.floor( math.log( population_size, 2 ) ) ) )
+
         self.breedable_population_size = math.floor( math.sqrt( population_size ) )
         self.population_size = math.floor( self.breedable_population_size ** 2 )
         random.shuffle( ttc_chromosome_genes_file )
@@ -155,11 +166,35 @@ class GeneticAlgorithm:
         self.number_of_genes = len( genes )
         self.original_population = copy_population( self.population ) # create a copy of population for original population
 
+def get_crossover_indices( number_of_genes, crossover_type = str(), crossover_genes_indices = list() ):
+
+    if crossover_type == str() and crossover_genes_indices == list():
+
+        crossover_genes_indices = random.sample( range( number_of_genes ), number_of_genes )
+    
+    else:
+    
+        temp_1 = math.ceil( len( number_of_genes ) / 2 )
+        temp_2 = list( range( number_of_genes [ temp_1 : ] ) )
+        
+        if crossover_type == 'alternating':
+
+            crossover_genes_indices = map( lambda x: 2 * x, temp_2 )
+
+        elif crossover_type == 'fiftyfifty':
+
+            crossover_genes_indices = temp_2
+
+    return crossover_genes_indices
+
 def hard_cutoff( population, breedable_population_size ):
+
     population.sort( key = lambda chromosome: chromosome[ 'score' ], reverse = True )
+
     return population[ : breedable_population_size ]
 
 def stochastic( population, breedable_population_size ): 
+
     fittest_chromosomes = []
     
     while len( fittest_chromosomes ) < breedable_population_size:
@@ -173,6 +208,7 @@ def stochastic( population, breedable_population_size ):
     return fittest_chromosomes
 
 def tournament( population, breedable_population_size ): 
+
     fittest_chromosomes = []
     
     for chromosome in population:
@@ -218,6 +254,7 @@ def copy_population( population ):
     return list( population )
     
 def get_mutated_chromosomes( number_of_genes, mutation_rate ):
+
     number_of_mutated_genes = math.ceil( number_of_genes * mutation_rate )
     chromosome_one_mutated_genes = random.sample( range( number_of_genes ), number_of_mutated_genes )
     chromosome_two_mutated_genes = random.sample( range( number_of_genes ), number_of_mutated_genes )

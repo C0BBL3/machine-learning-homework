@@ -4,7 +4,7 @@ import time
 import matplotlib.pyplot as plt
 import filecmp
 
-all_possible_board_states = open('011/board_states.txt', 'r').readlines()
+all_possible_board_states = open('genetic_algorithm/board_states.txt', 'r').readlines()
 
 def get_random_move(board_state):
     return random.choice([j for j in range(9) if board_state[j] == 0])

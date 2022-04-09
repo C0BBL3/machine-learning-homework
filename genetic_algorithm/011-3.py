@@ -29,7 +29,7 @@ loss_prevention_score = list() # | || || |_
 
 num_generations = 100
 
-ttc_chromosome_genes = [ line.strip( '\n' ) for line in open( '011/ttc_chromosome_genes.txt', 'r' ).readlines() ]
+ttc_chromosome_genes = [ line.strip( '\n' ) for line in open( 'genetic_algorithm/ttc_chromosome_genes.txt', 'r' ).readlines() ]
 # ^^^^^ tic tac toe chromosome genes
 
 GA = GeneticAlgorithm()

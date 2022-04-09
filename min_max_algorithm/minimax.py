@@ -5,7 +5,8 @@ class Minimax:
     def generate_tree( self, game, current_player, root_node = None, current_depth = 0, max_depth = 3 ): # current_player is wack
 
         if current_depth == 0:
-
+            
+            self.initial_player = current_player
             self.nodes = list() # initialize self.nodes list
 
             for depth in range( max_depth ):
@@ -23,7 +24,7 @@ class Minimax:
             for root in root_nodes: # generate whole depth layer
 
                 branches = game.get_possible_branches( root.board_state, current_player ) # list of board states
-                self.grow_branches( game, root, current_nodes, branches )
+                self.grow_branches( game, root, current_player, current_nodes, branches )
             
             for root in root_nodes: # generate tree from new depth layer
                 
@@ -56,13 +57,18 @@ class Minimax:
 
     def evaluate_game_tree( self ):
 
-        for node in self.nodes[ : -1 ]:
+        current_player = int( self.initial_player )
 
-            node.value = game.evaluate( node.board_state )
+        for _ in self.nodes:
+
+            current_player = game.get_next_player( current_player )
+
+        for node in self.nodes[ : -1 ]: # leaves of game tree get evaluated
+
+            node.value = game.evaluate( node.board_state, current_player )
 
         for nodes in self.nodes[ : 0 : -1 ]: # ahhhhhhhh
             # no root node in iteration backwards 
-            # (doesnt hit the star on the christmas tree and starting from the presents6)
 
             for node in nodes:
 
@@ -75,9 +81,10 @@ class Minimax:
         best_node = max( self.nodes[ 0 ], key = lambda node: node.value )
         
         for move, i in enumerate( root_board_state ):
+            
             j = best_node.board_state[ move ]
-            if i != j:
-                return move
+
+            if i != j: return move
 
 class Node:
     def __init__( self, board_state = list(), value = int(), index = int() ):
@@ -87,7 +94,7 @@ class Node:
         self.parents = []
         self.children = []
 
-    def __eq__(self, node): # node == node
+    def __eq__(self, node): # if node == node
         return self.board_state == node.board_state
 
     def __iadd__(self, node): # parent += child

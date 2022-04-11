@@ -10,6 +10,7 @@ class Game:
             strategy_two = strategy_two[ 0 ]
 
         self.strategies = [ strategy_one, strategy_two ]
+        self.state()
 
     def play( self ):
 
@@ -59,7 +60,7 @@ class Game:
         possible_moves = [ i for i in range( 9 ) if int( board_state[ i ] ) == 0 ]
         branches = list()
 
-        for possible_move in possible_moves:
+        for i in possible_moves:
 
             branch = board_state[ : i ] + [ current_player ] + board_state[ i + 1 : ]
             branches.append( branch )

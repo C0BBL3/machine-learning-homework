@@ -1,7 +1,6 @@
 import math
 from nn_directed_weighted_graph import NNDirectedWeightedGraph
 
-
 class NeuralNetwork( NNDirectedWeightedGraph ):
     def __init__( self, weights, functions = None, derivatives = None, data_points = dict(), alpha = 0.001, debug = False ):
         

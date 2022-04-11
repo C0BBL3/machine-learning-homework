@@ -1,4 +1,6 @@
-from game import Game
+import sys
+sys.path.append('genetic_algorithm/')
+from tic_tac_toe import Game
 
 class Minimax:
 
@@ -9,26 +11,32 @@ class Minimax:
             self.initial_player = current_player
             self.nodes = list() # initialize self.nodes list
 
-            for depth in range( max_depth ):
+            for depth in range( max_depth + 1 ):
 
                 self.nodes.append( list() )
 
+            if root_node is None:
+
+                root_node = Node( game.board, index = 0 )
+
             self.nodes[0].append( root_node )
+            next_player = game.get_next_player( current_player )
+            self.generate_tree( game, next_player, current_depth = current_depth + 1 )
 
-        elif 0 < current_depth < max_depth:
+        elif 0 < current_depth <= max_depth:
 
-            root_nodes = self.nodes[ current_depth ]
-            current_nodes = self.nodes[ current_depth + 1 ]
+            root_nodes = self.nodes[ current_depth - 1]
+            current_nodes = self.nodes[ current_depth ]
             next_player = game.get_next_player( current_player )
 
             for root in root_nodes: # generate whole depth layer
 
                 branches = game.get_possible_branches( root.board_state, current_player ) # list of board states
-                self.grow_branches( game, root, current_player, current_nodes, branches )
+                self.grow_branches( game, root, current_nodes, branches )
             
-            for root in root_nodes: # generate tree from new depth layer
+            for root in current_nodes: # generate tree from new depth layer
                 
-                self.generate_tree( game, next_player, current_depth = current_depth + 1 )
+                self.generate_tree( game, next_player, current_depth = current_depth + 1, root_node = root )
             
     def grow_branches( self, game, root, current_nodes, branches ):
 
@@ -37,7 +45,7 @@ class Minimax:
             new_index = sum( [ len( nodes ) for nodes in self.nodes ] )
             new_node = Node( board_state = branch, index = new_index )
             current_nodes.append( new_node )
-            root += new_node # add new node to current root
+            root.append_child( new_node ) # add new node to current root
 
         current_nodes.sort( key = lambda node: node.index ) # for sleeping better at night
 
@@ -51,7 +59,7 @@ class Minimax:
 
                     if root.index in similar_node.parents:
                         
-                        root -= similar_node # remove "siblings" of current root
+                        root.kill_child( similar_node ) # remove "siblings" of current root
 
                         similar_node = None # kill
 
@@ -97,13 +105,13 @@ class Node:
     def __eq__(self, node): # if node == node
         return self.board_state == node.board_state
 
-    def __iadd__(self, node): # parent += child
+    def append_child(self, node): # parent += child
         if node.index not in self.children:
             self.children.append( node.index )
         if self.index not in node.parents:
             node.parents.append( self.index )
 
-    def __isub__(self, node): # parent -= child
+    def kill_child(self, node): # parent -= child
         if node.index in self.children:
             self.children.remove( node.index )
         if self.index in node.parents:

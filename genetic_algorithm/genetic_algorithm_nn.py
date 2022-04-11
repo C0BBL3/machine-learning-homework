@@ -1,9 +1,12 @@
-import random
+from numpy import random
 import numpy as np
 import time
 import ast
 import math
 from tic_tac_toe import Game
+import sys
+sys.path.append('neural_network')
+from neural_network import NeuralNetwork
 
 class GeneticAlgorithm:
     def __init__( self ):
@@ -107,26 +110,27 @@ class GeneticAlgorithm:
                     mutation_rate 
                 ) 
 
-                baby_chromosome_one = {'genes': {}, 'score': 0}
-                baby_chromosome_two = {'genes': {}, 'score': 0}
+                baby_chromosome_one = {'genes': NeuralNetwork( dict() ), 'score': 0}
+                baby_chromosome_two = {'genes': NeuralNetwork( dict() ), 'score': 0}
                 
-                for gene_index, board_state in enumerate( chromosome_one[ 'genes' ].keys() ):
+                for edge, weight in chromosome_one[ 'genes' ].weights.keys():
 
                     genes = [ 
-                        chromosome_one[ 'genes' ][ board_state ], 
-                        chromosome_two[ 'genes' ][ board_state ] 
-                    ]
-                    mutated_genes = [ 
-                        check_mutation( board_state, genes[0], gene_index, mutated_genes_indices[0] ),
-                        check_mutation( board_state, genes[1], gene_index, mutated_genes_indices[1] ) 
+                        chromosome_one[ 'genes' ].weights[ edge ], 
+                        chromosome_two[ 'genes' ].weights[ edge ] 
                     ]
                     
-                    if gene_index in crossover_genes_indices:
+                    mutated_genes = [ 
+                        check_mutation( genes[0], edge, mutated_genes_indices[0] ),
+                        check_mutation( genes[1], edge, mutated_genes_indices[1] ) 
+                    ]
+                    
+                    if edge in crossover_genes_indices:
 
                         mutated_genes = mutated_genes[ : : -1 ]
 
-                    baby_chromosome_one[ 'genes' ][ board_state ] = mutated_genes[ 0 ]
-                    baby_chromosome_two[ 'genes' ][ board_state ] = mutated_genes[ 1 ]
+                    baby_chromosome_one[ 'genes' ].weights[ edge ] = mutated_genes[ 0 ]
+                    baby_chromosome_two[ 'genes' ].weights[ edge ] = mutated_genes[ 1 ]
 
                 offspring.append( baby_chromosome_one )
                 offspring.append( baby_chromosome_two )
@@ -168,22 +172,23 @@ class GeneticAlgorithm:
 
 def get_crossover_indices( number_of_genes, crossover_type = str(), crossover_genes_indices = list() ):
 
-    if crossover_type == str() and crossover_genes_indices == list():
-
-        crossover_genes_indices = random.sample( range( number_of_genes ), number_of_genes )
+    if crossover_type == str() and crossover_genes_indices == list(): 
+        
+        # random indices
+        crossover_genes_indices = random.choice( range( number_of_genes ), number_of_genes, replace = False )
     
     else:
     
-        temp_1 = math.ceil( len( number_of_genes ) / 2 )
-        temp_2 = list( range( number_of_genes [ temp_1 : ] ) )
+        half_of_number_of_genes = math.ceil( len( number_of_genes ) / 2 )
+        first_half_of_genes_indices = list( range( number_of_genes [ half_of_number_of_genes : ] ) )
         
         if crossover_type == 'alternating':
 
-            crossover_genes_indices = map( lambda x: 2 * x, temp_2 )
+            crossover_genes_indices = map( lambda x: 2 * x, first_half_of_genes_indices )
 
         elif crossover_type == 'fiftyfifty':
 
-            crossover_genes_indices = temp_2
+            crossover_genes_indices = first_half_of_genes_indices
 
     return crossover_genes_indices
 
@@ -199,7 +204,7 @@ def stochastic( population, breedable_population_size ):
     
     while len( fittest_chromosomes ) < breedable_population_size:
         
-        heat = random.sample( population, math.floor( breedable_population_size / 2 ) )
+        heat = random.choice( population, math.floor( breedable_population_size / 2 ), replace = False )
         fittest_chromosome = max( heat, key = lambda chromosome: chromosome[ 'score' ] )
         fittest_chromosomes.append( fittest_chromosome )
         fittest_chromosome_index = population.index( fittest_chromosome )
@@ -216,17 +221,21 @@ def tournament( population, breedable_population_size ):
 
     while len( fittest_chromosomes ) < breedable_population_size:
         
-        heat = random.sample( population, math.floor( breedable_population_size / 2 ) )
+        heat = random.choice( population, math.floor( breedable_population_size / 2 ), replace = False )
 
         for i, chromosome_one in enumerate( heat ):
+
             for j, chromosome_two in enumerate( heat ):
+
                 if i != j:
+
                     game = Game( chromosome_one[ 'genes' ], chromosome_two[ 'genes' ] )
                     result = game.play()
 
                     if result[ 1 ] == 1: # chromosome 1 won
                         chromosome_one[ 'score' ] += 1
                         chromosome_two[ 'score' ] -= 1
+
                     elif result[ 1 ] == 2: # chromosome 2 won
                         chromosome_one[ 'score' ] -= 1
                         chromosome_two[ 'score' ] += 1  
@@ -241,14 +250,13 @@ def tournament( population, breedable_population_size ):
 
     return fittest_chromosomes
 
-def check_mutation( board_state, gene, gene_index, mutated_genes ):
-    return get_random_move( board_state ) if gene_index in mutated_genes else gene
+def check_mutation( gene, gene_index, mutated_genes ):
+    return get_random_move() if gene_index in mutated_genes else gene
 
-def get_valid_move( board_state ):
-    return [ i for i in range( 9 ) if board_state[ i ] in [ '0', 0 ] ]
-
-def get_random_move( board_state ):
-    return random.choices( get_valid_move( board_state ) )[0]
+def get_random_move():
+    gaussian_random_numbers = np.random.normal( 0, 3, 1000 )
+    np.random.shuffle( gaussian_random_numbers )
+    return gaussian_random_numbers[0]
 
 def copy_population( population ):
     return list( population )
@@ -256,6 +264,6 @@ def copy_population( population ):
 def get_mutated_chromosomes( number_of_genes, mutation_rate ):
 
     number_of_mutated_genes = math.ceil( number_of_genes * mutation_rate )
-    chromosome_one_mutated_genes = random.sample( range( number_of_genes ), number_of_mutated_genes )
-    chromosome_two_mutated_genes = random.sample( range( number_of_genes ), number_of_mutated_genes )
+    chromosome_one_mutated_genes = random.choice( range( number_of_genes ), number_of_mutated_genes, replace = False )
+    chromosome_two_mutated_genes = random.choice( range( number_of_genes ), number_of_mutated_genes, replace = False  )
     return [ chromosome_one_mutated_genes, chromosome_two_mutated_genes ]

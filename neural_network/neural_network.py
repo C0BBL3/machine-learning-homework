@@ -102,12 +102,18 @@ class NeuralNetwork( NNDirectedWeightedGraph ):
     def calc_dE( self, data_point, edge ):
         return self.neuron_gradients[ edge[ 1 ] ] * self.derivatives[ edge[ 1 ] ]( self.nodes[ edge[ 1 ] ].input ) * self.nodes[ edge[ 0 ] ].value
         
-    def calc_prediction( self, data_point ):
+    def calc_prediction( self, data_point, weights = list() ):
         
         # Start and Depth First Recursion Iteration through input nodes
         # Using recursion, Depth First search through the nodes
         # The output node( s )'s value is be the prediction( s )
-        
+
+        if weights != list():
+
+            for i, edge in enumerate( self.weights.keys() ):
+
+                self.weights[ edge ] = weights[ i ]
+
         current_depth_nodes = [ node.index for node in self.nodes if self.get_depth( node.index ) == 0 ]
         
         for index, node_index in enumerate( current_depth_nodes ):

@@ -62,7 +62,7 @@ class Game:
 
         for i in possible_moves:
 
-            branch = board_state[ : i ] + [ current_player ] + board_state[ i + 1 : ]
+            branch = board_state[ : i ] + [ current_player + 1 ] + board_state[ i + 1 : ]
             branches.append( branch )
 
         return branches

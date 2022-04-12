@@ -4,47 +4,78 @@ from tic_tac_toe import Game
 
 class Minimax:
 
-    def generate_tree( self, game, current_player, root_node = None, max_depth = 9 ): # current_player is wack
+    def generate_tree( self, game, current_player, root_node = None, max_depth = 9, prune = True ): # current_player is wack
 
-        for current_depth in range(max_depth - 1):
+        self.initial_player = current_player
+        self.nodes = list() # initialize self.nodes list
+
+        for depth in range( max_depth + 1 ):
+
+            self.nodes.append( list() )
+
+        if root_node is None:
+
+            root_node = Node( game.board, index = 0 )
+
+        self.nodes[0].append( root_node )
         
-            if current_depth == 0:
-                
-                self.initial_player = current_player
-                self.nodes = list() # initialize self.nodes list
+        for current_depth in range(1, max_depth + 1):
 
-                for depth in range( max_depth + 1 ):
+            print('bop')
+        
+            root_nodes = self.nodes[ current_depth - 1]
 
-                    self.nodes.append( list() )
+            for root in root_nodes: # generate whole depth layer
 
-                if root_node is None:
+                if game.game_finished(board_state = root.board_state)[0]: continue 
+                branches = game.get_possible_branches( root.board_state, current_player ) # list of board states
+                self.grow_branches( game, root, current_depth, branches, prune = prune )
+            
+            current_player = game.get_next_player( current_player )
+            print(len(self.nodes[current_depth]))
 
-                    root_node = Node( game.board, index = 0 )
+    def grow_branches( self, game, root, current_depth, branches, prune = True ):
 
-                self.nodes[0].append( root_node )
-                current_player = game.get_next_player( current_player )
-
-            else:
-
-                root_nodes = self.nodes[ current_depth - 1]
-                current_nodes = self.nodes[ current_depth ]
-
-                for root in root_nodes: # generate whole depth layer
-
-                    branches = game.get_possible_branches( root.board_state, current_player ) # list of board states
-                    self.grow_branches( game, root, current_nodes, branches )
-                
-                current_player = game.get_next_player( current_player )
-
-    def grow_branches( self, game, root, current_nodes, branches ):
+        current_nodes = self.nodes[ current_depth ]
 
         for branch in branches:
 
             new_index = sum( [ len( nodes ) for nodes in self.nodes ] )
             new_node = Node( board_state = branch, index = new_index )
-            if sum(node == new_node for node in current_nodes) == 0:
+            similar_nodes = list( filter( lambda node: node == new_node, current_nodes ) )
+
+            if len( similar_nodes ) == 0 or not prune:
+
                 current_nodes.append( new_node )
-                root.append_child( new_node ) # add new node to current root
+                root.append_child( new_node )
+                # add new node to current root
+
+            else:
+
+                similar_nodes_parents = list()
+
+                for similar_node in similar_nodes:
+                
+                    for parent_index in similar_node.parents:
+
+                        parent = self.get_node( current_depth - 1, parent_index)
+                        if parent not in similar_nodes_parents:
+                            similar_nodes_parents.append( parent )
+
+                for parent in similar_nodes_parents:
+
+                    for child in similar_nodes:
+
+                        if child.index not in parent.children:
+
+                            parent.append_child( child )
+
+                        if child.index not in root.children:
+
+                            root.append_child( child )
+
+                        
+                
 
     def evaluate_game_tree( self, game ):
 
@@ -68,19 +99,25 @@ class Minimax:
                 for parent_index in node.parents:
 
                     # backtrack up the tree to give the parents value
-                    parent_depth = len(self.nodes) - i - 2
-                    parent = list( filter( lambda node: node.index == parent_index, self.nodes[ parent_depth ] ) )[0]
+                    parent_depth = len( self.nodes ) - i - 2
+                    parent = self.get_node(parent_depth, parent_index)
                     parent.value += node.value 
 
     def get_best_move( self, root_board_state ):
 
-        best_node = max( self.nodes[ 0 ], key = lambda node: node.value )
+        best_node = max( self.nodes[ 1 ], key = lambda node: node.value )
         
         for move, i in enumerate( root_board_state ):
             
             j = best_node.board_state[ move ]
 
             if i != j: return move
+
+        return None
+
+    def get_node(self, depth, index):
+        parent = list( filter( lambda node: node.index == index, self.nodes[ depth ] ) )[0]
+        return parent
 
 class Node:
     def __init__( self, board_state = list(), value = int(), index = int() ):

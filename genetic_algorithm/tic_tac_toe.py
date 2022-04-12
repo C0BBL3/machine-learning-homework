@@ -68,33 +68,36 @@ class Game:
         return branches
             
 
-    def game_finished( self ):
+    def game_finished( self, board_state = None ):
+
+        if board_state is None:
+            board_state = self.board
 
         # horizontal
-        if self.board[ 0 ] == self.board[ 1 ] == self.board[ 2 ] != 0: 
-            return ( True, self.board[ 0 ] ) 
-        if self.board[ 3 ] == self.board[ 4 ] == self.board[ 5 ] != 0: 
-            return ( True, self.board[ 3 ] )
-        if self.board[ 6 ] == self.board[ 7 ] == self.board[ 8 ] != 0: 
-            return ( True, self.board[ 6 ] )
+        if board_state[ 0 ] == board_state[ 1 ] == board_state[ 2 ] != 0: 
+            return ( True, board_state[ 0 ] ) 
+        if board_state[ 3 ] == board_state[ 4 ] == board_state[ 5 ] != 0: 
+            return ( True, board_state[ 3 ] )
+        if board_state[ 6 ] == board_state[ 7 ] == board_state[ 8 ] != 0: 
+            return ( True, board_state[ 6 ] )
 
         # vertical
-        if self.board[ 0 ] == self.board[ 3 ] == self.board[ 6 ] != 0: 
-            return ( True, self.board[ 0 ] )
-        if self.board[ 1 ] == self.board[ 4 ] == self.board[ 7 ] != 0: 
-            return ( True, self.board[ 1 ] )
-        if self.board[ 2 ] == self.board[ 5 ] == self.board[ 8 ] != 0: 
-            return ( True, self.board[ 2 ] )
+        if board_state[ 0 ] == board_state[ 3 ] == board_state[ 6 ] != 0: 
+            return ( True, board_state[ 0 ] )
+        if board_state[ 1 ] == board_state[ 4 ] == board_state[ 7 ] != 0: 
+            return ( True, board_state[ 1 ] )
+        if board_state[ 2 ] == board_state[ 5 ] == board_state[ 8 ] != 0: 
+            return ( True, board_state[ 2 ] )
 
         # diagonal
-        if self.board[ 0 ] == self.board[ 4 ] == self.board[ 8 ] != 0: 
-            return ( True, self.board[ 0 ] ) 
+        if board_state[ 0 ] == board_state[ 4 ] == board_state[ 8 ] != 0: 
+            return ( True, board_state[ 0 ] ) 
         
         # backwards diagonal
-        if self.board[ 2 ] == self.board[ 4 ] == self.board[ 6 ] != 0: 
-            return ( True, self.board[ 2 ] ) 
+        if board_state[ 2 ] == board_state[ 4 ] == board_state[ 6 ] != 0: 
+            return ( True, board_state[ 2 ] ) 
 
-        if self.board.count( 0 ) == 0:
+        if board_state.count( 0 ) == 0:
             return ( False, None )
 
         return ( False, None )

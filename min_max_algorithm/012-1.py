@@ -6,13 +6,24 @@ from tic_tac_toe import Game
 
 def minimax_function( board_state, current_player ):
     minimax = Minimax()
-    minimax.generate_tree(Game(None, None), current_player, root_board_state = board_state, prune = True, max_depth = 6)
-    minimax.evaluate_game_tree(Game(None, None))
+    minimax.generate_tree(
+        Game(None, None), 
+        current_player, 
+        root_board_state = board_state, 
+        prune = True, 
+        max_depth = 6
+    )
+    minimax.evaluate_game_tree(
+        Game(None, None))
     
     return minimax.get_best_move(board_state)
 
 def random_function( board_state, current_player ):
-    return random.choice( [ i for i in range( 9 ) if int( board_state[ i ] ) == 0 ] )
+    return random.choice( [ 
+        i 
+        for i in range( 9 ) 
+        if int( board_state[ i ] ) == 0 
+    ] )
 
 minimax_score = 0
 

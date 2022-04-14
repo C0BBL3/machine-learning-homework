@@ -90,12 +90,14 @@ for i in range( 1, 1001 ):
             prediction = nn[ 'neural network' ].calc_prediction( data_point )
             nn[ 'rss' ] += ( prediction - data_point[ 'output' ] ) ** 2
 
-    total_rss.append(sum( 
-        [ 
-            nn[ 'rss' ] 
-            for nn in neural_networks
-        ] 
-    ))
+    total_rss.append(
+        sum( 
+            [ 
+                nn[ 'rss' ] 
+                for nn in neural_networks
+            ] 
+        )
+    )
 
     neural_networks = sorted(
         neural_networks, 

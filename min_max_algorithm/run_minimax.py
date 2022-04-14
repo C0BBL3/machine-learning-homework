@@ -7,4 +7,5 @@ game = Game(None, None)
 
 minimax = Minimax()
 minimax.generate_tree(game, 0, prune = False)
-print(sum(len(nodes) for nodes in minimax.nodes))
+print( sum(len(nodes) for nodes in minimax.nodes))
+print( minimax.leaf_node_count )

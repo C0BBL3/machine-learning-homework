@@ -4,8 +4,9 @@ from tic_tac_toe import Game
 
 class Minimax:
 
-    def generate_tree( self, game, current_player, root_node = None, max_depth = 9, prune = True ): # current_player is wack
+    def generate_tree( self, game, current_player, root_board_state = None, max_depth = 9, prune = True ): # current_player is wack
 
+        self.leaf_node_count = int()
         self.initial_player = current_player
         self.nodes = list() # initialize self.nodes list
 
@@ -13,26 +14,31 @@ class Minimax:
 
             self.nodes.append( list() )
 
-        if root_node is None:
+        if root_board_state is None:
 
             root_node = Node( game.board, index = 0 )
 
         self.nodes[0].append( root_node )
         
         for current_depth in range(1, max_depth + 1):
-
-            print('bop')
         
             root_nodes = self.nodes[ current_depth - 1]
 
             for root in root_nodes: # generate whole depth layer
 
-                if game.game_finished(board_state = root.board_state)[0]: continue 
+                if game.game_finished(board_state = root.board_state)[0]: continue
                 branches = game.get_possible_branches( root.board_state, current_player ) # list of board states
                 self.grow_branches( game, root, current_depth, branches, prune = prune )
             
             current_player = game.get_next_player( current_player )
-            print(len(self.nodes[current_depth]))
+
+        for nodes in self.nodes:
+
+            for node in nodes:
+
+                if node.children == []:
+                    
+                    self.leaf_node_count += 1
 
     def grow_branches( self, game, root, current_depth, branches, prune = True ):
 
@@ -40,42 +46,54 @@ class Minimax:
 
         for branch in branches:
 
-            new_index = sum( [ len( nodes ) for nodes in self.nodes ] )
-            new_node = Node( board_state = branch, index = new_index )
-            similar_nodes = list( filter( lambda node: node == new_node, current_nodes ) )
+            if not prune:
 
-            if len( similar_nodes ) == 0 or not prune:
-
-                current_nodes.append( new_node )
-                root.append_child( new_node )
-                # add new node to current root
+                self.create_children( root, branch, current_nodes )
 
             else:
 
-                similar_nodes_parents = list()
+                similar_node = next( current_nodes, lambda node: node.board_state == branch )
+  
+                if similar_node is None:
 
-                for similar_node in similar_nodes:
-                
-                    for parent_index in similar_node.parents:
+                    self.create_children( root, branch, current_nodes )
 
-                        parent = self.get_node( current_depth - 1, parent_index)
-                        if parent not in similar_nodes_parents:
-                            similar_nodes_parents.append( parent )
+                else:
 
-                for parent in similar_nodes_parents:
+                    self.prune( similar_node, root, current_depth)
 
-                    for child in similar_nodes:
+    def create_children( self, root, branch, current_nodes ):
 
-                        if child.index not in parent.children:
+        new_index = sum( [ len( nodes ) for nodes in self.nodes ] )
+        new_node = Node( board_state = branch, index = new_index )
+        current_nodes.append( new_node )
+        root.append_child( new_node )
 
-                            parent.append_child( child )
+    def prune( self, similar_node, root, current_depth ):
+        
+        similar_nodes_parents = list()
 
-                        if child.index not in root.children:
+        while similar_node is not None:
+        
+            for parent_index in similar_node.parents:
 
-                            root.append_child( child )
+                parent = self.get_node(parent_index, current_depth - 1)
+                if parent not in similar_nodes_parents:
+                    similar_nodes_parents.append( parent )
 
-                        
-                
+            similar_node = next( current_nodes, lambda node: node.board_state == branch )
+
+        for parent in similar_nodes_parents:
+
+            for child in similar_nodes:
+
+                if child.index not in parent.children:
+
+                    parent.append_child( child )
+
+                if child.index not in root.children:
+
+                    root.append_child( child )
 
     def evaluate_game_tree( self, game ):
 
@@ -99,8 +117,7 @@ class Minimax:
                 for parent_index in node.parents:
 
                     # backtrack up the tree to give the parents value
-                    parent_depth = len( self.nodes ) - i - 2
-                    parent = self.get_node(parent_depth, parent_index)
+                    parent = self.get_node(parent_index)
                     parent.value += node.value 
 
     def get_best_move( self, root_board_state ):
@@ -115,8 +132,21 @@ class Minimax:
 
         return None
 
-    def get_node(self, depth, index):
-        parent = list( filter( lambda node: node.index == index, self.nodes[ depth ] ) )[0]
+    def get_node(self, index, depth = int()):
+
+        if depth == int():
+
+            for nodes in self.nodes:
+
+                if len(nodes) > index:
+
+                    depth -= 1
+                    break
+
+                else: depth += 1
+
+        parent = next( self.nodes[ depth ], lambda node: node.index == index )
+        
         return parent
 
 class Node:

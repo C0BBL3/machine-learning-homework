@@ -126,7 +126,9 @@ class GeneticAlgorithm:
 
     def compete( self, chromosome_one, chromosome_two ):
 
-        game = Game( chromosome_one[ 'genes' ], chromosome_two[ 'genes' ] )
+        lambda_chromosome_one = lambda board_state, _: chromosome_one[ 'genes' ][ board_state ] 
+        lambda_chromosome_two = lambda board_state, _: chromosome_two[ 'genes' ][ board_state ] 
+        game = Game( lambda_chromosome_one, lambda_chromosome_two )
         result = game.play()
 
         if result[ 1 ] == 1: # chromosome 1 won

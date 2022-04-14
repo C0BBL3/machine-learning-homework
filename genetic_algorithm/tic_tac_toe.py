@@ -1,15 +1,10 @@
 class Game:
     
     def __init__( self, strategy_one, strategy_two ):
+
         self.board = [ 0 for _ in range( 9 ) ]
-
-        if isinstance( strategy_one, list ): 
-            strategy_one = strategy_one[ 0 ]
-
-        if isinstance( strategy_two, list ): 
-            strategy_two = strategy_two[ 0 ]
-
-        self.strategies = [ strategy_one, strategy_two ]
+        self.strategies = [ strategy_one, strategy_two ] 
+        # ^^^^^^ [ function, function]
         self.state()
 
     def play( self ):
@@ -19,7 +14,7 @@ class Game:
         while not self.game_finished()[ 0 ] and self.board.count( 0 ) > 0:
 
             current_state = self.state( current_player )
-            current_move = self.strategies[ current_player ][ current_state ]
+            current_move = self.strategies[ current_player ]( self.board, current_player )
             self.place( current_player, current_move )
             current_player = self.get_next_player( current_player )
 

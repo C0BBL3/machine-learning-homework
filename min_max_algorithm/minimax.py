@@ -17,6 +17,10 @@ class Minimax:
         if root_board_state is None:
 
             root_node = Node( game.board, index = 0 )
+        
+        else:
+
+            root_node = Node( root_board_state, index = 0 )
 
         self.nodes[0].append( root_node )
         
@@ -52,15 +56,15 @@ class Minimax:
 
             else:
 
-                similar_node = next( current_nodes, lambda node: node.board_state == branch )
+                similar_nodes = list( filter( lambda node: node.board_state == branch, current_nodes ) )
   
-                if similar_node is None:
+                if len( similar_nodes ) == 0:
 
                     self.create_children( root, branch, current_nodes )
 
                 else:
 
-                    self.prune( similar_node, root, current_depth)
+                    self.prune( similar_nodes, root, current_depth)
 
     def create_children( self, root, branch, current_nodes ):
 
@@ -69,19 +73,17 @@ class Minimax:
         current_nodes.append( new_node )
         root.append_child( new_node )
 
-    def prune( self, similar_node, root, current_depth ):
+    def prune( self, similar_nodes, root, current_depth ):
         
         similar_nodes_parents = list()
 
-        while similar_node is not None:
+        for similar_node in similar_nodes:
         
             for parent_index in similar_node.parents:
 
                 parent = self.get_node(parent_index, current_depth - 1)
                 if parent not in similar_nodes_parents:
                     similar_nodes_parents.append( parent )
-
-            similar_node = next( current_nodes, lambda node: node.board_state == branch )
 
         for parent in similar_nodes_parents:
 
@@ -136,17 +138,17 @@ class Minimax:
 
         if depth == int():
 
+            temp = int() 
             for nodes in self.nodes:
 
-                if len(nodes) > index:
-
-                    depth -= 1
+                temp += len(nodes)
+                if temp > index:
+                    
                     break
 
                 else: depth += 1
 
-        parent = next( self.nodes[ depth ], lambda node: node.index == index )
-        
+        parent = list( filter( lambda node: node.index == index,list(  self.nodes[depth]) ) )[0]
         return parent
 
 class Node:

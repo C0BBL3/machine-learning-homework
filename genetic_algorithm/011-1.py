@@ -25,7 +25,9 @@ def generate_strategy(all_possible_board_states):
     return strategy
 
 def fight(strategy_one, strategy_two, count_score = True):
-    game = Game(strategy_one['strategy'], strategy_two['strategy'])
+    lambda_strategy_one = lambda board_state: strategy_one['strategy'][board_state]
+    lambda_strategy_two = lambda board_state: strategy_two['strategy'][board_state]
+    game = Game(lambda_strategy_one, lambda_strategy_two)
     result = game.play()
     if not count_score: return strategy_one, strategy_two
     

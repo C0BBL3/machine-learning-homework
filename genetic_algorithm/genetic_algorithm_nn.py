@@ -165,8 +165,8 @@ class GeneticAlgorithm:
         
         for line in ttc_chromosome_genes_file[ : self.population_size ]:
 
-            genes = ast.literal_eval( line ) # parse string dictionary
-            new_chromosome = {'genes': genes, 'score': 0}
+            weights = ast.literal_eval( line ) # parse string dictionary
+            new_chromosome = {'genes': NeuralNetwork( weights ), 'score': 0}
             self.population.append( new_chromosome )
 
         self.number_of_genes = len( genes )

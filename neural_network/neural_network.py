@@ -1,8 +1,9 @@
 import math
 from nn_directed_weighted_graph import NNDirectedWeightedGraph
+import numpy as np
 
 class NeuralNetwork( NNDirectedWeightedGraph ):
-    def __init__( self, weights, functions = None, derivatives = None, data_points = dict(), alpha = 0.001, debug = False ):
+    def __init__( self, weights, functions = None, derivatives = None, data_points = list(), alpha = 0.001, debug = False ):
         
         # Inhereit from a DirectedWeightedGraph to make the net
         node_indices = sorted( set( [ _ for key in weights.keys() for _ in key ] ) )
@@ -129,6 +130,8 @@ class NeuralNetwork( NNDirectedWeightedGraph ):
         
         self.evaluate_prediction( 1 )
         self.predictions[ tuple( data_point[ 'input' ] ) ] = self.nodes[ -1 ].value
+        
+        return self.nodes[ -1 ].value
 
     def evaluate_prediction( self, depth ):
         
@@ -147,6 +150,23 @@ class NeuralNetwork( NNDirectedWeightedGraph ):
             
             self.evaluate_prediction( depth + 1 )
 
+    def mitosis( self ):
+
+        new_weights = dict()
+
+        for edge, weight in self.weights.items():
+
+            new_weights[ edge ] = weight - self.alpha * np.random.normal(0, 1)
+
+        new_alpha = self.alpha * math.e ** ( np.random.normal( 0, 1 ) / ( 2 ** 0.5 * len( new_weights ) ** 0.25 ) )
+        
+        return NeuralNetwork(
+            new_weights, 
+            functions = self.functions, 
+            derivatives = self.derivatives,
+            alpha = new_alpha
+        )
+
     def get_node_input( self, node_index ):
         
         result = 0
@@ -160,13 +180,13 @@ class NeuralNetwork( NNDirectedWeightedGraph ):
         return result
         
     def print_outputs( self, iteration ):
-        print( 'Iteration {  }'.format( iteration ) )
-        print( '\tWeight Gradients ( dE/w_xy ): {  }'.format( self.weight_gradients ) )
-        print( '\tNeuron Gradients ( dE/n_x ): {  }'.format( self.neuron_gradients ) )
-        print( '\tIntermediate Neuron Gradients ( dn_x/dn_y ): {  }'.format( self.intermediate_neuron_gradients ) )
-        print( '\tMisclassifications: {  }'.format( list( self.misclassifications.values() ).count( True ) ) )
-        print( '\tPredictions: {  }'.format( self.predictions ) )
-        print( '\tUpdated Weights: {  }'.format( self.weights ) )
+        print( 'Iteration {}'.format( iteration ) )
+        print( '\tWeight Gradients ( dE/w_xy ): {}'.format( self.weight_gradients ) )
+        print( '\tNeuron Gradients ( dE/n_x ): {}'.format( self.neuron_gradients ) )
+        print( '\tIntermediate Neuron Gradients ( dn_x/dn_y ): {}'.format( self.intermediate_neuron_gradients ) )
+        print( '\tMisclassifications: {}'.format( list( self.misclassifications.values() ).count( True ) ) )
+        print( '\tPredictions: {}'.format( self.predictions ) )
+        print( '\tUpdated Weights: {}'.format( self.weights ) )
 
     def print_debugging_variables( self, data_point, edge, dE ):
         print( '\nedge', edge )

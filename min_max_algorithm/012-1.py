@@ -18,7 +18,6 @@ minimax_score = 0
 
 for i in range(1, 1001):
 
-    
     if i % 100 == 0 or i < 6:
         print('\nGame:', i)
 

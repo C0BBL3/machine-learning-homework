@@ -8,12 +8,17 @@ def calculate_score( fittest_chromosomes, population ):
 
         for chromosome_two in population:
 
-            GA.compete( chromosome_one, chromosome_two )
+            if chromosome_one in population or chromosome_two in fittest_chromosomes:
+                continue
+
+            lambda_chromosome_one = lambda board_state, _: chromosome_one[ 'genes' ][ board_state ] 
+            lambda_chromosome_two = lambda board_state, _: chromosome_two[ 'genes' ][ board_state ]
+            
+            GA.compete( lambda_chromosome_one, lambda_chromosome_two )
             chromosome_two[ 'score' ] = 0
 
-            GA.compete( chromosome_two, chromosome_one )
+            GA.compete( lambda_chromosome_two, lambda_chromosome_one )
             chromosome_two[ 'score' ] = 0
-
     score = list()
 
     for chromosome in fittest_chromosomes:

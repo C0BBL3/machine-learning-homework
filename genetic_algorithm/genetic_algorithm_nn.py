@@ -139,10 +139,8 @@ class GeneticAlgorithm:
         self.population = self.fittest_chromosomes + offspring  
 
     def compete( self, chromosome_one, chromosome_two ):
-
-        lambda_chromosome_one = lambda board_state, _: chromosome_one[ 'genes' ].calc_prediction( {'input': board_state} )
-        lambda_chromosome_two = lambda board_state, _: chromosome_two[ 'genes' ].calc_prediction( {'input': board_state} )
-        game = Game( lambda_chromosome_one, lambda_chromosome_two )
+        
+        game = Game( nn_chromosome(chromosome_one), nn_chromosome(chromosome_two) )
         result = game.play()
 
         if result[ 1 ] == 1: # chromosome 1 won
@@ -171,6 +169,41 @@ class GeneticAlgorithm:
 
         self.number_of_genes = len( genes )
         self.original_population = copy_population( self.population ) # create a copy of population for original population
+
+def get_inputs(board_state):
+
+    temp = []
+
+    for space in board_state:
+        temp.append( 
+            space if space != 2 
+            else -1 
+        )
+
+    board_state = temp
+
+    top_left = sum( board_state[ 0 ][ : 2 ] ) + sum( board_state[ 1 ][ : 2 ] )
+    top_right = sum( board_state[ 0 ][ 1 : ] ) + sum( board_state[ 1 ][ 1 : ] )
+    bottom_left = sum( board_state[ 2 ][ : 2 ] ) + sum( board_state[ 2 ][ : 2 ] )
+    bottom_right = sum( board_state[ 1 ][ 1 : ] ) + sum( board_state[ 2 ][ 1 : ] )
+    total = sum( board_state[ 0 ] ) + sum( board_state[ 1 ] ) + sum( board_state[ 2 ] )
+
+    return board_state + [ 
+        top_left, 
+        top_right, 
+        bottom_left, 
+        bottom_right,
+        total
+    ]
+
+
+def nn_chromosome(chromosome):
+    prediction_function = chromosome['genes'].calc_prediction
+    return lambda board_state, _: prediction_function( 
+        {
+            'input': get_inputs(board_state) 
+        } 
+    )
 
 def get_crossover_indices( number_of_genes, crossover_type = str(), crossover_genes_indices = list() ):
 
@@ -206,8 +239,17 @@ def stochastic( population, breedable_population_size ):
     
     while len( fittest_chromosomes ) < breedable_population_size:
         
-        heat = random.choice( population, math.floor( breedable_population_size / 2 ), replace = False )
-        fittest_chromosome = max( heat, key = lambda chromosome: chromosome[ 'score' ] )
+        heat = random.choice( 
+            population, 
+            math.floor( 
+                breedable_population_size / 2 
+            ), 
+            replace = False
+        )
+        fittest_chromosome = max(
+            heat, 
+            key = lambda chromosome: chromosome[ 'score' ]
+        )
         fittest_chromosomes.append( fittest_chromosome )
         fittest_chromosome_index = population.index( fittest_chromosome )
         population.pop( fittest_chromosome_index )
@@ -231,7 +273,10 @@ def tournament( population, breedable_population_size ):
 
                 if i != j:
 
-                    game = Game( chromosome_one[ 'genes' ], chromosome_two[ 'genes' ] )
+                    game = Game( 
+                        chromosome_one[ 'genes' ], 
+                        chromosome_two[ 'genes' ] 
+                    )
                     result = game.play()
 
                     if result[ 1 ] == 1: # chromosome 1 won
@@ -242,7 +287,10 @@ def tournament( population, breedable_population_size ):
                         chromosome_one[ 'score' ] -= 1
                         chromosome_two[ 'score' ] += 1  
                     
-        fittest_chromosome = max( heat, key = lambda chromosome: chromosome[ 'score' ] )
+        fittest_chromosome = max( 
+            heat,
+            key = lambda chromosome: chromosome[ 'score' ]
+        )
         fittest_chromosomes.append( fittest_chromosome )
         fittest_chromosome_index = population.index( fittest_chromosome )
         population.pop( fittest_chromosome_index )
@@ -266,6 +314,15 @@ def copy_population( population ):
 def get_mutated_chromosomes( number_of_genes, mutation_rate ):
 
     number_of_mutated_genes = math.ceil( number_of_genes * mutation_rate )
-    chromosome_one_mutated_genes = random.choice( range( number_of_genes ), number_of_mutated_genes, replace = False )
-    chromosome_two_mutated_genes = random.choice( range( number_of_genes ), number_of_mutated_genes, replace = False  )
-    return [ chromosome_one_mutated_genes, chromosome_two_mutated_genes ]
+    chromosome_one_mutated_genes = random.choice( 
+        range( number_of_genes ), 
+        number_of_mutated_genes, 
+        replace = False )
+    chromosome_two_mutated_genes = random.choice( 
+        range( number_of_genes ), 
+        number_of_mutated_genes, 
+        replace = False  )
+    return [ 
+        chromosome_one_mutated_genes, 
+        chromosome_two_mutated_genes 
+    ]

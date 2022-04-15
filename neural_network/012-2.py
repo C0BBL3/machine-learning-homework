@@ -13,31 +13,31 @@ def sech( x ):
     return 2 / denominator
 
 dataset = [
-    ( 0.0 , 7.0 ), 
-    ( 0.2 , 5.6 ), 
-    ( 0.4 , 3.56 ), 
-    ( 0.6 , 1.23 ), 
-    ( 0.8 , -1.03 ),
-    ( 1.0 , -2.89 ), 
-    ( 1.2 , -4.06 ), 
-    ( 1.4 , -4.39 ), 
-    ( 1.6 , -3.88 ), 
-    ( 1.8 , -2.64 ),
-    ( 2.0 , -0.92 ), 
-    ( 2.2 , 0.95 ), 
-    ( 2.4 , 2.63 ), 
-    ( 2.6 , 3.79 ), 
-    ( 2.8 , 4.22 ),
-    ( 3.0 , 3.8 ), 
-    ( 3.2 , 2.56 ), 
-    ( 3.4 , 0.68 ), 
-    ( 3.6 , -1.58 ), 
-    ( 3.8 , -3.84 ),
-    ( 4.0 , -5.76 ), 
-    ( 4.2 , -7.01 ), 
-    ( 4.4 , -7.38 ), 
-    ( 4.6 , -6.76 ), 
-    ( 4.8 , -5.22 )
+    ( 0.0 , 0.7 ), 
+    ( 0.2 , 0.56 ), 
+    ( 0.4 , 0.356 ), 
+    ( 0.6 , 0.123 ), 
+    ( 0.8 , -0.103 ),
+    ( 1.0 , -0.289 ), 
+    ( 1.2 , -0.406 ), 
+    ( 1.4 , -0.439 ), 
+    ( 1.6 , -0.388 ), 
+    ( 1.8 , -0.264 ),
+    ( 2.0 , -0.092 ), 
+    ( 2.2 , 0.095 ), 
+    ( 2.4 , 0.263 ), 
+    ( 2.6 , 0.379 ), 
+    ( 2.8 , 0.422 ),
+    ( 3.0 , 0.38 ), 
+    ( 3.2 , 0.256 ), 
+    ( 3.4 , 0.068 ), 
+    ( 3.6 , -0.158 ), 
+    ( 3.8 , -0.384 ),
+    ( 4.0 , -0.576 ), 
+    ( 4.2 , -0.701 ), 
+    ( 4.4 , -0.738 ), 
+    ( 4.6 , -0.676 ), 
+    ( 4.8 , -0.522 )
 ]
 
 dataset = [ 
@@ -50,13 +50,16 @@ dataset = [
 
 neural_networks = list()
 total_rss = []
+worst_nn = None
+best_nn = None
 
 for _ in range( 30 ):
 
     weights = generate_weights(
         [1, 10, 6, 3, 1], 
         random_bool = True, 
-        random_range = [ -0.2, 0.2 ]
+        random_range = [ -0.2, 0.2 ],
+        layers_with_bias_nodes = [0, 1, 2, 3]
     )
 
     activation_functions = [ 
@@ -93,7 +96,7 @@ for i in range( 1, 1001 ):
     total_rss.append(
         sum( 
             [ 
-                nn[ 'rss' ] 
+                nn[ 'rss' ] / len( neural_networks )
                 for nn in neural_networks
             ] 
         )
@@ -104,6 +107,9 @@ for i in range( 1, 1001 ):
         key = lambda nn: nn[ 'rss' ], 
         reverse = True 
     )
+
+    if i == 1: worst_nn = neural_networks[ -1 ]
+    if i == 1000: best_nn = neural_networks[ 0 ]
 
     neural_networks = [ 
         {
@@ -124,5 +130,45 @@ for i in range( 1, 1001 ):
 import matplotlib.pyplot as plt
 
 plt.plot( list( range( 1000 ) ), total_rss )
-plt.savefig('images/012-2.png')
+plt.savefig('images/012-2-1.png')
+plt.clf()
 
+def run_neural_network(nn, iterations):
+    for i in range(1, iterations + 1):
+        for data_point in dataset:
+            nn.calc_prediction(data_point)
+            for node in nn.nodes[::-1]:
+                nn.update_neuron_gradients(data_point, node.index)
+            for edge in nn.weights.keys():
+                nn.update_weight_gradients(data_point, edge)
+        nn.update_weights(print_output=False, iteration=i)
+    return nn
+
+fitted_nn = NeuralNetwork(
+    best_nn[ 'neural network' ].weights, 
+    functions = best_nn[ 'neural network' ].functions, 
+    derivatives = best_nn[ 'neural network' ].derivatives,
+    alpha = 0.01
+)
+
+fitted_nn = run_neural_network(fitted_nn, 20000)
+
+xs = []
+ys = []
+ys_1 = []
+ys_2 = []
+ys_3 = []
+
+for data in dataset:
+    xs.append( data[ 'input' ][ 0 ] )
+    ys.append( data[ 'output' ] )
+    ys_1.append( worst_nn[ 'neural network' ].calc_prediction( data ) )
+    ys_2.append( best_nn[ 'neural network' ].calc_prediction( data ) )
+    ys_3.append( fitted_nn.calc_prediction( data ) )
+
+plt.scatter(xs, ys)
+plt.plot(xs, ys_1)
+plt.plot(xs, ys_2)
+plt.plot(xs, ys_3)
+plt.legend( [ 'Data Points', 'Worst Neural Network', 'Best Neural Network', 'Fitted Neural Network' ] )
+plt.savefig('images/012-2-2.png')

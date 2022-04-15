@@ -57,7 +57,7 @@ class NeuralNetwork( NNDirectedWeightedGraph ):
 
     def update_neuron_gradients( self, data_point, node_index ):
         
-        self.neuron_gradients[ node_index ] += 2.0 * data_point[ 'output' ]( self.predictions[ tuple( data_point[ 'input' ] ) ] )
+        self.neuron_gradients[ node_index ] += 2.0 * self.predictions[ tuple( data_point[ 'input' ] ) ]
         total_weight = 0.0
         every_possible_path_containing_edge = self.get_every_possible_path_containing_edge( current_paths = [ list( [ node_index ] ) ] )
         
@@ -91,10 +91,10 @@ class NeuralNetwork( NNDirectedWeightedGraph ):
         # Calculate Gradient
         dE = self.calc_dE( data_point, edge ) 
         
-        if data_point[ 'output' ]( self.predictions[ tuple( data_point[ 'input' ] ) ] ) != 0.0:
+        #if data_point[ 'output' ]( self.predictions[ tuple( data_point[ 'input' ] ) ] ) != 0.0:
             
-            self.misclassifications[ tuple( data_point[ 'input' ] ) ] = True
-            self.weight_gradients[ edge ] += dE # Update Gradient
+            #self.misclassifications[ tuple( data_point[ 'input' ] ) ] = True
+        self.weight_gradients[ edge ] += dE # Update Gradient
         
         if self.debug:
             self.print_debugging_variables( data_point, edge, dE )
@@ -170,6 +170,10 @@ class NeuralNetwork( NNDirectedWeightedGraph ):
     def get_node_input( self, node_index ):
         
         result = 0
+
+        if self.nodes[ node_index ].parents == list():
+            self.nodes[ node_index ].input = 1
+            return 1
         
         for parent in self.nodes[ node_index ].parents:
             

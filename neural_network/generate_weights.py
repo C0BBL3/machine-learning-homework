@@ -3,20 +3,47 @@ import math
 import time
 import random
 
-def generate_weights(layer_sizes, random_bool = True, random_range = [-1, 1]):
+def generate_weights(layer_sizes, random_bool = True, random_range = [-1, 1], layers_with_bias_nodes = list() ):
     weights = {}
     last_node_index = 0
     for layer_index, layer in enumerate(layer_sizes):
-        for next_node_index in range(sum(layer_sizes[:layer_index + 1]), sum(layer_sizes[:layer_index + 2])):
+
+        layer_start_index, layer_end_index = get_iteration_indices(
+            layer_sizes,
+            layer_index,
+            layers_with_bias_nodes
+        )
+
+        for next_node_index in range(layer_start_index, layer_end_index):
             for i in range(0, layer):
-                if not random_bool: 
-                    weight = 1
-                else: 
-                    temp = random.random() * ( random_range[ 1 ] - random_range[ 0 ] )
-                    weight = temp - random_range[1]
-                weights[(last_node_index + i, next_node_index)] = weight
+                edge = (last_node_index + i, next_node_index)
+                weights[ edge ] = get_random_weight(random_bool, random_range)
+
+        if layer_index in layers_with_bias_nodes:
+            for next_node_index in range(layer_start_index, layer_end_index):
+                edge = (layer_start_index - 1, next_node_index)
+                weights[ edge ] = get_random_weight(random_bool, random_range)
+            layer += 1
+
         last_node_index += layer
     return weights
+
+def get_random_weight(random_bool, random_range):
+    if not random_bool: 
+        weight = 1
+    else:
+        temp = random.random() * ( random_range[ 1 ] - random_range[ 0 ] )
+        weight = temp - random_range[1]
+    return weight
+
+def get_iteration_indices(layer_sizes, layer_index, layers_with_bias_nodes):
+    bias_node_adder = 0
+    if layer_index in layers_with_bias_nodes:
+        temp = layers_with_bias_nodes[:layer_index + 1]
+        bias_node_adder += len(temp)
+    layer_start_index = sum(layer_sizes[:layer_index + 1]) + bias_node_adder
+    layer_end_index = sum(layer_sizes[:layer_index + 2]) + bias_node_adder
+    return layer_start_index, layer_end_index
 
 # weights = generate_weights([2,3,3,1]) # tall house graph with all weights 1
 

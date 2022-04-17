@@ -3,25 +3,35 @@ from nn_directed_weighted_graph import NNDirectedWeightedGraph
 import numpy as np
 
 class NeuralNetwork( NNDirectedWeightedGraph ):
-    def __init__( self, weights, functions = None, derivatives = None, data_points = list(), alpha = 0.001, debug = False ):
+    def __init__( self, weights, data_type = 'continuous', functions = None, derivatives = None, data_points = list(), alpha = 0.001, debug = False ):
         
         # Inhereit from a DirectedWeightedGraph to make the net
         node_indices = sorted( set( [ _ for key in weights.keys() for _ in key ] ) )
         super().__init__( weights = weights, vertex_values = node_indices ) 
 
-        self.functions = [ lambda x: x for _ in range( 0, len( node_indices ) ) ]
-        self.derivatives = [ lambda x: 1 for _ in range( 0, len( node_indices ) ) ]
-        self.alpha = alpha
-        self.debug = debug
-        self.data_points = data_points
-        self.set_gradients()
-        self.set_misclassifications()
-        self.set_predictions()
-        
         if functions is not None and derivatives is not None:
 
             self.functions = functions
             self.derivatives = derivatives
+
+        else:
+
+            self.functions = [ lambda x: x for _ in range( 0, len( node_indices ) ) ]
+            self.derivatives = [ lambda x: 1 for _ in range( 0, len( node_indices ) ) ]
+        
+        self.alpha = alpha
+        self.debug = debug
+        self.data_points = data_points
+        self.data_type = data_type
+        self.set_gradients()
+        self.set_predictions()
+
+        if data_type == 'continuous':
+            #stuff
+            self.data_type = data_type
+        elif data_type == 'discrete':
+            #stuff
+            self.set_misclassifications()
 
     def set_gradients( self ):
         
@@ -45,6 +55,7 @@ class NeuralNetwork( NNDirectedWeightedGraph ):
             new_weights[ edge ] -= self.alpha * self.weight_gradients[ edge ] 
 
         self.weights = dict( new_weights )
+        new_weights = None
         del new_weights
 
         if print_output and ( iteration < 6 or iteration % 1000 == 0 ):
@@ -52,12 +63,22 @@ class NeuralNetwork( NNDirectedWeightedGraph ):
             self.print_outputs( iteration )
 
         self.set_gradients()
-        self.set_misclassifications()
         self.set_predictions()
+
+        if self.data_type == 'discrete':
+            self.set_misclassifications()
 
     def update_neuron_gradients( self, data_point, node_index ):
         
-        self.neuron_gradients[ node_index ] += 2.0 * self.predictions[ tuple( data_point[ 'input' ] ) ]
+        if self.data_type == 'continuous':
+
+            prediction = self.predictions[ tuple( data_point[ 'input' ] ) ]
+
+        else:
+
+            prediction = data_point[ 'output' ]( self.predictions[ tuple( data_point[ 'input' ] ) ] )
+        
+        self.neuron_gradients[ node_index ] += 2.0 * prediction
         total_weight = 0.0
         every_possible_path_containing_edge = self.get_every_possible_path_containing_edge( current_paths = [ list( [ node_index ] ) ] )
         
@@ -91,9 +112,14 @@ class NeuralNetwork( NNDirectedWeightedGraph ):
         # Calculate Gradient
         dE = self.calc_dE( data_point, edge ) 
         
-        #if data_point[ 'output' ]( self.predictions[ tuple( data_point[ 'input' ] ) ] ) != 0.0:
-            
-            #self.misclassifications[ tuple( data_point[ 'input' ] ) ] = True
+        if self.data_type == 'discrete':
+
+            prediction = data_point[ 'output' ]( self.predictions[ tuple( data_point[ 'input' ] ) ] )
+
+            if self.data_type == 'continuous' and prediction != 0.0:
+                
+                self.misclassifications[ tuple( data_point[ 'input' ] ) ] = True
+
         self.weight_gradients[ edge ] += dE # Update Gradient
         
         if self.debug:

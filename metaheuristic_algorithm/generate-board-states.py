@@ -45,7 +45,7 @@ def generate_board_states():
 
 board_states = generate_board_states()
 
-board_states_file = open('genetic_algorithm/board_states.txt', 'w')
+board_states_file = open('metaheuristic_algorithm/board_states.txt', 'w')
 
 for board_state in board_states:
     string_board_state = '\n' + ''.join([str(space) for space in board_state])

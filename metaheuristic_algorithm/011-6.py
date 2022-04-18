@@ -1,7 +1,7 @@
 import random
 import matplotlib.pyplot as plt
 from tic_tac_toe import Game, plots_3_and_4
-from genetic_algorithm import GeneticAlgorithm
+from metaheuristic_algorithm import MetaHeuristicAlgorithm
 
 def calculate_score( fittest_chromosomes, population ):
 
@@ -15,10 +15,10 @@ def calculate_score( fittest_chromosomes, population ):
             lambda_chromosome_one = lambda board_state, _: chromosome_one[ 'genes' ][ board_state ] 
             lambda_chromosome_two = lambda board_state, _: chromosome_two[ 'genes' ][ board_state ]
             
-            GA.compete( lambda_chromosome_one, lambda_chromosome_two )
+            MHA.compete( lambda_chromosome_one, lambda_chromosome_two )
             chromosome_two[ 'score' ] = 0
 
-            GA.compete( lambda_chromosome_two, lambda_chromosome_one )
+            MHA.compete( lambda_chromosome_two, lambda_chromosome_one )
             chromosome_two[ 'score' ] = 0
 
     score = list()
@@ -36,38 +36,38 @@ loss_prevention_score = [ [], [], [], [], [], [], [] ] # | || || |_
 
 num_generations = 50
 
-ttc_chromosome_genes = [ line.strip( '\n' ) for line in open( 'genetic_algorithm/ttc_chromosome_genes.txt', 'r' ).readlines() ]
+ttc_chromosome_genes = [ line.strip( '\n' ) for line in open( 'metaheuristic_algorithm/ttc_chromosome_genes.txt', 'r' ).readlines() ]
 # ^^^^^ tic tac toe chromosome genes
 
-genetic_algorithms = list()
+metaheuristic_algorithms = list()
 sizes = [ 64, 64, 256, 256, 1024, 1024 ]
 mutation_rates = [ 0.01, 0.001, 0.01, 0.001, 0.01, 0.001 ] 
 
 for i in range(6):
-    GA = GeneticAlgorithm()
-    GA.read_chromosomes( ttc_chromosome_genes, population_size = sizes[ i ] )
-    genetic_algorithms.append(GA)
-    del GA
+    MHA = MetaHeuristicAlgorithm()
+    MHA.read_chromosomes( ttc_chromosome_genes, population_size = sizes[ i ] )
+    metaheuristic_algorithms.append(MHA)
+    del MHA
 
 for generation in range( num_generations ):
     
     if generation < 5 or generation % 10 == 9 or generation == num_generations - 1: 
         print( '\nGeneration:', generation + 1 )
 
-    for i, GA in enumerate( genetic_algorithms ):
+    for i, MHA in enumerate( metaheuristic_algorithms ):
 
-        GA.determine_fitness( fitness_score = 'bracket', cutoff_type = 'stochastic' )
-        GA.breed( mutation_rate = 0.01 )
+        MHA.determine_fitness( fitness_score = 'bracket', cutoff_type = 'stochastic' )
+        MHA.breed( mutation_rate = 0.01 )
 
-        original_average_score[ i ].append( calculate_score( GA.fittest_chromosomes, GA.original_population ) )
-        previous_average_score[ i ].append( calculate_score( GA.fittest_chromosomes, GA.previous_population ) )
+        original_average_score[ i ].append( calculate_score( MHA.fittest_chromosomes, MHA.original_population ) )
+        previous_average_score[ i ].append( calculate_score( MHA.fittest_chromosomes, MHA.previous_population ) )
 
         can_win_score = 0
         can_block_score = 0
         will_win_score = 0
         will_block_score = 0
 
-        for chromosome in GA.fittest_chromosomes:
+        for chromosome in MHA.fittest_chromosomes:
             for board_state in chromosome[ 'genes' ].keys():
                 list_board_state = [ int( space ) for space in board_state ]
                 win_capture = plots_3_and_4( list_board_state, 1 ) # win capture

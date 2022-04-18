@@ -3,8 +3,8 @@ from numpy import random
 import time
 
 random.seed( int( time.time() ) )
-board_states = [ line.strip( '\n' ) for line in open( 'genetic_algorithm/board_states.txt', 'r' ).readlines() ]
-ttc_chromosome_genes_file = open( 'genetic_algorithm/ttc_chromosome_genes.txt', 'w' )
+board_states = [ line.strip( '\n' ) for line in open( 'metaheuristic_algorithm/board_states.txt', 'r' ).readlines() ]
+ttc_chromosome_genes_file = open( 'metaheuristic_algorithm/ttc_chromosome_genes.txt', 'w' )
 
 for _ in range( 1024 ):
 

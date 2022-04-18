@@ -5,7 +5,7 @@ import ast
 import math
 from tic_tac_toe import Game
 
-class GeneticAlgorithm:
+class MetaHeuristicAlgorithm:
     def __init__( self ):
         self.population = list()
 

@@ -11,7 +11,7 @@ sys.path.pop()
 sys.path.append('min_max_algorithm')
 from minimax import Minimax
 
-class GeneticAlgorithm:
+class MetaHeuristicAlgorithm:
     def __init__( self ):
         self.population = list()
 
@@ -28,7 +28,7 @@ class GeneticAlgorithm:
         )
 
         for k, ( i, j ) in enumerate(matchups): 
-
+            
             result = self.compete( 
                 current_bracket[ i ],
                 current_bracket[ j ] 
@@ -76,7 +76,7 @@ class GeneticAlgorithm:
 
         offspring = list()
         
-        if crossover_type == 'none': # evolutionary 
+        if crossover_type == 'evolutionary': # evolutionary breeding (one parent producing one offspring)
 
             for chromosome in self.fittest_chromosomes:
                 
@@ -87,7 +87,7 @@ class GeneticAlgorithm:
                     }
                 )
 
-        else: # genetic
+        else: # genetic breeding (two parents producing two offspring)
 
             for i, chromosome_one in enumerate( self.fittest_chromosomes ):
                 

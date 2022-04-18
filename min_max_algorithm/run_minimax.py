@@ -1,7 +1,7 @@
 from minimax import Minimax
 import time
 import sys
-sys.path.append('genetic_algorithm/')
+sys.path.append('metaheuristic_algorithm/')
 from tic_tac_toe import Game
 
 

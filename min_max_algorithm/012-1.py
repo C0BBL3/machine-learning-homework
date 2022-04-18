@@ -1,7 +1,7 @@
 from numpy import random
 from minimax import Minimax
 import sys
-sys.path.append('genetic_algorithm/')
+sys.path.append('metaheuristic_algorithm/')
 from tic_tac_toe import Game
 
 def minimax_function( board_state, neural_network, current_player ):

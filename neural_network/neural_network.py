@@ -172,7 +172,7 @@ class NeuralNetwork( NNDirectedWeightedGraph ):
             self.nodes[ node_index ].value = self.functions[ node_index ]( self.nodes[ node_index ].input )
         
         # If not output node
-        if len( self.nodes[ node_index ].children ) > 0: 
+        if len( self.nodes[ current_depth_nodes[ -1 ] ].children ) > 0: 
             
             self.evaluate_prediction( depth + 1 )
 

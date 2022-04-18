@@ -7,22 +7,28 @@ from tic_tac_toe import Game
 import sys
 sys.path.append('neural_network')
 from neural_network import NeuralNetwork
+sys.path.pop()
+sys.path.append('min_max_algorithm')
+from minimax import Minimax
 
 class GeneticAlgorithm:
     def __init__( self ):
         self.population = list()
 
-    def determine_fitness( self, fitness_score = 'round robin', cutoff_type = 'hard cutoff', current_bracket = None, round_number = 1 ):
+    def determine_fitness( self, fitness_score = 'round robin', cutoff_type = 'hard cutoff', current_bracket = None, round_number = 1, breedable_population_size = int() ):
 
         self.fittest_chromosomes = list()
 
         if current_bracket is None: 
             current_bracket = self.population
 
-        matchups = self.determine_matchups( fitness_score, current_bracket = current_bracket )
+        matchups = determine_matchups( 
+            fitness_score, 
+            current_bracket = current_bracket 
+        )
 
-        for ( i, j ) in matchups: 
-            
+        for k, ( i, j ) in enumerate(matchups): 
+
             result = self.compete( 
                 current_bracket[ i ],
                 current_bracket[ j ] 
@@ -49,7 +55,7 @@ class GeneticAlgorithm:
                 current_bracket = next_round_population, 
                 round_number = round_number + 1 
             )
-
+        
         if cutoff_type == 'hard cutoff':
             self.fittest_chromosomes = hard_cutoff( 
             self.population,
@@ -65,82 +71,76 @@ class GeneticAlgorithm:
             self.population,
             self.breedable_population_size
             )
-        
-    def determine_matchups(self, fitness_score, current_bracket = None):
 
-        matchups = list()
-
-        if fitness_score == 'round robin':
-
-            for i in range( len( current_bracket ) ):
-
-                for j in range( len( current_bracket ) ):
-
-                    if i != j and [ i, j ] not in matchups:
-
-                        matchups.append( [ i, j ] )
-
-            return matchups
-
-        elif fitness_score == 'bracket':
-
-            for i in range( 0,  len( current_bracket ) - 1, 2 ):
-
-                matchups.append( [ i, i + 1 ] )
-
-            return matchups
-
-
-    def breed( self, mutation_rate = 0.001, crossover_type = str(), crossover_genes_indices = list() ):
+    def breed( self, mutation_rate = 0.001, crossover_type = 'random', crossover_genes_indices = list() ):
 
         offspring = list()
+        
+        if crossover_type == 'none': # evolutionary 
 
-        for i, chromosome_one in enumerate( self.fittest_chromosomes ):
-            
-            for chromosome_two in self.fittest_chromosomes[ i + 1 : ]:
-
-                crossover_genes_indices = get_crossover_indices( 
-                    self.number_of_genes,
-                    crossover_type,
-                    crossover_genes_indices
+            for chromosome in self.fittest_chromosomes:
+                
+                offspring.append(
+                    {
+                        'genes': chromosome[ 'genes' ].mitosis(),
+                        'score': 0
+                    }
                 )
 
-                mutated_genes_indices = get_mutated_chromosomes( 
-                    self.number_of_genes, 
-                    mutation_rate 
-                ) 
+        else: # genetic
 
-                baby_chromosome_one = {'genes': NeuralNetwork( dict() ), 'score': 0}
-                baby_chromosome_two = {'genes': NeuralNetwork( dict() ), 'score': 0}
+            for i, chromosome_one in enumerate( self.fittest_chromosomes ):
                 
-                for edge, weight in chromosome_one[ 'genes' ].weights.keys():
+                for chromosome_two in self.fittest_chromosomes[ i + 1 : ]:
 
-                    genes = [ 
-                        chromosome_one[ 'genes' ].weights[ edge ], 
-                        chromosome_two[ 'genes' ].weights[ edge ] 
-                    ]
+                    crossover_genes_indices = get_crossover_indices( 
+                        self.number_of_genes,
+                        mutation_rate,
+                        crossover_type,
+                        crossover_genes_indices
+                    )
+
+                    mutated_genes_indices = get_mutated_chromosomes( 
+                        self.number_of_genes, 
+                        mutation_rate 
+                    ) 
+
+                    baby_chromosome_one = dict()
+                    baby_chromosome_two = dict()
                     
-                    mutated_genes = [ 
-                        check_mutation( genes[0], edge, mutated_genes_indices[0] ),
-                        check_mutation( genes[1], edge, mutated_genes_indices[1] ) 
-                    ]
+                    edges = chromosome_one[ 'genes' ].weights.keys()
                     
-                    if edge in crossover_genes_indices:
+                    for edge in edges:
 
-                        mutated_genes = mutated_genes[ : : -1 ]
+                        gene = [ 
+                            chromosome_one[ 'genes' ].weights[ edge ], 
+                            chromosome_two[ 'genes' ].weights[ edge ] 
+                        ]
+                        
+                        gene = [ 
+                            check_mutation( gene[0], edge, mutated_genes_indices[0] ),
+                            check_mutation( gene[1], edge, mutated_genes_indices[1] ) 
+                        ]
+                        
+                        if edge in crossover_genes_indices:
 
-                    baby_chromosome_one[ 'genes' ].weights[ edge ] = mutated_genes[ 0 ]
-                    baby_chromosome_two[ 'genes' ].weights[ edge ] = mutated_genes[ 1 ]
+                            gene = gene[ : : -1 ]
 
-                offspring.append( baby_chromosome_one )
-                offspring.append( baby_chromosome_two )
+                        baby_chromosome_one[ edge ] = gene[ 0 ]
+                        baby_chromosome_two[ edge ] = gene[ 1 ]
+
+                    baby_chromosome_one = {'genes': NeuralNetwork( baby_chromosome_one ), 'score': 0}
+                    baby_chromosome_two = {'genes': NeuralNetwork( baby_chromosome_two ), 'score': 0}
+
+                    offspring.append( baby_chromosome_one )
+                    offspring.append( baby_chromosome_two )
 
         self.previous_population = copy_population( self.population )
         self.population = self.fittest_chromosomes + offspring  
 
     def compete( self, chromosome_one, chromosome_two ):
         
-        game = Game( nn_chromosome(chromosome_one), nn_chromosome(chromosome_two) )
+        game = Game( nn_chromosome( chromosome_one ), nn_chromosome( chromosome_two ) )
         result = game.play()
 
         if result[ 1 ] == 1: # chromosome 1 won
@@ -152,25 +152,100 @@ class GeneticAlgorithm:
 
         return result
 
-    def read_chromosomes( self, ttc_chromosome_genes_file, population_size = 64 ): # the ttc_chromosome_genes_file is a readlines() file
-        
-        if population_size % 2 != 0: # adjust so population size is even
-            population_size = int( 2 ** ( math.floor( math.log( population_size, 2 ) ) ) )
+    def read_chromosomes( self, generate_weights_function, layer_sizes, layers_with_bias_nodes, population_size = 64, breedable_population_size = None ): # the ttc_chromosome_genes_file is a readlines() file
 
-        self.breedable_population_size = math.floor( math.sqrt( population_size ) )
-        self.population_size = math.floor( self.breedable_population_size ** 2 )
-        random.shuffle( ttc_chromosome_genes_file )
+        if breedable_population_size is None:
         
-        for line in ttc_chromosome_genes_file[ : self.population_size ]:
+            self.breedable_population_size = math.floor( 
+                math.sqrt( population_size ) 
+            )
+            
+        else:
 
-            weights = ast.literal_eval( line ) # parse string dictionary
-            new_chromosome = {'genes': NeuralNetwork( weights ), 'score': 0}
+            self.breedable_population_size = breedable_population_size
+
+        self.population_size = population_size
+        
+        for _ in range( self.population_size ):
+
+            genes = generate_weights_function(
+                layer_sizes,
+                random_bool = True, 
+                random_range = [ -1, 1 ],
+                layers_with_bias_nodes = layers_with_bias_nodes
+            )
+
+            activation_functions = [ 
+                tanh 
+                for _ in range( len( genes ) - 1 )
+            ] + [ lambda x: x ]
+
+            activation_function_derivatives = [
+                lambda x: sech(x) ** 2 
+                for _ in range( len( genes ) - 1 )
+            ] + [ lambda x: 1 ]
+
+            new_chromosome = {
+                'genes': NeuralNetwork( 
+                    genes, # weights
+                    functions = activation_functions, 
+                    derivatives = activation_function_derivatives,
+                    alpha = 0.01
+                ),
+                'score': 0
+            }
+
             self.population.append( new_chromosome )
 
         self.number_of_genes = len( genes )
         self.original_population = copy_population( self.population ) # create a copy of population for original population
 
-def get_inputs(board_state):
+def determine_matchups(fitness_score, current_bracket = None):
+
+    matchups = list()
+
+    if fitness_score == 'round robin':
+
+        for i in range( len( current_bracket ) ):
+
+            for j in range( len( current_bracket ) ):
+
+                if i != j and [ i, j ] not in matchups:
+
+                    matchups.append( [ i, j ] )
+
+    elif fitness_score == 'bracket':
+
+        for i in range( 0,  len( current_bracket ) - 1, 2 ):
+
+            matchups.append( [ i, i + 1 ] )
+
+    elif fitness_score == 'blondie24':
+
+        for i in range( len( current_bracket ) ):
+
+            for _ in range( 5 ):
+            
+                j = random.choice(list( range( len( current_bracket ) ) ) )
+
+                matchups.append( [i, j] )
+
+    return matchups
+
+def tanh( x ):
+    e_x = math.e ** x
+    e_neg_x = math.e ** ( - x )
+    numerator = e_x - e_neg_x
+    denominator = e_x + e_neg_x
+    return numerator / denominator
+
+def sech( x ):
+    e_x = math.e ** x
+    e_neg_x = math.e ** ( - x )
+    denominator = e_x + e_neg_x
+    return 2 / denominator
+
+def get_inputs (board_state ): # tic tac toe
 
     temp = []
 
@@ -182,11 +257,11 @@ def get_inputs(board_state):
 
     board_state = temp
 
-    top_left = sum( board_state[ 0 ][ : 2 ] ) + sum( board_state[ 1 ][ : 2 ] )
-    top_right = sum( board_state[ 0 ][ 1 : ] ) + sum( board_state[ 1 ][ 1 : ] )
-    bottom_left = sum( board_state[ 2 ][ : 2 ] ) + sum( board_state[ 2 ][ : 2 ] )
-    bottom_right = sum( board_state[ 1 ][ 1 : ] ) + sum( board_state[ 2 ][ 1 : ] )
-    total = sum( board_state[ 0 ] ) + sum( board_state[ 1 ] ) + sum( board_state[ 2 ] )
+    top_left = board_state[ 0 ] + board_state[ 1 ] + board_state[ 4 ] + board_state[ 5 ]
+    top_right = board_state[ 1 ] + board_state[ 2 ] + board_state[ 4 ] + board_state[ 5 ]
+    bottom_left = board_state[ 3 ] + board_state[ 4 ] + board_state[ 6 ] + board_state[ 7 ]
+    bottom_right = board_state[ 4 ] + board_state[ 5 ] + board_state[ 7 ] + board_state[ 8 ]
+    total = sum( board_state )
 
     return board_state + [ 
         top_left, 
@@ -196,40 +271,74 @@ def get_inputs(board_state):
         total
     ]
 
-
 def nn_chromosome(chromosome):
-    prediction_function = chromosome['genes'].calc_prediction
-    return lambda board_state, _: prediction_function( 
+
+    evaluation_function = lambda board_state: chromosome['genes'].calc_prediction(
         {
-            'input': get_inputs(board_state) 
-        } 
+            'input': get_inputs(board_state)
+        }
     )
 
-def get_crossover_indices( number_of_genes, crossover_type = str(), crossover_genes_indices = list() ):
+    return lambda board_state, current_player: minimax_function(
+        board_state, 
+        evaluation_function, 
+        current_player
+    )
 
-    if crossover_type == str() and crossover_genes_indices == list(): 
+def minimax_function( board_state, evaluation_function, current_player ):
+    minimax = Minimax()
+    minimax.generate_tree(
+        Game(None, None), 
+        current_player, 
+        root_board_state = board_state, 
+        prune = True, 
+        max_depth = 4
+    )
+    minimax.evaluate_game_tree(
+        Game(None, None), 
+        evaluation_function
+    )
+    
+    return minimax.get_best_move(board_state)
+
+def get_crossover_indices( number_of_genes, mutation_rate, crossover_type = 'random', crossover_genes_indices = list() ):
+
+    
+    if crossover_type == 'random': 
         
         # random indices
-        crossover_genes_indices = random.choice( range( number_of_genes ), number_of_genes, replace = False )
+        crossover_genes_indices = random.choice( 
+            range( number_of_genes ), 
+            round( number_of_genes * mutation_rate ), 
+            replace = False
+        )
     
     else:
     
-        half_of_number_of_genes = math.ceil( len( number_of_genes ) / 2 )
-        first_half_of_genes_indices = list( range( number_of_genes [ half_of_number_of_genes : ] ) )
+        half_of_number_of_genes = math.ceil( number_of_genes / 2 )
+        first_half_of_genes_indices = list( range( half_of_number_of_genes ) )
         
-        if crossover_type == 'alternating':
+        if crossover_type == 'alternating': 
 
-            crossover_genes_indices = map( lambda x: 2 * x, first_half_of_genes_indices )
+            # every even is a crossover
+            crossover_genes_indices = list ( map( 
+                lambda x: 2 * x, 
+                first_half_of_genes_indices 
+            ) )
 
         elif crossover_type == 'fiftyfifty':
 
+            # first half is a crossover
             crossover_genes_indices = first_half_of_genes_indices
 
     return crossover_genes_indices
 
 def hard_cutoff( population, breedable_population_size ):
 
-    population.sort( key = lambda chromosome: chromosome[ 'score' ], reverse = True )
+    population.sort( 
+        key = lambda chromosome: chromosome[ 'score' ], 
+        reverse = True 
+    )
 
     return population[ : breedable_population_size ]
 
@@ -265,7 +374,11 @@ def tournament( population, breedable_population_size ):
 
     while len( fittest_chromosomes ) < breedable_population_size:
         
-        heat = random.choice( population, math.floor( breedable_population_size / 2 ), replace = False )
+        heat = random.choice( 
+            population, 
+            math.floor( breedable_population_size / 2 ), 
+            replace = False
+        )
 
         for i, chromosome_one in enumerate( heat ):
 
@@ -301,11 +414,13 @@ def tournament( population, breedable_population_size ):
     return fittest_chromosomes
 
 def check_mutation( gene, gene_index, mutated_genes ):
-    return get_random_move() if gene_index in mutated_genes else gene
+    return calculate_mutation() if gene_index in mutated_genes else gene
 
-def get_random_move():
-    gaussian_random_numbers = np.random.normal( 0, 3, 1000 )
-    np.random.shuffle( gaussian_random_numbers )
+def calculate_mutation():
+    gaussian_random_numbers = np.random.normal( 0, 1, 1000 )
+    np.random.shuffle( 
+        gaussian_random_numbers
+    )
     return gaussian_random_numbers[0]
 
 def copy_population( population ):
@@ -313,7 +428,9 @@ def copy_population( population ):
     
 def get_mutated_chromosomes( number_of_genes, mutation_rate ):
 
-    number_of_mutated_genes = math.ceil( number_of_genes * mutation_rate )
+    number_of_mutated_genes = math.ceil( 
+        number_of_genes * mutation_rate
+    )
     chromosome_one_mutated_genes = random.choice( 
         range( number_of_genes ), 
         number_of_mutated_genes, 

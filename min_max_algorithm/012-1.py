@@ -4,7 +4,7 @@ import sys
 sys.path.append('genetic_algorithm/')
 from tic_tac_toe import Game
 
-def minimax_function( board_state, current_player ):
+def minimax_function( board_state, neural_network, current_player ):
     minimax = Minimax()
     minimax.generate_tree(
         Game(None, None), 
@@ -14,7 +14,9 @@ def minimax_function( board_state, current_player ):
         max_depth = 6
     )
     minimax.evaluate_game_tree(
-        Game(None, None))
+        Game(None, None), 
+        neural_network
+    )
     
     return minimax.get_best_move(board_state)
 

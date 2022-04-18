@@ -1,3 +1,5 @@
+import math
+
 class Game:
     
     def __init__( self, strategy_one, strategy_two ):
@@ -14,7 +16,7 @@ class Game:
         while not self.game_finished()[ 0 ] and self.board.count( 0 ) > 0:
 
             current_state = self.state( current_player )
-            current_move = self.strategies[ current_player ]( self.board, current_player )
+            current_move = int( round( self.strategies[ current_player ]( self.board, current_player ) ) )
             self.place( current_player, current_move )
             current_player = self.get_next_player( current_player )
 
@@ -49,13 +51,13 @@ class Game:
 
     def get_next_player( self, current_player ):
         return 1 if current_player == 0 else 0
-
+    
     def get_possible_branches( self, board_state, current_player ):
-
-        possible_moves = [ i for i in range( 9 ) if int( board_state[ i ] ) == 0 ]
+        
+        possible_branches = [ i for i in range( 9 ) if int( board_state[ i ] ) == 0 ]
         branches = list()
 
-        for i in possible_moves:
+        for i in possible_branches:
 
             branch = board_state[ : i ] + [ current_player + 1 ] + board_state[ i + 1 : ]
             branches.append( branch )

@@ -97,7 +97,7 @@ class Minimax:
 
                     root.append_child( child )
 
-    def evaluate_game_tree( self, game ):
+    def evaluate_game_tree( self, game, evaluation_function ):
 
         current_player = int( self.initial_player )
 
@@ -109,7 +109,7 @@ class Minimax:
 
             for node in nodes:
 
-                node.value = game.evaluate( node.board_state, current_player )
+                node.value = evaluation_function( node.board_state )
 
         for i, nodes in enumerate( self.nodes[ : 0 : -1 ] ): # ahhhhhhhh
             # no root node in iteration backwards 

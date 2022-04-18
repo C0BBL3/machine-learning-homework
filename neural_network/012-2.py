@@ -1,5 +1,4 @@
 import math
-import decimal
 import sys
 from generate_weights import generate_weights
 from neural_network import NeuralNetwork
@@ -59,19 +58,10 @@ max_y = abs (
     ) [ 1 ]
 )
 
-dataset = [ # preprocessing
-    ( 
-        data[0] / max_x,
-        data[1] / max_y
-    ) 
-    for data in dataset
-]
-
-
 dataset = [ 
     { 
-        'input': [ data[ 0 ] ], 
-        'output': data[ 1 ] 
+        'input': [ data[0] / max_x ], 
+        'output': data[1] / max_y 
     }  
     for data in dataset
 ]
@@ -87,7 +77,7 @@ for _ in range( 30 ):
         [1, 6, 6, 6, 6, 6, 1], 
         random_bool = True, 
         random_range = [ -1, 1 ],
-        layers_with_bias_nodes = [0, 1, 2, 3, 4, 5]
+        layers_with_bias_nodes = [True, True, True, True, True, False]
     )
 
     activation_functions = [ lambda x: x ] + [ 

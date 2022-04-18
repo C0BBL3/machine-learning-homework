@@ -4,31 +4,49 @@ import time
 import random
 
 def generate_weights(layer_sizes, random_bool = True, random_range = [-1, 1], layers_with_bias_nodes = list() ):
-    weights = {}
-    last_node_index = 0
-    for layer_index, layer in enumerate(layer_sizes):
 
-        layer_start_index, layer_end_index = get_iteration_indices(
+    weights = {}
+
+    for layer_index, layer_size in enumerate( layer_sizes[ : -1 ] ):
+
+        if layer_index == 0:
+
+            current_layer_iteration_indices = list( range( 0, layer_sizes[ 0 ] ) ) 
+        
+        else:
+
+            current_layer_iteration_indices = list( next_layer_iteration_indices )
+
+        next_layer_iteration_indices = get_iteration_indices(
             layer_sizes,
             layer_index,
-            layers_with_bias_nodes
+            layers_with_bias_nodes,
+            layers_with_bias_nodes[ layer_index ]
         )
 
-        for next_node_index in range(layer_start_index, layer_end_index):
-            for i in range(0, layer):
-                edge = (last_node_index + i, next_node_index)
-                weights[ edge ] = get_random_weight(random_bool, random_range)
+        for next_node_index in next_layer_iteration_indices:
 
-        if layer_index in layers_with_bias_nodes:
-            for next_node_index in range(layer_start_index, layer_end_index):
-                edge = (layer_start_index - 1, next_node_index)
-                weights[ edge ] = get_random_weight(random_bool, random_range)
-            layer += 1
+            for current_node_index in current_layer_iteration_indices:
 
-        last_node_index += layer
+                edge = ( current_node_index, next_node_index )
+                weights[ edge ] = get_random_weight( random_bool, random_range )
+
+        if layers_with_bias_nodes[ layer_index ]:
+
+            bias_node_index = current_layer_iteration_indices[ -1 ] + 1
+            
+            for next_node_index in next_layer_iteration_indices:
+
+                edge = ( 
+                    bias_node_index, 
+                    next_node_index 
+                )
+                
+                weights[ edge ] = get_random_weight( random_bool, random_range )
+
     return weights
 
-def get_random_weight(random_bool, random_range):
+def get_random_weight( random_bool, random_range ):
     if not random_bool: 
         weight = 1
     else:
@@ -36,14 +54,30 @@ def get_random_weight(random_bool, random_range):
         weight = temp - random_range[1]
     return weight
 
-def get_iteration_indices(layer_sizes, layer_index, layers_with_bias_nodes):
+def get_iteration_indices(layer_sizes, layer_index, layers_with_bias_nodes, bias_layer):
+
     bias_node_adder = 0
-    if layer_index in layers_with_bias_nodes:
-        temp = layers_with_bias_nodes[:layer_index + 1]
+
+    if bias_layer:
+
+        temp = layers_with_bias_nodes[ : layer_index + 1 ]
         bias_node_adder += len(temp)
-    layer_start_index = sum(layer_sizes[:layer_index + 1]) + bias_node_adder
-    layer_end_index = sum(layer_sizes[:layer_index + 2]) + bias_node_adder
-    return layer_start_index, layer_end_index
+
+    layer_start_index = sum(
+        layer_sizes[ : layer_index + 1 ] 
+    ) + bias_node_adder
+
+    layer_end_index = sum(
+        layer_sizes[ : layer_index + 2]
+    ) + bias_node_adder
+    
+    return [ 
+        i 
+        for i in range( 
+            layer_start_index, 
+            layer_end_index 
+        ) 
+    ]
 
 # weights = generate_weights([2,3,3,1]) # tall house graph with all weights 1
 

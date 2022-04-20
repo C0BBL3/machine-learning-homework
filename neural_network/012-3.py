@@ -1,6 +1,7 @@
 import math
 import sys
 from numpy import random
+import matplotlib.pyplot as plt
 from generate_weights import generate_weights
 from neural_network import NeuralNetwork
 import sys
@@ -102,10 +103,8 @@ for generation in range( num_generations ):
     original_average_score.append( calculate_score( MHA.fittest_chromosomes, MHA.original_population ) )
     previous_average_score.append( calculate_score( MHA.fittest_chromosomes, MHA.previous_population ) )
 
-import matplotlib.pyplot as plt
-
-plt.plot( list( range( num_generations ) ), random_average_score )
-plt.plot( list( range( num_generations ) ), original_average_score )
-plt.plot( list( range( num_generations ) ), previous_average_score )
-plt.legend( [ 'Random', 'Original', 'Previous' ] )
-plt.savefig( 'images/012-3.png' )
+    plt.plot( list( range( generation ) ), random_average_score )
+    plt.plot( list( range( generation ) ), original_average_score )
+    plt.plot( list( range( generation ) ), previous_average_score )
+    plt.legend( [ 'Random', 'Original', 'Previous' ] )
+    plt.savefig( 'images/012-3.png' )

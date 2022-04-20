@@ -30,7 +30,7 @@ def generate_weights(layer_sizes, random_bool = True, random_range = [-1, 1], la
             current_layer_iteration_indices = list( 
                 range( 
                     0 + shift , 
-                    layer_sizes[ 0 ] + shift 
+                    layer_sizes[ 0 ] + shift
                 ) 
             ) 
         
@@ -78,8 +78,6 @@ def generate_weights(layer_sizes, random_bool = True, random_range = [-1, 1], la
 
     return weights
 
-
-
 def get_iteration_indices( layer_sizes, layer_index, layers_with_bias_nodes, bias_layer, shift = 0 ):
 
     bias_node_adder = 0
@@ -111,12 +109,12 @@ def get_input_weights( layer_sizes, input_size, shift, random_bool, random_range
 
     layer_sizes[ 0 ] = sum( 
         [ 
-            ( input_size[0] - i ) ^ 2 
+            ( input_size[0] - i ) ** 2 
             for i in range( input_size[ 0 ] )
         ]
     )
 
-    all_possible_quadrants = get_all_possible_quadrant_indices( input_size )
+    all_possible_quadrants = get_all_possible_quadrant_indices( shift, input_size )
 
     for input_node_index in range( shift ):
 
@@ -127,23 +125,20 @@ def get_input_weights( layer_sizes, input_size, shift, random_bool, random_range
             ), 
             ( # one to all
                 input_node_index,
-                shift + layer_sizes[ 0 ]
+                layer_sizes[ 0 ] + shift - 1
             ) 
         ]
         
-        quadrant_indices = get_quadrant_indices( 
-            input_size, 
-            input_node_index 
-        )
+        for quadrant_index, quadrant in enumerate( all_possible_quadrants ): # one to multiple
 
-        for quadrant_index in quadrant_indices: # one to multiple
-
-            edge.append( 
-                (
-                    input_node_index, 
-                    quadrant_index
+            if input_node_index in quadrant:
+            
+                edges.append( 
+                    (
+                        input_node_index, 
+                        quadrant_index + 2 * shift
+                    )
                 )
-            )
 
         for edge in edges: 
 
@@ -168,11 +163,11 @@ def get_all_possible_quadrant_indices( shift, input_size ):
         
             for x_index in range( size_of_quadrant ): # x index
 
-                indices.append( shift + x_index + input_size[ 0 ] * y_index )
+                indices.append( x_index + input_size[ 0 ] * y_index )
             
-        for y_shift in range( size_of_gap ): # y shift
+        for y_shift in range( size_of_gap + 1 ): # y shift
 
-            for x_shift in range( size_of_gap ): # x shift
+            for x_shift in range( size_of_gap + 1 ): # x shift
             
                 quadrant = list( 
                     map(
@@ -184,25 +179,15 @@ def get_all_possible_quadrant_indices( shift, input_size ):
                 all_possible_quadrants.append( quadrant )
 
     return all_possible_quadrants
-
-def get_quadrant_indices( input_size, input_node_index, all_possible_quadrants ):
-
-    quadrant_indices = list()
-    shift = math.prod( input_size )
-
-    for i, quadrant in enumerate( all_possible_quadrants ):
-
-        if input_node_index in quadrant:
-
-            quadrant_indices.append( 2 * shift + i )
     
-    return quadrant_indices
-    
-    
-def get_random_weight( random_bool, random_range ):
-    if not random_bool: 
+def get_random_weight( rb, rr ): # rb is random bool  and rr is random range
+
+    # rb's we have the meats
+    if not rb:
+
         weight = 1
     else:
-        temp = random.random() * ( random_range[ 1 ] - random_range[ 0 ] )
-        weight = temp - random_range[1]
+
+        weight = random.random() * ( rr[ 1 ] - rr[ 0 ] ) - rr[1]
+
     return weight

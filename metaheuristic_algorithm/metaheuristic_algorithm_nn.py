@@ -245,32 +245,6 @@ def sech( x ):
     denominator = e_x + e_neg_x
     return 2 / denominator
 
-def get_inputs (board_state ): # tic tac toe
-
-    temp = []
-
-    for space in board_state:
-        temp.append( 
-            space if space != 2 
-            else -1 
-        )
-
-    board_state = temp
-
-    top_left = board_state[ 0 ] + board_state[ 1 ] + board_state[ 4 ] + board_state[ 5 ]
-    top_right = board_state[ 1 ] + board_state[ 2 ] + board_state[ 4 ] + board_state[ 5 ]
-    bottom_left = board_state[ 3 ] + board_state[ 4 ] + board_state[ 6 ] + board_state[ 7 ]
-    bottom_right = board_state[ 4 ] + board_state[ 5 ] + board_state[ 7 ] + board_state[ 8 ]
-    total = sum( board_state )
-
-    return board_state + [ 
-        top_left, 
-        top_right, 
-        bottom_left, 
-        bottom_right,
-        total
-    ]
-
 def nn_chromosome(chromosome):
 
     evaluation_function = lambda board_state: chromosome['genes'].calc_prediction(

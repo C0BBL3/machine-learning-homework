@@ -158,7 +158,8 @@ def get_all_possible_quadrant_indices( shift, input_size ):
 
     all_possible_quadrants = list()
 
-    for size_of_gap in range( 1, input_size[ 0 ] ): # size of gap ( between end of current row and beginning of next row indices )
+    for size_of_gap in range( 1, input_size[ 0 ] - 1 ): # (-1 so no double single indices)
+        # size of gap ( between end of current row and beginning of next row indices )
 
         size_of_quadrant = input_size[ 0 ] - size_of_gap
         indices = []
@@ -167,7 +168,7 @@ def get_all_possible_quadrant_indices( shift, input_size ):
         
             for x_index in range( size_of_quadrant ): # x index
 
-                indices.append( shift + x_index + input_size[ 1 ] * y_index )
+                indices.append( shift + x_index + input_size[ 0 ] * y_index )
             
         for y_shift in range( size_of_gap ): # y shift
 
@@ -175,7 +176,7 @@ def get_all_possible_quadrant_indices( shift, input_size ):
             
                 quadrant = list( 
                     map(
-                        lambda i: i + x_shift + input_size[ 1 ] * y_shift, 
+                        lambda i: i + x_shift + input_size[ 0 ] * y_shift, 
                         list( indices ) 
                     ) 
                 )

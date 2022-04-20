@@ -275,7 +275,7 @@ def nn_chromosome(chromosome):
 
     evaluation_function = lambda board_state: chromosome['genes'].calc_prediction(
         {
-            'input': get_inputs(board_state)
+            'input': list( board_state)
         }
     )
 

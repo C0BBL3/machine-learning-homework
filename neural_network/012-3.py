@@ -74,12 +74,8 @@ MHA.read_chromosomes(
     [14, 9, 6, 1],
     population_size = 30, # instead of 30 cause im lazy
     breedable_population_size = 15,
-    layers_with_bias_nodes = [ False, False, False, False ] # nothing
-    #[ # everything but output
-        #True if i < len(layer_sizes) - 1 
-        #else False 
-        #for i in range( len( layer_sizes ) ) 
-    #]
+    layers_with_bias_nodes = [ False, False, False, False ],
+    input_size = [ 3, 3 ] # must be square
 )
 
 def random_function( board_state, current_player ):

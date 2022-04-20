@@ -107,4 +107,5 @@ for generation in range( num_generations ):
     plt.plot( list( range( generation ) ), original_average_score )
     plt.plot( list( range( generation ) ), previous_average_score )
     plt.legend( [ 'Random', 'Original', 'Previous' ] )
-    plt.savefig( 'images/012-3.png' )
+    plt.savefig( 'images/012-3-1.png' )
+    plt.clf()

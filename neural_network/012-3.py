@@ -9,15 +9,17 @@ sys.path.append('metaheuristic_algorithm/')
 from metaheuristic_algorithm_nn import MetaHeuristicAlgorithm, nn_chromosome
 from tic_tac_toe import Game
 
+print( '\nStarting...' )
+
 def calculate_score( fittest_chromosomes, population ):
+
+    num_games = int()
 
     for chromosome_one in fittest_chromosomes:
 
         for chromosome_two in population:
 
-            if chromosome_one in population or chromosome_two in fittest_chromosomes:
-                continue
-
+            if chromosome_one is chromosome_two: continue
             
             MHA.compete( chromosome_one, chromosome_two )
             chromosome_two[ 'score' ] = 0
@@ -25,15 +27,22 @@ def calculate_score( fittest_chromosomes, population ):
             MHA.compete( chromosome_two, chromosome_one )
             chromosome_two[ 'score' ] = 0
 
+            num_games += 2
+
     score = list()
 
     for chromosome in fittest_chromosomes:
-        score.append( chromosome[ 'score' ] / len( fittest_chromosomes ) )
+        score.append( chromosome[ 'score' ] / num_games )
+        chromosome[ 'score' ] = 0
+
+    for chromosome in population:
         chromosome[ 'score' ] = 0
 
     return sum( score )
 
 def calculate_score_random( fittest_chromosomes, random_population ):
+
+    num_games = int()
 
     for chromosome_one in fittest_chromosomes:
 
@@ -55,10 +64,12 @@ def calculate_score_random( fittest_chromosomes, random_population ):
             elif result[ 1 ] == 2: # chromosome 2 won
                 chromosome_one[ 'score' ] -= 1
 
+            num_games += 2
+
     score = list()
 
     for chromosome in fittest_chromosomes:
-        score.append( chromosome[ 'score' ] / len( fittest_chromosomes ) )
+        score.append( chromosome[ 'score' ] / num_games )
         chromosome[ 'score' ] = 0
 
     return sum( score )
@@ -69,11 +80,13 @@ previous_average_score = list()
 
 num_generations = 100
 
+print( '\nInitializing Meta-Heuristic Algorithm...' )
+
 MHA = MetaHeuristicAlgorithm()
 MHA.read_chromosomes( 
     generate_weights, 
     [14, 9, 6, 1],
-    population_size = 30, # instead of 30 cause im lazy
+    population_size = 30, # instead of 20 cause im lazy
     breedable_population_size = 15,
     layers_with_bias_nodes = [ False, False, False, False ],
     input_size = [ 3, 3 ] # must be square
@@ -86,26 +99,27 @@ def random_function( board_state, current_player ):
         if int( board_state[ i ] ) == 0 
     ] )
 
-random_population = [ 
-    random_function
-    for _ in range(30)
-]
+random_population = [ random_function ]
+
+print( '\nInitialization Complete! \n\nEvolving...' )
 
 for generation in range( num_generations ):
     
-    if generation < 5 or generation % 10 == 9: 
-        print( '\nGeneration:', generation + 1 )
-
     MHA.determine_fitness( fitness_score = 'blondie24', cutoff_type = 'hard cutoff' )
     MHA.breed( mutation_rate = 0.01, crossover_type = 'evolutionary' )
 
     random_average_score.append( calculate_score_random( MHA.fittest_chromosomes, random_population ) )
-    original_average_score.append( calculate_score( MHA.fittest_chromosomes, MHA.original_population ) )
-    previous_average_score.append( calculate_score( MHA.fittest_chromosomes, MHA.previous_population ) )
+    original_average_score.append( calculate_score( MHA.fittest_chromosomes, MHA.original_population[ : MHA.breedable_population_size] ) )
+    previous_average_score.append( calculate_score( MHA.fittest_chromosomes, MHA.previous_population[ : MHA.breedable_population_size ] ) )
 
-    plt.plot( list( range( generation ) ), random_average_score )
-    plt.plot( list( range( generation ) ), original_average_score )
-    plt.plot( list( range( generation ) ), previous_average_score )
+    plt.plot( list( range( 1, generation + 2 ) ), random_average_score )
+    plt.plot( list( range( 1, generation + 2 ) ), original_average_score )
+    plt.plot( list( range( 1, generation + 2 ) ), previous_average_score )
     plt.legend( [ 'Random', 'Original', 'Previous' ] )
     plt.savefig( 'images/012-3-1.png' )
     plt.clf()
+
+    if generation < 5 or generation % 10 == 9: 
+        print( '\n\tGeneration:', generation + 1, 'Completed!' )
+
+print( '\nEvolution Complete!' )

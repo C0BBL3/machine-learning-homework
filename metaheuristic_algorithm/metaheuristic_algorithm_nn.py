@@ -177,14 +177,20 @@ class MetaHeuristicAlgorithm:
             )
 
             activation_functions = [ 
-                tanh 
-                for _ in range( len( genes ) - 1 )
-            ] + [ lambda x: x ]
+                lambda x: tanh(x) 
+                for _ in range( len( genes ) - layer_sizes[ -2 ] )
+            ] + [ 
+                lambda x: x
+                for _ in range( layer_sizes[ -2 ] ) 
+            ]
 
             activation_function_derivatives = [
                 lambda x: sech(x) ** 2 
-                for _ in range( len( genes ) - 1 )
-            ] + [ lambda x: 1 ]
+                for _ in range( len( genes ) - layer_sizes[ -2 ] )
+            ] + [ 
+                lambda x: 1
+                for _ in range( layer_sizes[ -2 ] ) 
+            ]
 
             new_chromosome = {
                 'genes': NeuralNetwork( 
@@ -267,7 +273,7 @@ def minimax_function( board_state, evaluation_function, current_player ):
         current_player, 
         root_board_state = board_state, 
         prune = True, 
-        max_depth = 4
+        max_depth = 3
     )
     minimax.evaluate_game_tree(
         Game(None, None), 

@@ -188,6 +188,6 @@ def get_random_weight( rb, rr ): # rb is random bool  and rr is random range
         weight = 1
     else:
 
-        weight = random.random() * ( rr[ 1 ] - rr[ 0 ] ) - rr[1]
+        weight = random.uniform( rr[0], rr[1] )
 
     return weight

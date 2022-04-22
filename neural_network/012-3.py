@@ -19,7 +19,7 @@ def calculate_score( fittest_chromosomes, population ):
 
         for chromosome_two in population:
 
-            if chromosome_one is chromosome_two: continue
+            #if chromosome_one is chromosome_two: continue
             
             MHA.compete( chromosome_one, chromosome_two )
             chromosome_two[ 'score' ] = 0
@@ -29,20 +29,23 @@ def calculate_score( fittest_chromosomes, population ):
 
             num_games += 2
 
-    score = list()
+    score = int()
 
     for chromosome in fittest_chromosomes:
-        score.append( chromosome[ 'score' ] / num_games )
+        score += chromosome[ 'score' ] / num_games
         chromosome[ 'score' ] = 0
 
     for chromosome in population:
         chromosome[ 'score' ] = 0
 
-    return sum( score )
+    return score
 
 def calculate_score_random( fittest_chromosomes, random_population ):
 
     num_games = int()
+
+    for chromosome in fittest_chromosomes:
+        chromosome[ 'score' ] = 0
 
     for chromosome_one in fittest_chromosomes:
 
@@ -66,13 +69,13 @@ def calculate_score_random( fittest_chromosomes, random_population ):
 
             num_games += 2
 
-    score = list()
+    score = int()
 
     for chromosome in fittest_chromosomes:
-        score.append( chromosome[ 'score' ] / num_games )
+        score += chromosome[ 'score' ] / num_games
         chromosome[ 'score' ] = 0
 
-    return sum( score )
+    return score
 
 random_average_score = list()
 original_average_score = list()
@@ -109,8 +112,8 @@ for generation in range( num_generations ):
     MHA.breed( mutation_rate = 0.01, crossover_type = 'evolutionary' )
 
     random_average_score.append( calculate_score_random( MHA.fittest_chromosomes, random_population ) )
-    original_average_score.append( calculate_score( MHA.fittest_chromosomes, MHA.original_population[ : MHA.breedable_population_size] ) )
-    previous_average_score.append( calculate_score( MHA.fittest_chromosomes, MHA.previous_population[ : MHA.breedable_population_size ] ) )
+    original_average_score.append( calculate_score( MHA.fittest_chromosomes, MHA.original_population ) )
+    previous_average_score.append( calculate_score( MHA.fittest_chromosomes, MHA.previous_population ) )
 
     plt.plot( list( range( 1, generation + 2 ) ), random_average_score )
     plt.plot( list( range( 1, generation + 2 ) ), original_average_score )

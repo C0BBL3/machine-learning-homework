@@ -77,7 +77,7 @@ class MetaHeuristicAlgorithm:
         offspring = list()
         
         if crossover_type == 'evolutionary': # evolutionary breeding (one parent producing one offspring)
-
+            
             for chromosome in self.fittest_chromosomes:
                 
                 offspring.append(
@@ -110,7 +110,7 @@ class MetaHeuristicAlgorithm:
                     
                     edges = chromosome_one[ 'genes' ].weights.keys()
                     
-                    for edge in edges:
+                    for edge_index, edge in enumerate( edges ):
 
                         gene = [ 
                             chromosome_one[ 'genes' ].weights[ edge ], 
@@ -122,21 +122,28 @@ class MetaHeuristicAlgorithm:
                             check_mutation( gene[1], edge, mutated_genes_indices[1] ) 
                         ]
                         
-                        if edge in crossover_genes_indices:
+                        if edge_index in crossover_genes_indices:
 
                             gene = gene[ : : -1 ]
 
                         baby_chromosome_one[ edge ] = gene[ 0 ]
                         baby_chromosome_two[ edge ] = gene[ 1 ]
 
-                    baby_chromosome_one = {'genes': NeuralNetwork( baby_chromosome_one ), 'score': 0}
-                    baby_chromosome_two = {'genes': NeuralNetwork( baby_chromosome_two ), 'score': 0}
+                    baby_chromosome_one = {
+                        'genes': NeuralNetwork( baby_chromosome_one ), 
+                        'score': 0
+                    }
+                    
+                    baby_chromosome_two = {
+                        'genes': NeuralNetwork( baby_chromosome_two ), 
+                        'score': 0
+                    }
 
                     offspring.append( baby_chromosome_one )
                     offspring.append( baby_chromosome_two )
 
         self.previous_population = copy_population( self.population )
-        self.population = self.fittest_chromosomes + offspring  
+        self.population = copy_population( self.fittest_chromosomes + offspring ) 
 
     def compete( self, chromosome_one, chromosome_two ):
         
@@ -405,6 +412,10 @@ def calculate_mutation():
     return gaussian_random_numbers[0]
 
 def copy_population( population ):
+
+    for chromosome in population:
+        chromosome[ 'score' ] = 0
+    
     return list( population )
     
 def get_mutated_chromosomes( number_of_genes, mutation_rate ):

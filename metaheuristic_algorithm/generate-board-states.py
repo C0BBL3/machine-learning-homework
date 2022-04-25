@@ -1,4 +1,5 @@
 import filecmp
+from tic_tac_toe import plots_3_and_4
 
 def evaluate_board(board):
     # horizontal
@@ -28,7 +29,10 @@ def evaluate_board(board):
     return (False, None)
 
 def generate_board_states():
-    temp = []
+    board_states = list()
+    winnable_board_states = list()
+    losable_board_states = list() # should be reverse of winnable
+
     for a in [0, 1, 2]: # 
         for b in [0, 1, 2]:
             for c in [0, 1, 2]:
@@ -38,15 +42,41 @@ def generate_board_states():
                             for g in [0, 1, 2]:
                                 for h in [0, 1, 2]:
                                     for i in [0, 1, 2]:
-                                        board = [a, b, c, d, e, f, g, h, i]
-                                        if evaluate_board(board)[0]: continue
-                                        temp.append(board)
-    return temp
 
-board_states = generate_board_states()
+                                        board = [a, b, c, d, e, f, g, h, i]
+
+                                        if evaluate_board(board)[0]: continue
+
+                                        board_states.append( board )
+
+                                        win = plots_3_and_4(board, 1)
+
+                                        if win[ 0 ]:
+                                            winnable_board_states.append( board )
+
+                                        loss = plots_3_and_4(board, 2)
+
+                                        if loss[ 0 ]:
+                                            losable_board_states.append( board )
+
+    return board_states, winnable_board_states, losable_board_states
+
+board_states, winnable_board_states, losable_board_states = generate_board_states()
 
 board_states_file = open('metaheuristic_algorithm/board_states.txt', 'w')
 
 for board_state in board_states:
     string_board_state = '\n' + ''.join([str(space) for space in board_state])
     board_states_file.write(string_board_state)
+
+winnable_board_states_file = open('metaheuristic_algorithm/winnable_board_states.txt', 'w')
+
+for board_state in winnable_board_states:
+    string_board_state = '\n' + ''.join([str(space) for space in board_state])
+    winnable_board_states_file.write(string_board_state)
+
+losable_board_states_file = open('metaheuristic_algorithm/losable_board_states.txt', 'w')
+
+for board_state in losable_board_states:
+    string_board_state = '\n' + ''.join([str(space) for space in board_state])
+    losable_board_states_file.write(string_board_state)

@@ -19,13 +19,21 @@ def calculate_score( fittest_chromosomes, population ):
 
         for chromosome_two in population:
 
-            #if chromosome_one is chromosome_two: continue
-            
-            MHA.compete( chromosome_one, chromosome_two )
-            chromosome_two[ 'score' ] = 0
+            game = Game( nn_chromosome( chromosome_one ), nn_chromosome( chromosome_two ) )
+            result = game.play()
 
-            MHA.compete( chromosome_two, chromosome_one )
-            chromosome_two[ 'score' ] = 0
+            if result[ 1 ] == 1: # chromosome 1 won
+                chromosome_one[ 'score' ] += 1
+            elif result[ 1 ] == 2: # chromosome 2 won
+                chromosome_one[ 'score' ] -= 1
+            
+            game = Game( nn_chromosome( chromosome_two ), nn_chromosome( chromosome_one ) )
+            result = game.play()
+
+            if result[ 1 ] == 1: # chromosome 1 won
+                chromosome_one[ 'score' ] += 1
+            elif result[ 1 ] == 2: # chromosome 2 won
+                chromosome_one[ 'score' ] -= 1
 
             num_games += 2
 
@@ -56,7 +64,7 @@ def calculate_score_random( fittest_chromosomes, random_population ):
 
             if result[ 1 ] == 1: # chromosome 1 won
                 chromosome_one[ 'score' ] += 1
-            elif result[ 1 ] == 2: # chromosome 2 won
+            elif result[ 1 ] == 2: # random won
                 chromosome_one[ 'score' ] -= 1
             
             game = Game( random_function, nn_chromosome( chromosome_one ) )
@@ -64,7 +72,7 @@ def calculate_score_random( fittest_chromosomes, random_population ):
 
             if result[ 1 ] == 1: # chromosome 1 won
                 chromosome_one[ 'score' ] += 1
-            elif result[ 1 ] == 2: # chromosome 2 won
+            elif result[ 1 ] == 2: # random won
                 chromosome_one[ 'score' ] -= 1
 
             num_games += 2
@@ -81,7 +89,7 @@ random_average_score = list()
 original_average_score = list()
 previous_average_score = list()
 
-num_generations = 100
+num_generations = 250
 
 print( '\nInitializing Meta-Heuristic Algorithm...' )
 
@@ -103,6 +111,7 @@ def random_function( board_state, current_player ):
     ] )
 
 random_population = [ random_function ]
+temp = 0
 
 print( '\nInitialization Complete! \n\nEvolving...' )
 
@@ -111,18 +120,51 @@ for generation in range( num_generations ):
     MHA.determine_fitness( fitness_score = 'blondie24', cutoff_type = 'hard cutoff' )
     MHA.breed( mutation_rate = 0.01, crossover_type = 'evolutionary' )
 
-    random_average_score.append( calculate_score_random( MHA.fittest_chromosomes, random_population ) )
-    original_average_score.append( calculate_score( MHA.fittest_chromosomes, MHA.original_population ) )
-    previous_average_score.append( calculate_score( MHA.fittest_chromosomes, MHA.previous_population ) )
+    if generation % 5 == 4:
 
-    plt.plot( list( range( 1, generation + 2 ) ), random_average_score )
-    plt.plot( list( range( 1, generation + 2 ) ), original_average_score )
-    plt.plot( list( range( 1, generation + 2 ) ), previous_average_score )
-    plt.legend( [ 'Random', 'Original', 'Previous' ] )
-    plt.savefig( 'images/012-3-1.png' )
-    plt.clf()
+        random_average_score.append( 
+            calculate_score_random( 
+                MHA.fittest_chromosomes, 
+                random_population 
+            ) 
+        )
+        original_average_score.append( 
+            calculate_score( 
+                MHA.fittest_chromosomes, 
+                MHA.original_population[ : MHA.breedable_population_size ] 
+            ) 
+        )
+        previous_average_score.append( 
+            calculate_score( 
+                MHA.fittest_chromosomes, 
+                MHA.previous_population[ : MHA.breedable_population_size ] 
+            ) 
+        )
+        
+        plt.plot( list( range( 1, temp + 2 ) ), random_average_score )
+        plt.plot( list( range( 1, temp + 2 ) ), original_average_score )
+        plt.plot( list( range( 1, temp + 2 ) ), previous_average_score )
+        plt.legend( [ 'Random', 'Original', 'Previous' ] )
+        plt.savefig( 'images/012-3-1.png' )
+        plt.clf()
 
-    if generation < 5 or generation % 10 == 9: 
+        temp += 1
+
+
+    if generation < 5 or generation % 5 == 4: 
         print( '\n\tGeneration:', generation + 1, 'Completed!' )
 
 print( '\nEvolution Complete!' )
+
+import filecmp
+
+neural_network_file = open('metaheuristic_algorithm/best_neural_network.txt', 'w')
+neural_network_file.write('{')
+
+for edge, weight in MMA.fittest_chromosomes[ 0 ].weights.items():
+    string = '\n{}: {}'.format(edge, weight)
+    neural_network_file.write(string)
+
+neural_network_file.write('\n}')
+
+print( '\nSaved Best Neural Network!' )

@@ -4,21 +4,22 @@ import sys
 sys.path.append('metaheuristic_algorithm/')
 from tic_tac_toe import Game
 
-def minimax_function( board_state, neural_network, current_player ):
+def minimax_function( board_state, current_player ):
     minimax = Minimax()
+
     minimax.generate_tree(
-        Game(None, None), 
+        Game( None, None ), 
         current_player, 
         root_board_state = board_state, 
-        prune = True, 
-        max_depth = 6
+        max_depth = 9
     )
+
     minimax.evaluate_game_tree(
-        Game(None, None), 
-        neural_network
+        Game( None, None ), 
+        game.evaluate
     )
     
-    return minimax.get_best_move(board_state)
+    return minimax.get_best_move( board_state )
 
 def random_function( board_state, current_player ):
     return random.choice( [ 
@@ -31,13 +32,14 @@ minimax_score = 0
 
 for i in range(1, 1001):
 
-    if i % 100 == 0 or i < 6:
+    if i % 10 == 0:# or i < 6:
         print('\nGame:', i)
+        print(100 * minimax_score / i, '% winrate for player 1')  
 
-    game = Game( minimax_function, random_function )
+    game = Game( minimax_function, minimax_function )
     result = game.play()
 
     if result[ 1 ] == 1: # minimax_function won
         minimax_score += 1
 
-print(minimax_score / 1000)  
+    

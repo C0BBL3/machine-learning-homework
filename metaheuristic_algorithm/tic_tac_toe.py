@@ -8,17 +8,16 @@ class Game:
         self.strategies = [ strategy_one, strategy_two ] 
         # ^^^^^^ [ function, function]
         self.state()
+        self.current_player = 1
 
     def play( self ):
 
-        current_player = 0
-        
         while not self.game_finished()[ 0 ] and self.board.count( 0 ) > 0:
 
-            current_state = self.state( current_player )
-            current_move = int( round( self.strategies[ current_player ]( self.board, current_player ) ) )
-            self.place( current_player, current_move )
-            current_player = self.get_next_player( current_player )
+            current_state = self.state( self.current_player )
+            current_move = self.strategies[ self.current_player ]( self.board, self.current_player )
+            self.place( self.current_player, current_move )
+            self.current_player = self.get_next_player( self.current_player )
 
         winner = self.game_finished()
 
@@ -55,14 +54,11 @@ class Game:
     def get_possible_branches( self, board_state, current_player ):
         
         possible_branches = [ i for i in range( 9 ) if int( board_state[ i ] ) == 0 ]
-        branches = list()
 
-        for i in possible_branches:
-
-            branch = board_state[ : i ] + [ current_player + 1 ] + board_state[ i + 1 : ]
-            branches.append( branch )
-
-        return branches
+        return [ 
+            board_state[ : i ] + [ current_player + 1 ] + board_state[ i + 1 : ] 
+            for i in possible_branches
+        ]
             
 
     def game_finished( self, board_state = None ):

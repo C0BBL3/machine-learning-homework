@@ -277,15 +277,16 @@ def nn_chromosome(chromosome):
 
 def minimax_function( board_state, evaluation_function, current_player ):
     minimax = Minimax()
+    
     minimax.generate_tree(
-        Game(None, None), 
+        Game( None, None ), 
         current_player, 
         root_board_state = board_state, 
-        prune = True, 
         max_depth = 4
     )
+
     minimax.evaluate_game_tree(
-        Game(None, None), 
+        Game( None, None ), 
         evaluation_function
     )
     

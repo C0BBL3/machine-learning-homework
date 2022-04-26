@@ -6,125 +6,136 @@ class Minimax:
 
     def generate_tree( self, game, current_player, root_board_state = None, max_depth = 9, prune = True ): # current_player is wack
 
-        self.leaf_node_count = int()
-        self.initial_player = current_player
-        self.nodes = list() # initialize self.nodes list
-
-        for depth in range( max_depth + 1 ):
-
-            self.nodes.append( list() )
+        self.initial_player = int( current_player )
+        self.prune_bool = prune
+        self.max_depth = max_depth
 
         if root_board_state is None:
 
-            root_node = Node( game.board, index = 0 )
-        
-        else:
+            root_board_state = game.board
 
-            root_node = Node( root_board_state, index = 0 )
-
-        self.nodes[0].append( root_node )
+        self.nodes = { 0: Node( root_board_state, index = 0, depth = 0 ) }
         
         for current_depth in range(1, max_depth + 1):
         
-            root_nodes = self.nodes[ current_depth - 1]
+            root_nodes = {
+                node_index: node
+                for node_index, node in self.nodes.items()
+                if node.depth == current_depth - 1
+            }
 
-            for root in root_nodes: # generate whole depth layer
+            for root_index, root in root_nodes.items(): # generate whole depth layer
 
-                if game.game_finished(board_state = root.board_state)[0]: continue
-                branches = game.get_possible_branches( root.board_state, current_player ) # list of board states
-                self.grow_branches( game, root, current_depth, branches, prune = prune )
+                if game.game_finished( board_state = root.board_state )[ 0 ]: 
+                    continue
+
+                self.grow_branches( 
+                    game, 
+                    root, 
+                    current_depth, 
+                    current_player,
+                )
             
             current_player = game.get_next_player( current_player )
 
-        for nodes in self.nodes:
+        self.leaf_nodes = {
+            node_index: node
+            for node_index, node in self.nodes.items()
+            if node.children == set() 
+        }
 
-            for node in nodes:
+    def grow_branches( self, game, root, current_depth, current_player ):
 
-                if node.children == []:
-                    
-                    self.leaf_node_count += 1
+        branches = game.get_possible_branches( # list of board states
+            root.board_state, 
+            current_player 
+        )
 
-    def grow_branches( self, game, root, current_depth, branches, prune = True ):
+        current_nodes = {
+            node_index: node 
+            for node_index, node in self.nodes.items()
+            if node.depth == current_depth
+        }
 
-        current_nodes = self.nodes[ current_depth ]
+        for branch in branches: 
 
-        for branch in branches:
+            if not self.prune_bool: 
 
-            if not prune:
-
-                self.create_children( root, branch, current_nodes )
+                self.create_children( root, branch, current_nodes, current_depth, current_player )
 
             else:
 
-                similar_nodes = list( filter( lambda node: node.board_state == branch, current_nodes ) )
+                similar_nodes = {
+                    node_index: node 
+                    for node_index, node in current_nodes.items()  
+                    if node.board_state == branch 
+                }
   
-                if len( similar_nodes ) == 0:
+                if similar_nodes == dict():
 
-                    self.create_children( root, branch, current_nodes )
+                    self.create_children( root, branch, current_nodes, current_depth, current_player )
 
                 else:
 
-                    self.prune( similar_nodes, root, current_depth)
+                    self.prune( similar_nodes, root, current_depth )
 
-    def create_children( self, root, branch, current_nodes ):
+    def create_children( self, root, branch, current_nodes, depth = int(), player = None ):
 
-        new_index = sum( [ len( nodes ) for nodes in self.nodes ] )
-        new_node = Node( board_state = branch, index = new_index )
-        current_nodes.append( new_node )
+        new_node_index = len( self.nodes )
+        new_node = Node( 
+            board_state = branch, 
+            index = new_node_index, 
+            depth = depth,
+            player = player
+        )
+        self.nodes[ new_node_index ] = new_node
         root.append_child( new_node )
 
     def prune( self, similar_nodes, root, current_depth ):
         
-        similar_nodes_parents = list()
+        similar_nodes_parents = dict()
 
-        for similar_node in similar_nodes:
+        for similar_node_index, similar_node in similar_nodes.items():
         
             for parent_index in similar_node.parents:
 
-                parent = self.get_node(parent_index, current_depth - 1)
-                if parent not in similar_nodes_parents:
-                    similar_nodes_parents.append( parent )
+                parent = self.nodes[ parent_index ]
 
-        for parent in similar_nodes_parents:
+                if parent not in similar_nodes_parents.values():
 
-            for child in similar_nodes:
+                    similar_nodes_parents[ parent_index ] = parent
 
-                if child.index not in parent.children:
+        for parent in similar_nodes_parents.values():
 
-                    parent.append_child( child )
+            for child in similar_nodes.values():
 
-                if child.index not in root.children:
+                parent.append_child( child )
+                root.append_child( child )
 
-                    root.append_child( child )
+    def evaluate_game_tree( self, game, evaluation_function, use_current_player = False ):
 
-    def evaluate_game_tree( self, game, evaluation_function ):
+        for node_index in range( len( self.nodes ) - 1, -1, -1): 
 
-        current_player = int( self.initial_player )
+            node = self.nodes[ node_index ]
 
-        for _ in self.nodes:
+            if node.children == list():
 
-            current_player = game.get_next_player( current_player )
+                node.value = evaluation_function( node.board_state, node.player )     
+                continue
 
-        for nodes in self.nodes[ : -1 ]: # leaves of game tree get evaluated
-
-            for node in nodes:
-
-                node.value = evaluation_function( node.board_state )
-
-        for i, nodes in enumerate( self.nodes[ : 0 : -1 ] ): # ahhhhhhhh
-            # no root node in iteration backwards 
-
-            for node in nodes:
-
-                for parent_index in node.parents:
-
-                    # backtrack up the tree to give the parents value
-                    parent = self.get_node(parent_index)
-                    parent.value += node.value 
+            for child_index in node.children:
+                
+                node.value += self.nodes[ child_index ].value
 
     def get_best_move( self, root_board_state ):
 
-        best_node = max( self.nodes[ 1 ], key = lambda node: node.value )
+        first_layer_nodes = [
+            node 
+            for node in self.nodes.values()
+            if node.depth == 1
+        ]
+
+        best_node = max( first_layer_nodes, key = lambda node: node.value )
         
         for move, i in enumerate( root_board_state ):
             
@@ -134,39 +145,24 @@ class Minimax:
 
         return None
 
-    def get_node(self, index, depth = int()):
-
-        if depth == int():
-
-            temp = int() 
-            for nodes in self.nodes:
-
-                temp += len(nodes)
-                if temp > index:
-                    
-                    break
-
-                else: depth += 1
-
-        parent = list( filter( lambda node: node.index == index,list(  self.nodes[depth]) ) )[0]
-        return parent
-
 class Node:
-    def __init__( self, board_state = list(), value = int(), index = int() ):
+    def __init__( self, board_state = list(), value = int(), index = int(), depth = int(), player = None ):
         self.board_state = board_state
         self.value = value
         self.index = index
-        self.parents = []
-        self.children = []
+        self.depth = depth
+        self.player = None
+        self.parents = set()
+        self.children = set()
 
     def __eq__(self, node): # if node == node
         return self.board_state == node.board_state
 
     def append_child(self, node): # parent += child
         if node.index not in self.children:
-            self.children.append( node.index )
+            self.children.add( node.index )
         if self.index not in node.parents:
-            node.parents.append( self.index )
+            node.parents.add( self.index )
 
     def kill_child(self, node): # parent -= child
         if node.index in self.children:

@@ -1,7 +1,7 @@
 import filecmp
 from tic_tac_toe import Game, plots_3_and_4
 
-game = Game(None, None)
+game = Game( None, None )
 
 def detect_tie( board ):
 

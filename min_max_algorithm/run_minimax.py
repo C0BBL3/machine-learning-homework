@@ -4,11 +4,12 @@ import sys
 sys.path.append('metaheuristic_algorithm/')
 from tic_tac_toe import Game
 
-
-game = Game(None, None)
+game = Game( None, None )
 start = time.time()
 minimax = Minimax()
-minimax.generate_tree(game, 0, prune = True)
-print( [len(nodes) for nodes in minimax.nodes])
-print( minimax.leaf_node_count )
-print(time.time()-start)
+minimax.generate_tree( game, game.current_player )
+minimax.evaluate_game_tree( game, game.evaluate )
+print( time.time() - start )
+print( len( minimax.nodes ) )
+print( len( minimax.leaf_nodes ) )
+

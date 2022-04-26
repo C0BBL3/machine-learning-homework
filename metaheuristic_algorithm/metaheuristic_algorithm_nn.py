@@ -159,7 +159,7 @@ class MetaHeuristicAlgorithm:
 
         return result
 
-    def read_chromosomes( self, generate_weights_function, layer_sizes, layers_with_bias_nodes, population_size = 64, breedable_population_size = None, input_size = list() ): # the ttc_chromosome_genes_file is a readlines() file
+    def read_chromosomes( self, generate_weights_function, layer_sizes, layers_with_bias_nodes, population_size = 64, breedable_population_size = None, input_size = list(), random_range = [-1.0, 1.0] ): # the ttc_chromosome_genes_file is a readlines() file
 
         if breedable_population_size is None:
         
@@ -178,32 +178,34 @@ class MetaHeuristicAlgorithm:
             genes = generate_weights_function(
                 layer_sizes,
                 random_bool = True, 
-                random_range = [ -1, 1 ],
+                random_range = random_range,
                 layers_with_bias_nodes = layers_with_bias_nodes,
                 input_size = input_size
             )
 
+            input_size_int = input_size[ 0 ] * input_size[ 1 ]
+            
             activation_functions = [ 
-                lambda x: tanh(x) 
-                for _ in range( len( genes ) - layer_sizes[ -2 ] )
-            ] + [ 
                 lambda x: x
-                for _ in range( layer_sizes[ -2 ] ) 
+                for _ in range( input_size_int )
+            ] + [ 
+                lambda x: tanh(x) 
+                for _ in range( sum( layer_sizes )) 
             ]
 
-            activation_function_derivatives = [
-                lambda x: sech(x) ** 2 
-                for _ in range( len( genes ) - layer_sizes[ -2 ] )
-            ] + [ 
+            activation_derivatives = [
                 lambda x: 1
-                for _ in range( layer_sizes[ -2 ] ) 
+                for _ in range( input_size_int )
+            ] + [ 
+                lambda x: sech(x) ** 2
+                for _ in range( sum( layer_sizes )) 
             ]
 
             new_chromosome = {
                 'genes': NeuralNetwork( 
                     genes, # weights
                     functions = activation_functions, 
-                    derivatives = activation_function_derivatives,
+                    derivatives = activation_derivatives,
                     alpha = 0.01
                 ),
                 'score': 0
@@ -280,14 +282,14 @@ def minimax_function( board_state, evaluation_function, current_player ):
         current_player, 
         root_board_state = board_state, 
         prune = True, 
-        max_depth = 3
+        max_depth = 4
     )
     minimax.evaluate_game_tree(
         Game(None, None), 
         evaluation_function
     )
     
-    return minimax.get_best_move(board_state)
+    return minimax.get_best_move( board_state )
 
 def get_crossover_indices( number_of_genes, mutation_rate, crossover_type = 'random', crossover_genes_indices = list() ):
 

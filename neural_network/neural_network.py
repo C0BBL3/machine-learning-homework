@@ -204,9 +204,7 @@ class NeuralNetwork( NNDirectedWeightedGraph ):
         for parent in self.nodes[ node_index ].parents:
             
             result += self.weights[ ( parent, node_index ) ] * self.nodes[ parent ].value
-        
-        self.nodes[ node_index ].input = result
-        
+                
         return result
         
     def print_outputs( self, iteration ):

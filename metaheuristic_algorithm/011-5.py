@@ -36,7 +36,7 @@ loss_prevention_score = list() # | || || |_
 
 num_generations = 100
 
-ttc_chromosome_genes = [ line.strip( '\n' ) for line in open( 'metaheuristic_algorithm/ttc_chromosome_genes.txt', 'r' ).readlines() ]
+ttc_chromosome_genes = [ line.strip( '\n' ) for line in open( 'metaheuristic_algorithm/ttt_board_states/ttc_chromosome_genes.txt', 'r' ).readlines() ]
 # ^^^^^ tic tac toe chromosome genes
 
 MHA = MetaHeuristicAlgorithm()

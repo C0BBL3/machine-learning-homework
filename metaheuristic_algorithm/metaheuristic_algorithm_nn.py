@@ -263,7 +263,7 @@ def nn_chromosome(chromosome):
 
     evaluation_function = lambda board_state: chromosome['genes'].calc_prediction(
         {
-            'input': list( board_state)
+            'input': list( board_state )
         }
     )
 
@@ -291,7 +291,6 @@ def minimax_function( board_state, evaluation_function, current_player ):
 
 def get_crossover_indices( number_of_genes, mutation_rate, crossover_type = 'random', crossover_genes_indices = list() ):
 
-    
     if crossover_type == 'random': 
         
         # random indices
@@ -413,10 +412,18 @@ def calculate_mutation():
 
 def copy_population( population ):
 
+    copy_population_list = list()
+
     for chromosome in population:
-        chromosome[ 'score' ] = 0
+
+        copy_chromosome = {
+            'genes': NeuralNetwork( chromosome[ 'genes' ].weights ),
+            'score': int()
+        }
+
+        copy_population_list.append( copy_chromosome )
     
-    return list( population )
+    return copy_population_list
     
 def get_mutated_chromosomes( number_of_genes, mutation_rate ):
 

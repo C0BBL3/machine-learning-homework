@@ -1,7 +1,37 @@
 import filecmp
-from tic_tac_toe import plots_3_and_4
+from tic_tac_toe import Game, plots_3_and_4
 
-def evaluate_board(board):
+game = Game(None, None)
+
+def detect_tie( board ):
+
+    if board.count( 0 ) == 0:
+
+        return True
+
+    elif board.count( 0 ) >= 1:
+
+        return False
+
+    else:
+
+        if board.count( 1 ) > board.count( 2 ):
+            current_player = 2
+        else:
+            current_player = 1
+        
+        possible_branches = game.get_possible_branches(board, current_player)
+
+        for branch in possible_branches:
+
+            if evaluate_board( branch )[ 0 ] and branch.count( 0 ) > 0:
+
+                return False
+
+        return True
+
+
+def evaluate_board( board ):
     # horizontal
     if board[0] == board[1] == board[2] != 0: 
         return (True, board[0]) 
@@ -23,8 +53,8 @@ def evaluate_board(board):
     if board[2] == board[4] == board[6] != 0: 
         return (True, board[2]) 
 
-    if board.count(0) == 0: 
-        return (False, None)
+    if detect_tie( board ): 
+        return (False, 'Tie')
 
     return (False, None)
 
@@ -32,6 +62,9 @@ def generate_board_states():
     board_states = list()
     winnable_board_states = list()
     losable_board_states = list() # should be reverse of winnable
+    winning_board_states = list()
+    losing_board_states = list()
+    tieing_board_states = list()
 
     for a in [0, 1, 2]: # 
         for b in [0, 1, 2]:
@@ -43,11 +76,14 @@ def generate_board_states():
                                 for h in [0, 1, 2]:
                                     for i in [0, 1, 2]:
 
-                                        board = [a, b, c, d, e, f, g, h, i]
+                                        board = [ a, b, c, d, e, f, g, h, i ]
 
-                                        if evaluate_board(board)[0]: continue
+                                        
 
-                                        board_states.append( board )
+                                        board_evaluation = evaluate_board( board )
+
+                                        if not board_evaluation[0]: 
+                                            board_states.append( board )
 
                                         win = plots_3_and_4(board, 1)
 
@@ -58,25 +94,57 @@ def generate_board_states():
 
                                         if loss[ 0 ]:
                                             losable_board_states.append( board )
+                                        
+                                        if board_evaluation[ 0 ] and board_evaluation[ 1 ] == 1:
 
-    return board_states, winnable_board_states, losable_board_states
+                                            winning_board_states.append( board )
 
-board_states, winnable_board_states, losable_board_states = generate_board_states()
+                                        elif board_evaluation[ 0 ] and board_evaluation[ 1 ] == 2:
 
-board_states_file = open('metaheuristic_algorithm/board_states.txt', 'w')
+                                            losing_board_states.append( board )
+
+                                        elif detect_tie( board ):
+
+                                            tieing_board_states.append( board )
+
+    return board_states, winnable_board_states, losable_board_states, winning_board_states, losing_board_states, tieing_board_states
+
+board_states, winnable_board_states, losable_board_states, winning_board_states, losing_board_states, tieing_board_states = generate_board_states()
+
+board_states_file = open('metaheuristic_algorithm/ttt_board_states/board_states.txt', 'w')
 
 for board_state in board_states:
     string_board_state = '\n' + ''.join([str(space) for space in board_state])
     board_states_file.write(string_board_state)
 
-winnable_board_states_file = open('metaheuristic_algorithm/winnable_board_states.txt', 'w')
+winnable_board_states_file = open('metaheuristic_algorithm/ttt_board_states/winnable_board_states.txt', 'w')
 
 for board_state in winnable_board_states:
     string_board_state = '\n' + ''.join([str(space) for space in board_state])
     winnable_board_states_file.write(string_board_state)
 
-losable_board_states_file = open('metaheuristic_algorithm/losable_board_states.txt', 'w')
+losable_board_states_file = open('metaheuristic_algorithm/ttt_board_states/losable_board_states.txt', 'w')
 
 for board_state in losable_board_states:
     string_board_state = '\n' + ''.join([str(space) for space in board_state])
     losable_board_states_file.write(string_board_state)
+
+
+winning_board_states_file = open('metaheuristic_algorithm/ttt_board_states/winning_board_states.txt', 'w')
+
+for board_state in winning_board_states:
+    string_board_state = '\n' + ''.join([str(space) for space in board_state])
+    winning_board_states_file.write(string_board_state)
+
+losing_board_states_file = open('metaheuristic_algorithm/ttt_board_states/losing_board_states.txt', 'w')
+
+for board_state in losing_board_states:
+    string_board_state = '\n' + ''.join([str(space) for space in board_state])
+    losing_board_states_file.write(string_board_state)
+
+
+tieing_board_states_file = open('metaheuristic_algorithm/ttt_board_states/tieing_board_states.txt', 'w')
+
+for board_state in tieing_board_states:
+    string_board_state = '\n' + ''.join([str(space) for space in board_state])
+    tieing_board_states_file.write(string_board_state)

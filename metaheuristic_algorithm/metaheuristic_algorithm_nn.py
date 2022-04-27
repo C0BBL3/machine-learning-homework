@@ -17,8 +17,12 @@ class MetaHeuristicAlgorithm:
     def __init__( self ):
         self.population = list()
 
-    def determine_fitness( self, fitness_score = 'round robin', cutoff_type = 'hard cutoff', current_bracket = None, round_number = 1, breedable_population_size = int(), cpu_core_pool = None ):
+    def determine_fitness( self, fitness_score = 'round robin', cutoff_type = 'hard cutoff', current_bracket = None, round_number = 1, breedable_population_size = int(), cpu_core_pool = None, num_of_matchups_per_core = int() ):
 
+        if num_of_matchups_per_core == int():
+
+            num_of_matchups_per_core = self.breedable_population_size
+        
         self.fittest_chromosomes = list()
 
         if current_bracket is None: 
@@ -38,11 +42,17 @@ class MetaHeuristicAlgorithm:
         manager = multiprocessing.Manager()
         return_dict = manager.dict()
 
-        for matchup in matchups: 
+        for i in range(0, len( matchups ), num_of_matchups_per_core ):
+
+            matchups_arg = matchups[ i : num_of_matchups_per_core + i ] 
+            # for ex in blondie24, this provides 15 matchups 
+            # for the multi_core_compete function to use
+
+            args = [ fitness_score ] + [ matchups_arg ] + [ return_dict ] 
 
             worker = multiprocessing.Process( 
                 target = self.multi_core_compete, 
-                args = [ fitness_score ] + matchup + [ return_dict ] 
+                args = args
             )
 
             worker.start()
@@ -88,28 +98,29 @@ class MetaHeuristicAlgorithm:
             self.breedable_population_size
             )
 
-    def multi_core_compete( self, fitness_score, i, j, return_dict ): # nasty
+    def multi_core_compete( self, fitness_score, matchups, return_dict ): # nasty
 
-        chromosome_one = self.current_bracket[ i ]
-        chromosome_two = self.current_bracket[ j ]
-        
-        result = self.compete( 
-            chromosome_one, 
-            chromosome_two
-        )
+        for (i, j) in matchups:
+            chromosome_one = self.current_bracket[ i ]
+            chromosome_two = self.current_bracket[ j ]
+            
+            result = self.compete( 
+                chromosome_one, 
+                chromosome_two
+            )
 
-        if fitness_score == 'bracket':
+            if fitness_score == 'bracket':
 
-            if result[0] is False or result[1] == 'Draw':
-                self.compete( 
-                    chromosome_two, 
-                    chromosome_one
-                ) # reverse matchup and if its still a draw these two dont move on
+                if result[0] is False or result[1] == 'Draw':
+                    self.compete( 
+                        chromosome_two, 
+                        chromosome_one
+                    ) # reverse matchup and if its still a draw these two dont move on
 
-        return_dict[ ( i, j ) ] = {
-            i: chromosome_one[ 'score' ],
-            j: chromosome_two[ 'score' ]
-        }
+            return_dict[ ( i, j ) ] = {
+                i: chromosome_one[ 'score' ],
+                j: chromosome_two[ 'score' ]
+            }
 
 
     def breed( self, mutation_rate = 0.001, crossover_type = 'random', crossover_genes_indices = list() ):

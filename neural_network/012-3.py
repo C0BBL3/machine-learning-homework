@@ -255,32 +255,44 @@ for generation in range( num_generations ):
         print( '\n\tEvolving Generation: {}...'.format( generation + 1 ) )
     
     if __name__ == '__main__':
+
         with Pool( multiprocessing.cpu_count() - 1 ) as cpu_core_pool: # pool( n - 1 amount of cpu cores/threads idk )
-            MHA.determine_fitness( fitness_score = 'blondie24', cutoff_type = 'hard cutoff', cpu_core_pool = cpu_core_pool )
-    MHA.breed( mutation_rate = 0.01, crossover_type = 'evolutionary' )
 
-    if generation < 5 or generation % 5 == 4: 
-        print( '\n\tGeneration: {} Evolution Completed!'.format( generation + 1 ) )
+            MHA.determine_fitness( 
+                fitness_score = 'blondie24', 
+                cutoff_type = 'hard cutoff', 
+                cpu_core_pool = cpu_core_pool,
+                num_of_matchups_per_core = 21 
+            ) 
+            # 21 yields lowest time taken
 
-    #if generation == 0 or generation % 5 == 4:
+            MHA.breed( 
+                mutation_rate = 0.01, 
+                crossover_type = 'evolutionary' 
+            )
 
-    #print( '\n\tPlotting Generation: {}...'.format( generation + 1 ) )
+            if generation < 5 or generation % 5 == 4: 
+                print( '\n\tGeneration: {} Evolution Completed!'.format( generation + 1 ) )
 
-    #plot_win_loss_tie( MHA, plotted_generations, random_average_score, original_average_score, previous_average_score )
+            if generation == 0 or generation % 5 == 4:
 
-    #print ('\n\t\tWin-Lose-Tie Plotting Completed!' )
-    
-    #plot_state_value( MHA, plotted_generations, win_prediction_score, lose_prediction_score, tie_prediction_score )
+                print( '\n\tPlotting Generation: {}...'.format( generation + 1 ) )
 
-    #print( '\t\tState Value Plotting Completed!' )
-    
-    #plot_strategy_effectiveness( MHA, plotted_generations, win_capture_score, loss_prevention_score )
+                plot_win_loss_tie( MHA, plotted_generations, random_average_score, original_average_score, previous_average_score )
 
-    #print( '\t\tStrategy Effectiveness Plotting Completed!' )
+                print ('\n\t\tWin-Lose-Tie Plotting Completed!' )
+                
+                plot_state_value( MHA, plotted_generations, win_prediction_score, lose_prediction_score, tie_prediction_score )
 
-    #print( '\n\tPlotting Generation: {} Completed'.format( generation + 1) )
+                print( '\t\tState Value Plotting Completed!' )
+                
+                plot_strategy_effectiveness( MHA, plotted_generations, win_capture_score, loss_prevention_score )
 
-    #plotted_generations += 1
+                print( '\t\tStrategy Effectiveness Plotting Completed!' )
+
+                print( '\n\tPlotting Generation: {} Completed'.format( generation + 1) )
+
+                plotted_generations += 1
 
 print( '\nEvolution Complete!' )
 

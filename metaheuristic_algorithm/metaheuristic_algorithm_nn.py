@@ -35,8 +35,6 @@ class MetaHeuristicAlgorithm:
             current_bracket = current_bracket 
         )
 
-        start = time.time()
-
         workers = []
 
         manager = multiprocessing.Manager()
@@ -65,8 +63,6 @@ class MetaHeuristicAlgorithm:
 
             self.current_bracket[ i ][ 'score' ] = worker_return[ i ]
             self.current_bracket[ j ][ 'score' ] = worker_return[ j ]
-
-        print('time', time.time() - start)
 
         if fitness_score == 'bracket' and len( matchups ) > 1:
 

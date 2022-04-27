@@ -1,6 +1,7 @@
 import math
 import sys
 import filecmp
+import time
 from numpy import random
 import multiprocessing
 from multiprocessing import Pool
@@ -16,7 +17,7 @@ from tic_tac_toe import Game, plots_3_and_4
 
 print( '\nStarting...' )
 
-def calculate_score( fittest_chromosomes, population, num_games = 50 ):
+def calculate_score( fittest_chromosomes, population, num_games, return_int ):
 
     for _ in range( num_games ):
 
@@ -47,9 +48,9 @@ def calculate_score( fittest_chromosomes, population, num_games = 50 ):
     for chromosome in population:
         chromosome[ 'score' ] = 0
 
-    return score
+    return_int += score
 
-def calculate_score_random( fittest_chromosomes, random_function, num_games = 50 ):
+def calculate_score_random( fittest_chromosomes, random_function, num_games, return_int ):
 
     for _ in range( num_games ):
 
@@ -78,30 +79,45 @@ def calculate_score_random( fittest_chromosomes, random_function, num_games = 50
         score += chromosome[ 'score' ] / ( 2 * num_games )
         chromosome[ 'score' ] = 0
 
-    return score
+    return_int += score
 
 def plot_win_loss_tie( MHA, plotted_generations, random_average_score, original_average_score, previous_average_score ):
 
-    random_average_score.append( 
-        calculate_score_random( 
-            MHA.fittest_chromosomes, 
-            random_function 
-        ) 
-    )
-        
-    original_average_score.append( 
-        calculate_score( 
-            MHA.fittest_chromosomes, 
-            MHA.original_population 
-        ) 
-    )
+    random_original_previous_iter = {
+        'random': ( random_average_score, calculate_score_random, random_function ), 
+        'original': ( original_average_score, calculate_score, MHA.original_population ), 
+        'previous': ( previous_average_score, calculate_score, MHA.previous_population ) 
+    }
+    
+    workers = list()
+    manager = multiprocessing.Manager()
+    return_dict = manager.dict()
+    return_dict[ 'random' ] = 0
+    return_dict[ 'original' ] = 0
+    return_dict[ 'previous' ] = 0
 
-    previous_average_score.append( 
-        calculate_score( 
-            MHA.fittest_chromosomes, 
-            MHA.previous_population
-        ) 
-    )
+    for name, ( array, function, enemys ) in random_original_previous_iter.items():
+
+        workers.append( list() )
+        
+        for i in range( 0, 3 ):
+
+            args = [ MHA.fittest_chromosomes ] + [ enemys ] + [ 16 ] + [ return_dict[ name ] ]
+
+            worker = multiprocessing.Process( 
+                target = function, 
+                args = args
+            )
+
+            worker.start()
+            workers[ -1 ].append( worker )
+
+    for worker_group in workers:
+        for worker in workers[ -1 ]:
+            worker.join()
+
+    for name, ( array, _, _ ) in random_original_previous_iter.items():
+        array.append( return_dict[ name ] )
     
     plt.plot( list( range( 1, plotted_generations + 2 ) ), random_average_score )
     plt.plot( list( range( 1, plotted_generations + 2 ) ), original_average_score )
@@ -177,25 +193,27 @@ def plot_strategy_effectiveness( MHA, plotted_generations, win_capture_score, lo
     will_block_score = int()
     can_block_score = len( losable_board_states ) * len( MHA.fittest_chromosomes )
 
-    for chromosome in MHA.fittest_chromosomes:
+    for board_state in winnable_board_states:
 
-        for board_state in winnable_board_states:
+        temp = [int(space) for space in board_state]
 
-            temp = [int(space) for space in board_state]
+        win_capture = plots_3_and_4( temp, 1 ) # win capture
 
-            win_capture = plots_3_and_4( temp, 1 ) # win capture
-            
+        for chromosome in MHA.fittest_chromosomes:
+
             current_move = nn_chromosome( chromosome )( temp, 1 )
             
             if current_move in win_capture[ 1 ]:
                 
                 will_win_score += 1
         
-        for board_state in losable_board_states:
+    for board_state in losable_board_states:
 
-            temp = [int(space) for space in board_state]
+        temp = [int(space) for space in board_state]
 
-            loss_prevention = plots_3_and_4(temp, 2) # loss prevention
+        loss_prevention = plots_3_and_4(temp, 2) # loss prevention
+
+        for chromosome in MHA.fittest_chromosomes:
                 
             current_move = nn_chromosome( chromosome )( temp, 1 )
             
@@ -256,43 +274,40 @@ for generation in range( num_generations ):
     
     if __name__ == '__main__':
 
-        with Pool( multiprocessing.cpu_count() - 1 ) as cpu_core_pool: # pool( n - 1 amount of cpu cores/threads idk )
+        MHA.determine_fitness( 
+            fitness_score = 'blondie24', 
+            cutoff_type = 'hard cutoff', 
+            num_of_matchups_per_core = 21 
+        ) 
+        # 21 yields lowest time taken
 
-            MHA.determine_fitness( 
-                fitness_score = 'blondie24', 
-                cutoff_type = 'hard cutoff', 
-                cpu_core_pool = cpu_core_pool,
-                num_of_matchups_per_core = 21 
-            ) 
-            # 21 yields lowest time taken
+        MHA.breed( 
+            mutation_rate = 0.01, 
+            crossover_type = 'evolutionary' 
+        )
 
-            MHA.breed( 
-                mutation_rate = 0.01, 
-                crossover_type = 'evolutionary' 
-            )
+        if generation < 5 or generation % 5 == 4: 
+            print( '\n\tGeneration: {} Evolution Completed!'.format( generation + 1 ) )
 
-            if generation < 5 or generation % 5 == 4: 
-                print( '\n\tGeneration: {} Evolution Completed!'.format( generation + 1 ) )
+        if generation == 0 or generation % 5 == 4:
 
-            if generation == 0 or generation % 5 == 4:
+            print( '\n\tPlotting Generation: {}...'.format( generation + 1 ) )
 
-                print( '\n\tPlotting Generation: {}...'.format( generation + 1 ) )
+            plot_win_loss_tie( MHA, plotted_generations, random_average_score, original_average_score, previous_average_score )
 
-                plot_win_loss_tie( MHA, plotted_generations, random_average_score, original_average_score, previous_average_score )
+            print ('\n\t\tWin-Lose-Tie Plotting Completed!' )
+            
+            plot_state_value( MHA, plotted_generations, win_prediction_score, lose_prediction_score, tie_prediction_score )
 
-                print ('\n\t\tWin-Lose-Tie Plotting Completed!' )
-                
-                plot_state_value( MHA, plotted_generations, win_prediction_score, lose_prediction_score, tie_prediction_score )
+            print( '\t\tState Value Plotting Completed!' )
+            
+            plot_strategy_effectiveness( MHA, plotted_generations, win_capture_score, loss_prevention_score )
 
-                print( '\t\tState Value Plotting Completed!' )
-                
-                plot_strategy_effectiveness( MHA, plotted_generations, win_capture_score, loss_prevention_score )
+            print( '\t\tStrategy Effectiveness Plotting Completed!' )
 
-                print( '\t\tStrategy Effectiveness Plotting Completed!' )
+            print( '\n\tPlotting Generation: {} Completed'.format( generation + 1) )
 
-                print( '\n\tPlotting Generation: {} Completed'.format( generation + 1) )
-
-                plotted_generations += 1
+            plotted_generations += 1
 
 print( '\nEvolution Complete!' )
 

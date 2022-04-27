@@ -3,6 +3,8 @@ import numpy as np
 import time
 import ast
 import math
+import multiprocessing
+from multiprocessing import Pool
 from tic_tac_toe import Game
 import sys
 sys.path.append('neural_network')
@@ -15,32 +17,46 @@ class MetaHeuristicAlgorithm:
     def __init__( self ):
         self.population = list()
 
-    def determine_fitness( self, fitness_score = 'round robin', cutoff_type = 'hard cutoff', current_bracket = None, round_number = 1, breedable_population_size = int() ):
+    def determine_fitness( self, fitness_score = 'round robin', cutoff_type = 'hard cutoff', current_bracket = None, round_number = 1, breedable_population_size = int(), cpu_core_pool = None ):
 
         self.fittest_chromosomes = list()
 
         if current_bracket is None: 
             current_bracket = self.population
 
+        self.current_bracket = current_bracket
+
         matchups = determine_matchups( 
             fitness_score, 
             current_bracket = current_bracket 
         )
 
-        for k, ( i, j ) in enumerate(matchups): 
-            
-            result = self.compete( 
-                current_bracket[ i ],
-                current_bracket[ j ] 
+        start = time.time()
+
+        workers = []
+
+        manager = multiprocessing.Manager()
+        return_dict = manager.dict()
+
+        for matchup in matchups: 
+
+            worker = multiprocessing.Process( 
+                target = self.multi_core_compete, 
+                args = [ fitness_score ] + matchup + [ return_dict ] 
             )
 
-            if fitness_score == 'bracket':
+            worker.start()
+            workers.append( worker )
 
-                if result[0] is False or result[1] == 'Draw':
-                    self.compete( 
-                        current_bracket[ j ], 
-                        current_bracket[ i ] 
-                    ) # reverse matchup and if its still a draw these two dont move on
+        for worker in workers:
+            worker.join()
+
+        for (i, j), worker_return in return_dict.items():
+
+            self.current_bracket[ i ][ 'score' ] = worker_return[ i ]
+            self.current_bracket[ j ][ 'score' ] = worker_return[ j ]
+
+        print('time', time.time() - start)
 
         if fitness_score == 'bracket' and len( matchups ) > 1:
 
@@ -71,6 +87,30 @@ class MetaHeuristicAlgorithm:
             self.population,
             self.breedable_population_size
             )
+
+    def multi_core_compete( self, fitness_score, i, j, return_dict ): # nasty
+
+        chromosome_one = self.current_bracket[ i ]
+        chromosome_two = self.current_bracket[ j ]
+        
+        result = self.compete( 
+            chromosome_one, 
+            chromosome_two
+        )
+
+        if fitness_score == 'bracket':
+
+            if result[0] is False or result[1] == 'Draw':
+                self.compete( 
+                    chromosome_two, 
+                    chromosome_one
+                ) # reverse matchup and if its still a draw these two dont move on
+
+        return_dict[ ( i, j ) ] = {
+            i: chromosome_one[ 'score' ],
+            j: chromosome_two[ 'score' ]
+        }
+
 
     def breed( self, mutation_rate = 0.001, crossover_type = 'random', crossover_genes_indices = list() ):
 

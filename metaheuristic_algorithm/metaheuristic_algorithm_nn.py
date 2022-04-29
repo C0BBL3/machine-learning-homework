@@ -17,11 +17,7 @@ class MetaHeuristicAlgorithm:
     def __init__( self ):
         self.population = list()
 
-    def determine_fitness( self, fitness_score = 'round robin', cutoff_type = 'hard cutoff', current_bracket = None, round_number = 1, breedable_population_size = int(), cpu_core_pool = None, num_of_matchups_per_core = int() ):
-
-        if num_of_matchups_per_core == int():
-
-            num_of_matchups_per_core = self.breedable_population_size
+    def determine_fitness( self, fitness_score = 'round robin', cutoff_type = 'hard cutoff', current_bracket = None, round_number = 1, breedable_population_size = int() ):
         
         self.fittest_chromosomes = list()
 
@@ -36,15 +32,20 @@ class MetaHeuristicAlgorithm:
         )
 
         workers = []
-
+        available_thread_count = multiprocessing.cpu_count() - 1
         manager = multiprocessing.Manager()
         return_dict = manager.dict()
+        num_of_matchups_per_core = math.floor( 
+            len( matchups) /
+            available_thread_count
+        )
 
         for i in range(0, len( matchups ), num_of_matchups_per_core ):
 
             matchups_arg = matchups[ i : num_of_matchups_per_core + i ] 
-            # for ex in blondie24, this provides 15 matchups 
-            # for the multi_core_compete function to use
+            # for ex in blondie24, this provides 21 matchups 
+            # for the multi_core_compete function 
+            # to complete in each core
 
             args = [ fitness_score ] + [ matchups_arg ] + [ return_dict ] 
 
@@ -58,11 +59,13 @@ class MetaHeuristicAlgorithm:
 
         for worker in workers:
             worker.join()
+            # must call .join() to make sure
+            # the compete function is complete
+            # before moving on to cutoffs
+            
+        for i, worker_return in return_dict.items():
 
-        for (i, j), worker_return in return_dict.items():
-
-            self.current_bracket[ i ][ 'score' ] = worker_return[ i ]
-            self.current_bracket[ j ][ 'score' ] = worker_return[ j ]
+            self.current_bracket[ i ][ 'score' ] = worker_return
 
         if fitness_score == 'bracket' and len( matchups ) > 1:
 
@@ -94,9 +97,13 @@ class MetaHeuristicAlgorithm:
             self.breedable_population_size
             )
 
+        for chromosome in self.population:
+            chromosome[ 'score' ] = 0
+
     def multi_core_compete( self, fitness_score, matchups, return_dict ): # nasty
 
         for (i, j) in matchups:
+
             chromosome_one = self.current_bracket[ i ]
             chromosome_two = self.current_bracket[ j ]
             
@@ -113,11 +120,10 @@ class MetaHeuristicAlgorithm:
                         chromosome_one
                     ) # reverse matchup and if its still a draw these two dont move on
 
-            return_dict[ ( i, j ) ] = {
-                i: chromosome_one[ 'score' ],
-                j: chromosome_two[ 'score' ]
-            }
+        for (i, j) in matchups:
 
+            return_dict[ i ] = self.current_bracket[ i ][ 'score' ]
+            return_dict[ j ] = self.current_bracket[ j ][ 'score' ]
 
     def breed( self, mutation_rate = 0.001, crossover_type = 'random', crossover_genes_indices = list() ):
 
@@ -289,7 +295,14 @@ def determine_matchups(fitness_score, current_bracket = None):
 
             for _ in range( 5 ):
             
-                j = random.choice(list( range( len( current_bracket ) ) ) )
+                j = random.choice( list( range( len( current_bracket ) ) ) )
+
+                while [i, j] in matchups and [j, i] in matchups: 
+
+                    # re-roll j so we dont have two of the same games 
+                    # with the same players (order doesnt matter)
+
+                    j = random.choice( list( range( len( current_bracket ) ) ) )
 
                 matchups.append( [i, j] )
 
@@ -467,7 +480,14 @@ def copy_population( population ):
     for chromosome in population:
 
         copy_chromosome = {
-            'genes': NeuralNetwork( chromosome[ 'genes' ].weights ),
+            'genes': NeuralNetwork( 
+                chromosome[ 'genes' ].weights,
+                data_type = chromosome[ 'genes' ].data_type,
+                functions = chromosome[ 'genes' ].functions,
+                derivatives = chromosome[ 'genes' ].derivatives,
+                alpha = chromosome[ 'genes' ].alpha
+
+            ),
             'score': int()
         }
 

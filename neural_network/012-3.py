@@ -15,271 +15,271 @@ sys.path.append('metaheuristic_algorithm/')
 from metaheuristic_algorithm_nn import MetaHeuristicAlgorithm, nn_chromosome
 from tic_tac_toe import Game, plots_3_and_4
 
-print( '\nStarting...' )
+if __name__ == '__main__':
 
-def calculate_score( fittest_chromosomes, population, num_games, return_int ):
+    print( '\nStarting...' )
 
-    for _ in range( num_games ):
+    def calculate_score( fittest_chromosomes, population, num_games, return_int ):
 
-        chromosome_one = random.choice( fittest_chromosomes )
-        chromosome_two = random.choice( population )
-        game = Game( nn_chromosome( chromosome_one ), nn_chromosome( chromosome_two ) )
-        result = game.play()
+        for _ in range( num_games ):
 
-        if result[ 1 ] == 1: # chromosome 1 won
-            chromosome_one[ 'score' ] += 1
-        elif result[ 1 ] == 2: # chromosome 2 won
-            chromosome_one[ 'score' ] -= 1
+            chromosome_one = random.choice( fittest_chromosomes )
+            chromosome_two = random.choice( population )
+            game = Game( nn_chromosome( chromosome_one ), nn_chromosome( chromosome_two ) )
+            result = game.play()
+
+            if result[ 1 ] == 1: # chromosome 1 won
+                chromosome_one[ 'score' ] += 1
+            elif result[ 1 ] == 2: # chromosome 2 won
+                chromosome_one[ 'score' ] -= 1
+            
+            game = Game( nn_chromosome( chromosome_two ), nn_chromosome( chromosome_one ) )
+            result = game.play()
+
+            if result[ 1 ] == 1: # chromosome 1 won
+                chromosome_one[ 'score' ] += 1
+            elif result[ 1 ] == 2: # chromosome 2 won
+                chromosome_one[ 'score' ] -= 1
+
+        score = int()
+
+        for chromosome in fittest_chromosomes:
+            score += chromosome[ 'score' ] / ( 2 * num_games )
+            chromosome[ 'score' ] = 0
+
+        for chromosome in population:
+            chromosome[ 'score' ] = 0
+
+        return_int += score
+
+    def calculate_score_random( fittest_chromosomes, random_function, num_games, return_int ):
+
+        for _ in range( num_games ):
+
+            chromosome_one = random.choice( fittest_chromosomes )
+            game = Game( nn_chromosome( chromosome_one ), random_function )
+            result = game.play()
+
+            if result[ 1 ] == 1: # chromosome 1 won
+                chromosome_one[ 'score' ] += 1
+            elif result[ 1 ] == 2: # random won
+                chromosome_one[ 'score' ] -= 1
+            
+            game = Game( random_function, nn_chromosome( chromosome_one ) )
+            result = game.play()
+
+            if result[ 1 ] == 1: # chromosome 1 won
+                chromosome_one[ 'score' ] += 1
+            elif result[ 1 ] == 2: # random won
+                chromosome_one[ 'score' ] -= 1
+
+            num_games += 2
+
+        score = int()
+
+        for chromosome in fittest_chromosomes:
+            score += chromosome[ 'score' ] / ( 2 * num_games )
+            chromosome[ 'score' ] = 0
+
+        return_int += score
+
+    def plot_win_loss_tie( MHA, num_of_plotted_generations, random_average_score, original_average_score, previous_average_score, temp ):
+
+        start = time.time()
+        random_original_previous_iter = {
+            'random': ( random_average_score, calculate_score_random, random_function ), 
+            'original': ( original_average_score, calculate_score, MHA.original_population ), 
+            'previous': ( previous_average_score, calculate_score, MHA.previous_population ) 
+        }
         
-        game = Game( nn_chromosome( chromosome_two ), nn_chromosome( chromosome_one ) )
-        result = game.play()
+        workers = list()
+        manager = multiprocessing.Manager()
+        return_dict = manager.dict()
+        return_dict[ 'random' ] = 0
+        return_dict[ 'original' ] = 0
+        return_dict[ 'previous' ] = 0
 
-        if result[ 1 ] == 1: # chromosome 1 won
-            chromosome_one[ 'score' ] += 1
-        elif result[ 1 ] == 2: # chromosome 2 won
-            chromosome_one[ 'score' ] -= 1
+        for name, ( array, function, enemys ) in random_original_previous_iter.items():
 
-    score = int()
+            workers.append( list() )
+            
+            for i in range( 0, 6 ):
 
-    for chromosome in fittest_chromosomes:
-        score += chromosome[ 'score' ] / ( 2 * num_games )
-        chromosome[ 'score' ] = 0
+                args = [ MHA.fittest_chromosomes ] + [ enemys ] + [ 17 ] + [ return_dict[ name ] ]
 
-    for chromosome in population:
-        chromosome[ 'score' ] = 0
+                worker = multiprocessing.Process( 
+                    target = function, 
+                    args = args
+                )
 
-    return_int += score
+                worker.start()
+                workers[ -1 ].append( worker )
 
-def calculate_score_random( fittest_chromosomes, random_function, num_games, return_int ):
+        for worker_group in workers:
+            for worker in workers[ -1 ]:
+                worker.join()
 
-    for _ in range( num_games ):
-
-        chromosome_one = random.choice( fittest_chromosomes )
-        game = Game( nn_chromosome( chromosome_one ), random_function )
-        result = game.play()
-
-        if result[ 1 ] == 1: # chromosome 1 won
-            chromosome_one[ 'score' ] += 1
-        elif result[ 1 ] == 2: # random won
-            chromosome_one[ 'score' ] -= 1
+        for name, ( array, _, _ ) in random_original_previous_iter.items():
+            array.append( return_dict[ name ] )
         
-        game = Game( random_function, nn_chromosome( chromosome_one ) )
-        result = game.play()
+        plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), random_average_score )
+        plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), original_average_score )
+        plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), previous_average_score )
+        plt.legend( [ 'Random', 'Original', 'Previous' ] )
+        plt.savefig( 'images/012-3-1.png' )
+        plt.clf()
+        print('time', time.time() - start )
 
-        if result[ 1 ] == 1: # chromosome 1 won
-            chromosome_one[ 'score' ] += 1
-        elif result[ 1 ] == 2: # random won
-            chromosome_one[ 'score' ] -= 1
+    def plot_state_value( MHA, num_of_plotted_generations, win_prediction_score, lose_prediction_score, tie_prediction_score ):
 
-        num_games += 2
+        winning_board_states = [ line.strip( '\n' ) for line in open( 'metaheuristic_algorithm/ttt_board_states/winning_board_states.txt', 'r' ).readlines() ]
+        losing_board_states = [ line.strip( '\n' ) for line in open( 'metaheuristic_algorithm/ttt_board_states/losing_board_states.txt', 'r' ).readlines() ]
+        tieing_board_states = [ line.strip( '\n' ) for line in open( 'metaheuristic_algorithm/ttt_board_states/tieing_board_states.txt', 'r' ).readlines() ]
 
-    score = int()
+        win_predictions = int() 
+        num_win_predictions = len( winning_board_states ) * len( MHA.fittest_chromosomes ) 
 
-    for chromosome in fittest_chromosomes:
-        score += chromosome[ 'score' ] / ( 2 * num_games )
-        chromosome[ 'score' ] = 0
+        lose_predictions = int()
+        num_lose_predictions = len( losing_board_states ) * len( MHA.fittest_chromosomes )
 
-    return_int += score
-
-def plot_win_loss_tie( MHA, plotted_generations, random_average_score, original_average_score, previous_average_score ):
-
-    random_original_previous_iter = {
-        'random': ( random_average_score, calculate_score_random, random_function ), 
-        'original': ( original_average_score, calculate_score, MHA.original_population ), 
-        'previous': ( previous_average_score, calculate_score, MHA.previous_population ) 
-    }
-    
-    workers = list()
-    manager = multiprocessing.Manager()
-    return_dict = manager.dict()
-    return_dict[ 'random' ] = 0
-    return_dict[ 'original' ] = 0
-    return_dict[ 'previous' ] = 0
-
-    for name, ( array, function, enemys ) in random_original_previous_iter.items():
-
-        workers.append( list() )
-        
-        for i in range( 0, 3 ):
-
-            args = [ MHA.fittest_chromosomes ] + [ enemys ] + [ 16 ] + [ return_dict[ name ] ]
-
-            worker = multiprocessing.Process( 
-                target = function, 
-                args = args
-            )
-
-            worker.start()
-            workers[ -1 ].append( worker )
-
-    for worker_group in workers:
-        for worker in workers[ -1 ]:
-            worker.join()
-
-    for name, ( array, _, _ ) in random_original_previous_iter.items():
-        array.append( return_dict[ name ] )
-    
-    plt.plot( list( range( 1, plotted_generations + 2 ) ), random_average_score )
-    plt.plot( list( range( 1, plotted_generations + 2 ) ), original_average_score )
-    plt.plot( list( range( 1, plotted_generations + 2 ) ), previous_average_score )
-    plt.legend( [ 'Random', 'Original', 'Previous' ] )
-    plt.savefig( 'images/012-3-1.png' )
-    plt.clf()
-
-def plot_state_value( MHA, plotted_generations, win_prediction_score, lose_prediction_score, tie_prediction_score ):
-
-    winning_board_states = [ line.strip( '\n' ) for line in open( 'metaheuristic_algorithm/ttt_board_states/winning_board_states.txt', 'r' ).readlines() ]
-    losing_board_states = [ line.strip( '\n' ) for line in open( 'metaheuristic_algorithm/ttt_board_states/losing_board_states.txt', 'r' ).readlines() ]
-    tieing_board_states = [ line.strip( '\n' ) for line in open( 'metaheuristic_algorithm/ttt_board_states/tieing_board_states.txt', 'r' ).readlines() ]
-
-    win_predictions = int() 
-    num_win_predictions = len( winning_board_states ) * len( MHA.fittest_chromosomes ) 
-
-    lose_predictions = int()
-    num_lose_predictions = len( losing_board_states ) * len( MHA.fittest_chromosomes )
-
-    tie_predictions = int()
-    num_tie_predictions = len( tieing_board_states ) * len( MHA.fittest_chromosomes )
-
-    for chromosome in MHA.fittest_chromosomes:
-
-        for board_state in winning_board_states:
-
-            temp = [int(space) for space in board_state]
-            win_predictions += chromosome['genes'].calc_prediction(
-                {
-                    'input': temp
-                }
-            )
-                        
-        for board_state in losing_board_states:
-
-            temp = [int(space) for space in board_state]
-            lose_predictions += chromosome['genes'].calc_prediction(
-                {
-                    'input': temp
-                }
-            )
-
-        for board_state in tieing_board_states:
-
-            temp = [int(space) for space in board_state]
-            tie_predictions += chromosome['genes'].calc_prediction(
-                {
-                    'input': temp
-                }
-            )
-
-    win_prediction_score.append( win_predictions / num_win_predictions )
-    lose_prediction_score.append( lose_predictions / num_lose_predictions )
-    tie_prediction_score.append( tie_predictions / num_tie_predictions )
-
-    plt.plot( list( range( 1, plotted_generations + 2 ) ), win_prediction_score )
-    plt.plot( list( range( 1, plotted_generations + 2 ) ), lose_prediction_score )
-    plt.plot( list( range( 1, plotted_generations + 2 ) ), tie_prediction_score )
-
-    plt.legend( [ 'Win', 'Lose', 'Tie' ] )
-    plt.savefig( 'images/012-3-2.png' )
-    plt.clf()
-
-def plot_strategy_effectiveness( MHA, plotted_generations, win_capture_score, loss_prevention_score ):
-
-    winnable_board_states = [ line.strip( '\n' ) for line in open( 'metaheuristic_algorithm/ttt_board_states/winnable_board_states.txt', 'r' ).readlines() ]
-    losable_board_states = [ line.strip( '\n' ) for line in open( 'metaheuristic_algorithm/ttt_board_states/losable_board_states.txt', 'r' ).readlines() ]
-
-    will_win_score = int()
-    can_win_score = len( winnable_board_states ) * len( MHA.fittest_chromosomes )
-
-    will_block_score = int()
-    can_block_score = len( losable_board_states ) * len( MHA.fittest_chromosomes )
-
-    for board_state in winnable_board_states:
-
-        temp = [int(space) for space in board_state]
-
-        win_capture = plots_3_and_4( temp, 1 ) # win capture
+        tie_predictions = int()
+        num_tie_predictions = len( tieing_board_states ) * len( MHA.fittest_chromosomes )
 
         for chromosome in MHA.fittest_chromosomes:
 
-            current_move = nn_chromosome( chromosome )( temp, 1 )
+            for board_state in winning_board_states:
+
+                temp = [int(space) for space in board_state]
+                win_predictions += chromosome['genes'].calc_prediction(
+                    {
+                        'input': temp
+                    }
+                )
+                            
+            for board_state in losing_board_states:
+
+                temp = [int(space) for space in board_state]
+                lose_predictions += chromosome['genes'].calc_prediction(
+                    {
+                        'input': temp
+                    }
+                )
+
+            for board_state in tieing_board_states:
+
+                temp = [int(space) for space in board_state]
+                tie_predictions += chromosome['genes'].calc_prediction(
+                    {
+                        'input': temp
+                    }
+                )
+
+        win_prediction_score.append( win_predictions / num_win_predictions )
+        lose_prediction_score.append( lose_predictions / num_lose_predictions )
+        tie_prediction_score.append( tie_predictions / num_tie_predictions )
+
+        plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), win_prediction_score )
+        plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), lose_prediction_score )
+        plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), tie_prediction_score )
+
+        plt.legend( [ 'Win', 'Lose', 'Tie' ] )
+        plt.savefig( 'images/012-3-2.png' )
+        plt.clf()
+
+    def plot_strategy_effectiveness( MHA, num_of_plotted_generations, win_capture_score, loss_prevention_score ):
+
+        winnable_board_states = [ line.strip( '\n' ) for line in open( 'metaheuristic_algorithm/ttt_board_states/winnable_board_states.txt', 'r' ).readlines() ]
+        losable_board_states = [ line.strip( '\n' ) for line in open( 'metaheuristic_algorithm/ttt_board_states/losable_board_states.txt', 'r' ).readlines() ]
+
+        will_win_score = int()
+        can_win_score = len( winnable_board_states ) * len( MHA.fittest_chromosomes )
+
+        will_block_score = int()
+        can_block_score = len( losable_board_states ) * len( MHA.fittest_chromosomes )
+
+        for board_state in winnable_board_states:
+
+            temp = [int(space) for space in board_state]
+
+            win_capture = plots_3_and_4( temp, 1 ) # win capture
+
+            for chromosome in MHA.fittest_chromosomes:
+
+                current_move = nn_chromosome( chromosome )( temp, 1 )
+                
+                if current_move in win_capture[ 1 ]:
+                    
+                    will_win_score += 1
             
-            if current_move in win_capture[ 1 ]:
+        for board_state in losable_board_states:
+
+            temp = [int(space) for space in board_state]
+
+            loss_prevention = plots_3_and_4(temp, 2) # loss prevention
+
+            for chromosome in MHA.fittest_chromosomes:
+                    
+                current_move = nn_chromosome( chromosome )( temp, 1 )
                 
-                will_win_score += 1
-        
-    for board_state in losable_board_states:
+                if current_move in loss_prevention[ 1 ]:
+                    
+                    will_block_score -= 1
 
-        temp = [int(space) for space in board_state]
+        win_capture_score.append( will_win_score / can_win_score )
+        loss_prevention_score.append( will_block_score / can_block_score )
 
-        loss_prevention = plots_3_and_4(temp, 2) # loss prevention
+        plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), win_capture_score )
+        plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), loss_prevention_score )
+        plt.legend( [ 'Win Rate', 'Lose Rate' ] )
+        plt.savefig( 'images/012-3-3.png' )
+        plt.clf()
 
-        for chromosome in MHA.fittest_chromosomes:
-                
-            current_move = nn_chromosome( chromosome )( temp, 1 )
-            
-            if current_move in loss_prevention[ 1 ]:
-                
-                will_block_score -= 1
+    random_average_score = list()
+    original_average_score = list()
+    previous_average_score = list()
 
-    win_capture_score.append( will_win_score / can_win_score )
-    loss_prevention_score.append( will_block_score / can_block_score )
+    win_prediction_score = list()
+    lose_prediction_score = list()
+    tie_prediction_score = list()
 
-    plt.plot( list( range( 1, plotted_generations + 2 ) ), win_capture_score )
-    plt.plot( list( range( 1, plotted_generations + 2 ) ), loss_prevention_score )
-    plt.legend( [ 'Win Rate', 'Lose Rate' ] )
-    plt.savefig( 'images/012-3-3.png' )
-    plt.clf()
+    win_capture_score = list()
+    loss_prevention_score = list()
 
-random_average_score = list()
-original_average_score = list()
-previous_average_score = list()
+    num_generations = 250
 
-win_prediction_score = list()
-lose_prediction_score = list()
-tie_prediction_score = list()
+    print( '\nInitializing Meta-Heuristic Algorithm...' )
 
-win_capture_score = list()
-loss_prevention_score = list()
+    MHA = MetaHeuristicAlgorithm() 
+    MHA.read_chromosomes( 
+        generate_weights, 
+        [14, 9, 6, 1],
+        population_size = 30, # instead of 20 cause im lazy
+        breedable_population_size = 15,
+        layers_with_bias_nodes = [ False, False, False, False ],
+        input_size = [ 3, 3 ] # must be square
+    )
 
-num_generations = 250
+    def random_function( board_state, current_player ):
+        return random.choice( [ 
+            i 
+            for i in range( 9 ) 
+            if int( board_state[ i ] ) == 0 
+        ] )
 
-print( '\nInitializing Meta-Heuristic Algorithm...' )
+    num_of_plotted_generations = 0
+    game = Game( None, None )
 
-MHA = MetaHeuristicAlgorithm() 
-MHA.read_chromosomes( 
-    generate_weights, 
-    [14, 9, 6, 1],
-    population_size = 30, # instead of 20 cause im lazy
-    breedable_population_size = 15,
-    layers_with_bias_nodes = [ False, False, False, False ],
-    input_size = [ 3, 3 ] # must be square
-)
+    print( '\nInitialization Complete! \n\nEvolving...' )
 
-def random_function( board_state, current_player ):
-    return random.choice( [ 
-        i 
-        for i in range( 9 ) 
-        if int( board_state[ i ] ) == 0 
-    ] )
+    for generation in range( num_generations ):
 
-plotted_generations = 0
-game = Game( None, None )
-
-print( '\nInitialization Complete! \n\nEvolving...' )
-
-for generation in range( num_generations ):
-
-    if generation < 5 or generation % 5 == 4: 
-        print( '\n\tEvolving Generation: {}...'.format( generation + 1 ) )
-    
-    if __name__ == '__main__':
+        if generation < 5 or generation % 5 == 4: 
+            print( '\n\tEvolving Generation: {}...'.format( generation + 1 ) )
 
         MHA.determine_fitness( 
             fitness_score = 'blondie24', 
             cutoff_type = 'hard cutoff', 
-            num_of_matchups_per_core = 21 
         ) 
-        # 21 yields lowest time taken
 
         MHA.breed( 
             mutation_rate = 0.01, 
@@ -289,39 +289,60 @@ for generation in range( num_generations ):
         if generation < 5 or generation % 5 == 4: 
             print( '\n\tGeneration: {} Evolution Completed!'.format( generation + 1 ) )
 
-        if generation == 0 or generation % 5 == 4:
+        if generation == 0 or generation % 5 == 4 or True:
 
             print( '\n\tPlotting Generation: {}...'.format( generation + 1 ) )
 
-            plot_win_loss_tie( MHA, plotted_generations, random_average_score, original_average_score, previous_average_score )
+            plot_win_loss_tie( 
+                MHA, 
+                num_of_plotted_generations, 
+                random_average_score, 
+                original_average_score, 
+                previous_average_score,
+                generation 
+            )
 
             print ('\n\t\tWin-Lose-Tie Plotting Completed!' )
             
-            plot_state_value( MHA, plotted_generations, win_prediction_score, lose_prediction_score, tie_prediction_score )
+            plot_state_value( 
+                MHA, 
+                num_of_plotted_generations, 
+                win_prediction_score, 
+                lose_prediction_score, 
+                tie_prediction_score 
+            )
 
             print( '\t\tState Value Plotting Completed!' )
             
-            plot_strategy_effectiveness( MHA, plotted_generations, win_capture_score, loss_prevention_score )
+            # this plot isn't needed but
+            # provides some decent info
+            
+            #plot_strategy_effectiveness( 
+            #   MHA, 
+            #   num_of_plotted_generations, 
+            #   win_capture_score, 
+            #   loss_prevention_score 
+            #)
 
-            print( '\t\tStrategy Effectiveness Plotting Completed!' )
+            #print( '\t\tStrategy Effectiveness Plotting Completed!' )
 
             print( '\n\tPlotting Generation: {} Completed'.format( generation + 1) )
 
-            plotted_generations += 1
+            num_of_plotted_generations += 1
 
-print( '\nEvolution Complete!' )
+        print( '\nEvolution Complete!' )
 
-print('\n\tSaving Best Neural Network')
-neural_network_file = open('metaheuristic_algorithm/ttt_board_states/best_neural_network.txt', 'w')
-neural_network_file.write('{')
+    print('\n\tSaving Best Neural Network')
+    neural_network_file = open('metaheuristic_algorithm/ttt_board_states/best_neural_network.txt', 'w')
+    neural_network_file.write('{')
 
-for edge, weight in MMA.fittest_chromosomes[ 0 ].weights.items():
-    string = '\n{}: {}'.format(edge, weight)
-    neural_network_file.write(string)
+    for edge, weight in MMA.fittest_chromosomes[ 0 ].weights.items():
+        string = '\n{}: {}'.format(edge, weight)
+        neural_network_file.write(string)
 
-neural_network_file.write('\n}')
+    neural_network_file.write('\n}')
 
-print( '\n\tSaved Best Neural Network!' )
+    print( '\n\tSaved Best Neural Network!' )
 
-print('\nFinished!')    
+    print('\nFinished!')    
 

@@ -19,101 +19,67 @@ if __name__ == '__main__':
 
     print( '\nStarting...' )
 
-    def calculate_score( fittest_chromosomes, population, num_games, return_dict, matchups ):
+    def calculate_score( fittest_chromosomes, population, num_games, return_int ):
 
-        i = random.choice( list( range( len( fittest_chromosomes ) ) ) )
-        j = random.choice( list( range( len( population ) ) ) )
-        
+        print('wins 1', return_int)
+
         for _ in range( num_games ):
 
-            chromosome_one = fittest_chromosomes[ i ]
-            chromosome_two = population[ j ]
+            chromosome_one = random.choice( fittest_chromosomes )
+            chromosome_two = random.choice( population )
 
             game = Game( nn_chromosome( chromosome_one ), nn_chromosome( chromosome_two ) )
             result = game.play()
 
             if result[ 1 ] == 1: # chromosome 1 won
-                chromosome_one[ 'score' ] += 1
-            elif result[ 1 ] == 2: # chromosome 2 won
-                chromosome_one[ 'score' ] -= 1
+                return_int += 1 / ( 2 * num_games )
             
-            #game = Game( nn_chromosome( chromosome_two ), nn_chromosome( chromosome_one ) )
-            #result = game.play()
+            game = Game( nn_chromosome( chromosome_two ), nn_chromosome( chromosome_one ) )
+            result = game.play()
 
-            #if result[ 1 ] == 1: # chromosome 1 won
-            #    chromosome_one[ 'score' ] += 1
-            #elif result[ 1 ] == 2: # chromosome 2 won
-            #    chromosome_one[ 'score' ] -= 1
+            if result[ 1 ] == 2: # chromosome 1 won
+                return_int += 1 / ( 2* num_games )
+            
+        print('wins 2', return_int)
 
-            while [ i, j ] not in matchups and [ j, i ] not in matchups:
+    def calculate_score_random( fittest_chromosomes, random_function, num_games, return_int ):
 
-                i = random.choice( list( range( len( fittest_chromosomes ) ) ) )
-                j = random.choice( list( range( len( population ) ) ) )
-
-            matchups.add( [ i, j + len( fittest_chromosomes ) ] )
-
-        score = int()
-
-        for chromosome in fittest_chromosomes:
-            score += chromosome[ 'score' ] / ( 2 * num_games )
-            chromosome[ 'score' ] = 0
-
-        for chromosome in population:
-            chromosome[ 'score' ] = 0
-
-        return_int += score
-
-    def calculate_score_random( fittest_chromosomes, random_function, num_games, return_int, matchups ):
+        print('wins random 1', return_int)
 
         for _ in range( num_games ):
 
             chromosome_one = random.choice( fittest_chromosomes )
+
             game = Game( nn_chromosome( chromosome_one ), random_function )
             result = game.play()
 
             if result[ 1 ] == 1: # chromosome 1 won
-                chromosome_one[ 'score' ] += 1
-            elif result[ 1 ] == 2: # random won
-                chromosome_one[ 'score' ] -= 1
+                return_int += 1 / ( 2 * num_games )
             
-            #game = Game( random_function, nn_chromosome( chromosome_one ) )
-            #result = game.play()
+            game = Game( random_function, nn_chromosome( chromosome_one ) )
+            result = game.play()
 
-            #if result[ 1 ] == 1: # chromosome 1 won
-            #    chromosome_one[ 'score' ] += 1
-            #elif result[ 1 ] == 2: # random won
-            #    chromosome_one[ 'score' ] -= 1
+            if result[ 1 ] == 2: # chromosome 1 won
+                return_int += 1 / ( 2 * num_games )
 
-            num_games += 2
-
-        score = int()
-
-        for chromosome in fittest_chromosomes:
-            score += chromosome[ 'score' ] / ( 2 * num_games )
-            chromosome[ 'score' ] = 0
-
-        return_int += score
+        print('wins random 2', return_int)
 
     def plot_win_loss_tie( MHA, plotted_generation_num, random_average_score, original_average_score, previous_average_score ):
 
         # stoopid thing to make cleaner code
         random_original_previous_iter = {
-            'random': ( random_average_score, calculate_score_random, None ), 
-            'original': ( original_average_score, calculate_score, MHA.original_population ), 
-            'previous': ( previous_average_score, calculate_score, MHA.previous_population ) 
+            'random': ( random_average_score, calculate_score_random, random_function ), 
+            'original': ( original_average_score, calculate_score, MHA.original_population[ : len( MHA.fittest_chromosomes ) ] ), 
+            'previous': ( previous_average_score, calculate_score, MHA.previous_population[ : len( MHA.fittest_chromosomes ) ] ) 
         }
-
-        start = time.time()
         
         workers = list()
-        manager = multiprocessing.Manager()
-        return_dict = manager.dict()
+        return_dict = multiprocessing.Manager().dict()
         return_dict[ 'random' ] = int()
         return_dict[ 'original' ] = int()
         return_dict[ 'previous' ] = int()
-        return_dict[ 'matchups' ] = set()
         
-        for i, ( name, ( array, function, enemys ) ) in enumerate( random_original_previous_iter.items() ): # cringe
+        for i, ( name, ( plot, function, enemys ) ) in enumerate( random_original_previous_iter.items() ): # cringe
 
             worker_group = list()
 
@@ -130,8 +96,7 @@ if __name__ == '__main__':
                     MHA.fittest_chromosomes, 
                     enemys, 
                     num_of_matchups_per_core, 
-                    return_dict[ name ], 
-                    return_dict[ 'matchups' ] 
+                    return_dict[ name ]
                 ]
 
                 worker = multiprocessing.Process( 
@@ -148,10 +113,9 @@ if __name__ == '__main__':
             for worker in worker_group:
                 worker.join()
 
-        for name, ( array, _, _ ) in random_original_previous_iter.items():
-            array.append( return_dict[ name ] )
-
-        print('time', time.time() - start)
+        for name, ( plot, _, _ ) in random_original_previous_iter.items():
+            print(return_dict[ name ])
+            plot.append( return_dict[ name ] )
         
         plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), random_average_score )
         plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), original_average_score )
@@ -159,53 +123,6 @@ if __name__ == '__main__':
         plt.legend( [ 'Random', 'Original', 'Previous' ] )
         plt.savefig( 'images/012-3-1.png' )
         plt.clf()
-
-    def plot_win_loss_tie( MHA, num_of_plotted_generations, random_average_score, original_average_score, previous_average_score ):
-
-        start = time.time()
-        random_original_previous_iter = {
-            'random': ( random_average_score, calculate_score_random, random_function ), 
-            'original': ( original_average_score, calculate_score, MHA.original_population ), 
-            'previous': ( previous_average_score, calculate_score, MHA.previous_population ) 
-        }
-        
-        workers = list()
-        manager = multiprocessing.Manager()
-        return_dict = manager.dict()
-        return_dict[ 'random' ] = 0
-        return_dict[ 'original' ] = 0
-        return_dict[ 'previous' ] = 0
-
-        for name, ( array, function, enemys ) in random_original_previous_iter.items():
-
-            workers.append( list() )
-            
-            for i in range( 0, 6 ):
-
-                args = [ MHA.fittest_chromosomes ] + [ enemys ] + [ 17 ] + [ return_dict[ name ] ]
-
-                worker = multiprocessing.Process( 
-                    target = function, 
-                    args = args
-                )
-
-                worker.start()
-                workers[ -1 ].append( worker )
-
-        for worker_group in workers:
-            for worker in workers[ -1 ]:
-                worker.join()
-
-        for name, ( array, _, _ ) in random_original_previous_iter.items():
-            array.append( return_dict[ name ] )
-        
-        plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), random_average_score )
-        plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), original_average_score )
-        plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), previous_average_score )
-        plt.legend( [ 'Random', 'Original', 'Previous' ] )
-        plt.savefig( 'images/012-3-1.png' )
-        plt.clf()
-        print('time', time.time() - start )
 
     def plot_state_value( MHA, num_of_plotted_generations, win_prediction_score, lose_prediction_score, tie_prediction_score ):
 

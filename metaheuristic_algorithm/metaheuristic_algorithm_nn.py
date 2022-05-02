@@ -212,7 +212,7 @@ class MetaHeuristicAlgorithm:
 
         return result
 
-    def read_chromosomes( self, generate_weights_function, layer_sizes, layers_with_bias_nodes, population_size = 64, breedable_population_size = None, input_size = list(), random_range = [-1.0, 1.0] ): # the ttc_chromosome_genes_file is a readlines() file
+    def read_chromosomes( self, generate_weights_function, layer_sizes, layers_with_bias_nodes, population_size = 64, breedable_population_size = None, input_size = list(), random_bool = True, random_range = [-1.0, 1.0] ): # the ttc_chromosome_genes_file is a readlines() file
 
         if breedable_population_size is None:
         
@@ -230,7 +230,7 @@ class MetaHeuristicAlgorithm:
 
             genes = generate_weights_function(
                 layer_sizes,
-                random_bool = True, 
+                random_bool = random_bool, 
                 random_range = random_range,
                 layers_with_bias_nodes = layers_with_bias_nodes,
                 input_size = input_size

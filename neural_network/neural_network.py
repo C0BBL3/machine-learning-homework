@@ -140,7 +140,11 @@ class NeuralNetwork( NNDirectedWeightedGraph ):
 
                 self.weights[ edge ] = weights[ i ]
 
-        current_depth_nodes = [ node.index for node in self.nodes if self.get_depth( node.index ) == 0 ]
+        current_depth_nodes = [ 
+            node.index 
+            for node in self.nodes 
+            if self.get_depth( node.index ) == 0 
+        ]
         
         for index, node_index in enumerate( current_depth_nodes ):
             

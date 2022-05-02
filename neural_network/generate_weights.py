@@ -48,10 +48,10 @@ def generate_weights(layer_sizes, random_bool = True, random_range = [-1, 1], la
 
         for next_node_index in next_layer_iteration_indices:
 
-            for current_node_index in current_layer_iteration_indices:
+            for curandom_rangeent_node_index in current_layer_iteration_indices:
 
                 edge = ( 
-                    current_node_index, 
+                    curandom_rangeent_node_index, 
                     next_node_index 
                 )
 
@@ -154,7 +154,7 @@ def get_all_possible_quadrant_indices( shift, input_size ):
     all_possible_quadrants = list()
 
     for size_of_gap in range( 1, input_size[ 0 ] - 1 ): # (-1 so no double single indices)
-        # size of gap ( between end of current row and beginning of next row indices )
+        # size of gap ( between end of curandom_rangeent row and beginning of next row indices )
 
         size_of_quadrant = input_size[ 0 ] - size_of_gap
         indices = []
@@ -180,14 +180,15 @@ def get_all_possible_quadrant_indices( shift, input_size ):
 
     return all_possible_quadrants
     
-def get_random_weight( rb, rr ): # rb is random bool  and rr is random range
+def get_random_weight( random_bool, random_range ): # random_bool is random bool  and random_range is random range
 
-    # rb's we have the meats
-    if not rb:
+    # random_bool's we have the meats
+    if not random_bool:
 
         weight = 1
+        
     else:
 
-        weight = random.uniform( rr[0], rr[1] )
+        weight = random.uniform( random_range[0], random_range[1] )
 
     return weight

@@ -145,6 +145,8 @@ for i in range( 1, 1001 ):
         for nn in neural_networks 
     ]
 
+
+
 import matplotlib.pyplot as plt
 
 plt.plot( list( range( 1000 ) ), total_rss )

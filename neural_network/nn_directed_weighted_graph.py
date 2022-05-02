@@ -18,14 +18,30 @@ class NNDirectedWeightedGraph:
 
     # Utilizes BacktrackingTM to get the depth recursively
     # For Debugging
-    def get_depth(self, index, current_depth=0):
-        if len(self.nodes[index].parents) == 0:
-            # If the given node is the input node or has no parents after backtracking, return the current depth
-            return current_depth
-        else:
-            # Return the node's first parent's index and increase the current depth count
-            first_parent = self.nodes[index].parents[0]
-            return self.get_depth(first_parent, current_depth=current_depth + 1)
+    def get_depth(self, index, current_depth = 0):
+        if self.nodes[index].parents == list():
+            first_child_index = self.nodes[index].children[ 0 ]
+            if self.nodes[first_child_index].parents == [index]:
+                return current_depth
+            temp = 0
+            sibling_index = self.nodes[first_child_index].parents[temp]
+            if sibling_index == index:
+                try:
+                    temp += 1
+                    sibling_index = self.nodes[first_child_index].parents[temp]
+                except:
+                    sibling_index = None
+            if sibling_index is None or self.nodes[sibling_index].parents == list():
+                # If the given node is the input node and has no parents after backtracking, 
+                # as well as it's siblings in the same layer dont have parents, return the current depth
+                # this is to check for bias node
+                return current_depth
+            else:
+                # continue backtracking with non-bias-node sibling
+                index = sibling_index
+        # Return the node's first parent's index and increase the current depth count
+        first_parent = self.nodes[index].parents[0]
+        return self.get_depth(first_parent, current_depth = current_depth + 1)
 
     def get_every_possible_path_containing_edge(self, current_paths=[]):
         # Start would be the initial edge

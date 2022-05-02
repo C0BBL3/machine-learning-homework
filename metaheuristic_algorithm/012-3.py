@@ -7,13 +7,13 @@ import multiprocessing
 from multiprocessing import Pool
 import matplotlib.pyplot as plt
 
-from generate_weights import generate_weights
-from neural_network import NeuralNetwork
-
-import sys
-sys.path.append('metaheuristic_algorithm/')
 from metaheuristic_algorithm_nn import MetaHeuristicAlgorithm, nn_chromosome
 from tic_tac_toe import Game, plots_3_and_4
+
+import sys
+sys.path.append('neural_network/')
+from generate_weights import generate_weights
+from neural_network import NeuralNetwork
 
 if __name__ == '__main__':
 
@@ -246,7 +246,7 @@ if __name__ == '__main__':
     MHA = MetaHeuristicAlgorithm() 
     MHA.read_chromosomes( 
         generate_weights, 
-        [14, 9, 6, 1],
+        [14, 8, 4, 1],
         population_size = 30, # instead of 20 cause im lazy
         breedable_population_size = 15,
         layers_with_bias_nodes = [ False, False, False, False ],

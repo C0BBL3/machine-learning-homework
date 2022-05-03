@@ -7,10 +7,10 @@ import multiprocessing
 from multiprocessing import Pool
 from tic_tac_toe import Game
 import sys
-sys.path.append('neural_network')
+sys.path.append('neural_network/')
 from neural_network import NeuralNetwork
 sys.path.pop()
-sys.path.append('min_max_algorithm')
+sys.path.append('min_max_algorithm/')
 from minimax import Minimax
 
 class MetaHeuristicAlgorithm:

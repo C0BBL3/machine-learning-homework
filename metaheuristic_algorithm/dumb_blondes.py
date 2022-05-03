@@ -33,7 +33,7 @@ def sech( x ):
     e_x = math.e ** x
     e_neg_x = math.e ** ( - x )
     denominator = e_x + e_neg_x
-    return 2 / denominator
+    return (2 / denominator) ** 2
 
 NN = NeuralNetwork( 
     generate_weights(
@@ -46,7 +46,7 @@ NN = NeuralNetwork(
         lambda x: x
         for _ in range( math.prod( input_size ) )
     ] + [ 
-        lambda x: tanh(x) 
+        tanh
         for _ in range( sum( layer_sizes ) ) 
     ],
 
@@ -54,7 +54,7 @@ NN = NeuralNetwork(
         lambda x: 1
         for _ in range( math.prod( input_size ) )
     ] + [ 
-        lambda x: sech(x) ** 2
+        sech
         for _ in range( sum( layer_sizes )) 
     ],
     alpha = 0.01

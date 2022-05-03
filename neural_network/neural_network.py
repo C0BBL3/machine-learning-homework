@@ -9,7 +9,7 @@ class NeuralNetwork( NNDirectedWeightedGraph ):
         node_indices = sorted( set( [ _ for key in weights.keys() for _ in key ] ) )
         super().__init__( weights = weights, vertex_values = node_indices ) 
 
-        if functions is not None and derivatives is not None:
+        if functions is not None and derivatives is not None and len( functions ) == len( derivatives ) == len( self.nodes ):
 
             self.functions = functions
             self.derivatives = derivatives
@@ -140,23 +140,25 @@ class NeuralNetwork( NNDirectedWeightedGraph ):
 
                 self.weights[ edge ] = weights[ i ]
 
-        current_depth_nodes = [ 
+        first_layer_nodes = [ 
             node.index 
             for node in self.nodes 
             if self.get_depth( node.index ) == 0 
         ]
         
-        for index, node_index in enumerate( current_depth_nodes ):
+        for node_index in first_layer_nodes:
+
+            node = self.nodes[ node_index ]
             
-            if index < len( data_point[ 'input' ] ):
+            if node_index < len( data_point[ 'input' ] ):
                 
-                self.nodes[ node_index ].input = data_point[ 'input' ][ index ]
-                self.nodes[ node_index ].value = self.functions[ node_index ]( self.nodes[ node_index ].input )
+                node.input = data_point[ 'input' ][ node_index ]
+                node.value = self.functions[ node_index ]( node.input )
             
             else:
                 
-                self.nodes[ node_index ].input = 1
-                self.nodes[ node_index ].value = self.functions[ node_index ]( self.nodes[ node_index ].input )
+                node.input = 1
+                node.value = self.functions[ node_index ]( node.input )
         
         self.evaluate_prediction( 1 )
         self.predictions[ tuple( data_point[ 'input' ] ) ] = self.nodes[ -1 ].value
@@ -168,12 +170,18 @@ class NeuralNetwork( NNDirectedWeightedGraph ):
         # Depth First Recursion Iteration through nodes
         # Updating their prediction values along the way
         
-        current_depth_nodes = [ node.index for node in self.nodes if self.get_depth( node.index ) == depth ]
+        current_depth_nodes = [ 
+            node.index 
+            for node in self.nodes 
+            if self.get_depth( node.index ) == depth 
+        ]
         
         for node_index in current_depth_nodes:
+
+            node = self.nodes[ node_index ]
             
-            self.nodes[ node_index ].input = self.get_node_input( node_index )
-            self.nodes[ node_index ].value = self.functions[ node_index ]( self.nodes[ node_index ].input )
+            node.input = self.get_node_input( node_index )
+            node.value = self.functions[ node_index ]( node.input )
         
         # If not output node
         if len( self.nodes[ current_depth_nodes[ -1 ] ].children ) > 0: 
@@ -207,6 +215,7 @@ class NeuralNetwork( NNDirectedWeightedGraph ):
         
         for parent in self.nodes[ node_index ].parents:
             
+            parent_temp = self.nodes[ parent ]
             result += self.weights[ ( parent, node_index ) ] * self.nodes[ parent ].value
                 
         return result

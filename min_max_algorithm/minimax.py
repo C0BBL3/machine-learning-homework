@@ -14,14 +14,14 @@ class Minimax:
 
             root_board_state = game.board
 
-        self.nodes = { 0: Node( root_board_state, index = 0, depth = 0 ) }
+        self.nodes = { 0: Node( root_board_state, index = 0, depth = 0, player = current_player ) }
         
-        for current_depth in range(1, max_depth + 1):
+        for current_depth in range( max_depth ):
         
             root_nodes = {
                 node_index: node
                 for node_index, node in self.nodes.items()
-                if node.depth == current_depth - 1
+                if node.depth == current_depth
             }
 
             for root_index, root in root_nodes.items(): # generate whole depth layer
@@ -32,7 +32,7 @@ class Minimax:
                 self.grow_branches( 
                     game, 
                     root, 
-                    current_depth, 
+                    current_depth + 1, 
                     current_player,
                 )
             
@@ -112,7 +112,7 @@ class Minimax:
                 parent.append_child( child )
                 root.append_child( child )
 
-    def evaluate_game_tree( self, game, evaluation_function, use_current_player = False ):
+    def evaluate_game_tree( self, game, evaluation_function ):
 
         for node_index in range( len( self.nodes ) - 1, -1, -1): 
 
@@ -120,7 +120,7 @@ class Minimax:
 
             if node.children == list():
 
-                node.value = evaluation_function( node.board_state, node.player )     
+                node.value = evaluation_function( node.board_state, self.nodes[ 0 ].player )  
                 continue
 
             for child_index in node.children:

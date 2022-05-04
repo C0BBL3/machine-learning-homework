@@ -19,50 +19,79 @@ if __name__ == '__main__':
 
     print( '\nStarting...' )
 
-    def calculate_score( fittest_chromosomes, population, num_games, return_int ):
+    def calculate_score( fittest_chromosomes, population, num_games, return_int, lock, time ):
 
-        print('wins 1', return_int)
+        result = float()
+        random.seed(time)
 
-        for _ in range( num_games ):
+        fittest_chromosome_indices =  random.randint(
+            len( fittest_chromosomes ), 
+            size = num_games 
+        )
 
-            chromosome_one = random.choice( fittest_chromosomes )
-            chromosome_two = random.choice( population )
+        print('fittest_chromosome_indices', fittest_chromosome_indices)
+
+        population_indices = random.randint(
+            len( population ), 
+            size = num_games 
+        )
+
+        print('population_indices', population_indices)
+        
+        for i in range( num_games ):
+
+            chromosome_one = fittest_chromosomes[ fittest_chromosome_indices[ i ] ]
+            chromosome_two = population[ population_indices[ i ] ]
 
             game = Game( nn_chromosome( chromosome_one ), nn_chromosome( chromosome_two ) )
-            result = game.play()
 
-            if result[ 1 ] == 1: # chromosome 1 won
-                return_int += 1 / ( 2 * num_games )
+            if game.play()[ 1 ] == 1: 
+                result += 1
             
             game = Game( nn_chromosome( chromosome_two ), nn_chromosome( chromosome_one ) )
-            result = game.play()
 
-            if result[ 1 ] == 2: # chromosome 1 won
-                return_int += 1 / ( 2* num_games )
+            if game.play()[ 1 ] == 2: 
+                result += 1 
+
+        lock.acquire()
+
+        return_int.value += result / ( 2 * num_games )
+        #print(result / num_games)
+
+        lock.release()
             
-        print('wins 2', return_int)
+    def calculate_score_random( fittest_chromosomes, random_function, num_games, return_int, lock, time ):
 
-    def calculate_score_random( fittest_chromosomes, random_function, num_games, return_int ):
+        result = float()
+        random.seed(time)
 
-        print('wins random 1', return_int)
+        fittest_chromosome_indices =  random.randint(
+            len( fittest_chromosomes ), 
+            size = num_games 
+        )
 
-        for _ in range( num_games ):
+        print('fittest_chromosome_indices', fittest_chromosome_indices)
 
-            chromosome_one = random.choice( fittest_chromosomes )
+        for i in range( num_games ):
+
+            chromosome_one = fittest_chromosomes[ fittest_chromosome_indices[ i ] ]
 
             game = Game( nn_chromosome( chromosome_one ), random_function )
-            result = game.play()
-
-            if result[ 1 ] == 1: # chromosome 1 won
-                return_int += 1 / ( 2 * num_games )
+            
+            if game.play()[ 1 ] == 1: 
+                result += 1
             
             game = Game( random_function, nn_chromosome( chromosome_one ) )
-            result = game.play()
+            
+            if game.play()[ 1 ] == 2: 
+                result += 1
 
-            if result[ 1 ] == 2: # chromosome 1 won
-                return_int += 1 / ( 2 * num_games )
+        lock.acquire()
 
-        print('wins random 2', return_int)
+        return_int.value += result / ( 2 * num_games )
+        #print(result / num_games)
+
+        lock.release()
 
     def plot_win_loss_tie( MHA, plotted_generation_num, random_average_score, original_average_score, previous_average_score ):
 
@@ -72,31 +101,37 @@ if __name__ == '__main__':
             'original': ( original_average_score, calculate_score, MHA.original_population[ : len( MHA.fittest_chromosomes ) ] ), 
             'previous': ( previous_average_score, calculate_score, MHA.previous_population[ : len( MHA.fittest_chromosomes ) ] ) 
         }
+
+        return_dict = {
+            'random': multiprocessing.Manager().Value( 'd', 0 ), # d for 'double' (precision float)
+            'original': multiprocessing.Manager().Value( 'd', 0 ),
+            'previous': multiprocessing.Manager().Value( 'd', 0 )
+        }
         
         workers = list()
-        return_dict = multiprocessing.Manager().dict()
-        return_dict[ 'random' ] = int()
-        return_dict[ 'original' ] = int()
-        return_dict[ 'previous' ] = int()
-        
-        for i, ( name, ( plot, function, enemys ) ) in enumerate( random_original_previous_iter.items() ): # cringe
+        lock = multiprocessing.Lock()
+
+        for i, (name, ( _, function, enemys ) ) in enumerate(random_original_previous_iter.items()): # cringe
 
             worker_group = list()
 
             available_thread_count = math.floor(
                 ( multiprocessing.cpu_count() - 1 ) / 3
             )
+
             num_of_matchups_per_core = math.floor( 
                 50 / available_thread_count
             )
             
-            for i in range( 0, available_thread_count ):
+            for j in range( 0, available_thread_count ):
                 
                 args = [ 
                     MHA.fittest_chromosomes, 
                     enemys, 
                     num_of_matchups_per_core, 
-                    return_dict[ name ]
+                    return_dict[ name ],
+                    lock,
+                    int(time.time() + 100*j*math.sin(i) + 350*i*math.cos(j*j) + 100*j + 4500*i) # random expression cause random is cringe
                 ]
 
                 worker = multiprocessing.Process( 
@@ -114,8 +149,8 @@ if __name__ == '__main__':
                 worker.join()
 
         for name, ( plot, _, _ ) in random_original_previous_iter.items():
-            print(return_dict[ name ])
-            plot.append( return_dict[ name ] )
+            print( return_dict[ name ].value / 5 )
+            plot.append( return_dict[ name ].value / 5 )
         
         plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), random_average_score )
         plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), original_average_score )
@@ -249,7 +284,7 @@ if __name__ == '__main__':
         [14, 8, 4, 1],
         population_size = 30, # instead of 20 cause im lazy
         breedable_population_size = 15,
-        layers_with_bias_nodes = [ False, False, False, False ],
+        layers_with_bias_nodes = [ True, True, True ],
         input_size = [ 3, 3 ] # must be square
     )
 

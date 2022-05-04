@@ -2,20 +2,20 @@ import math
 
 class Game:
     
-    def __init__( self, strategy_one, strategy_two ):
+    def __init__( self, strategy_one, strategy_two, current_player = 1 ):
 
         self.board = [ 0 for _ in range( 9 ) ]
         self.strategies = [ strategy_one, strategy_two ] 
         # ^^^^^^ [ function, function]
         self.state()
-        self.current_player = 1
+        self.current_player = current_player
 
     def play( self ):
 
         while not self.game_finished()[ 0 ] and self.board.count( 0 ) > 0:
 
-            current_state = self.state( self.current_player )
-            current_move = self.strategies[ self.current_player ]( self.board, self.current_player )
+            current_state = self.state( current_player = self.current_player )
+            current_move = self.strategies[ self.current_player - 1 ]( self.board, self.current_player )
             self.place( self.current_player, current_move )
             self.current_player = self.get_next_player( self.current_player )
 
@@ -30,7 +30,7 @@ class Game:
 
             if self.board[ index ] == 0: 
 
-                self.board[ index ] = player + 1
+                self.board[ index ] = player
 
             else: 
 
@@ -49,7 +49,7 @@ class Game:
         return ''.join( [ str( switcher[ space ] ) for space in self.board ] )
 
     def get_next_player( self, current_player ):
-        return 1 if current_player == 0 else 0
+        return 2 if current_player == 1 else 1
     
     def get_possible_branches( self, board_state, current_player ):
         

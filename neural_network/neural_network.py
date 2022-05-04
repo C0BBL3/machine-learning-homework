@@ -9,7 +9,7 @@ class NeuralNetwork( NNDirectedWeightedGraph ):
         node_indices = sorted( set( [ _ for key in weights.keys() for _ in key ] ) )
         super().__init__( weights = weights, vertex_values = node_indices ) 
 
-        if functions is not None and derivatives is not None and len( functions ) == len( derivatives ) == len( self.nodes ):
+        if functions is not None and len( functions ) == len( self.nodes ):
 
             self.functions = functions
             self.derivatives = derivatives

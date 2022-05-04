@@ -35,27 +35,21 @@ def sech( x ):
     denominator = e_x + e_neg_x
     return (2 / denominator) ** 2
 
-NN = NeuralNetwork( 
-    generate_weights(
+weights = generate_weights(
         layer_sizes,
         random_bool = False, 
-        layers_with_bias_nodes = [ False, False, False, False ],
+        layers_with_bias_nodes = [ True, True, True ],
         input_size = [ 3, 3 ]
-    ), 
+    )
+
+NN = NeuralNetwork( 
+    weights, 
     functions = [ 
         lambda x: x
-        for _ in range( math.prod( input_size ) )
+        for _ in range( 9 )
     ] + [ 
         tanh
-        for _ in range( sum( layer_sizes ) ) 
-    ],
-
-    derivatives = [
-        lambda x: 1
-        for _ in range( math.prod( input_size ) )
-    ] + [ 
-        sech
-        for _ in range( sum( layer_sizes )) 
+        for _ in range( sum(layer_sizes) + 3 ) 
     ],
     alpha = 0.01
 )
@@ -68,11 +62,15 @@ print(NN.calc_prediction( { 'input': [ 0, 0, 0, -1, 0, 0, 0, 0, 1 ] } ) )
 
 print(NN.calc_prediction( { 'input': [ 1, 0, -1, 0, 1, 0, -1, 0, -1 ] } ) )
 
+print(NN.calc_prediction( { 'input': [ 1, 1, 1, 1, 1, 1, 1, 1, 1 ] } ) )
+
+print(NN.calc_prediction( { 'input': [ -1, -1, -1, -1, -1, -1, -1, -1, -1 ] } ) )
+
 def minimax_function( board_state, current_player ):
     minimax = Minimax()
 
     minimax.generate_tree(
-        Game( None, None ), 
+        Game( None, None, current_player = current_player ), 
         current_player, 
         root_board_state = board_state, 
         max_depth = 9
@@ -95,7 +93,7 @@ def minimax_function( board_state, current_player ):
         Game( None, None ), 
         current_player, 
         root_board_state = board_state, 
-        max_depth = 4
+        max_depth = 3
     )
 
     minimax.evaluate_game_tree(

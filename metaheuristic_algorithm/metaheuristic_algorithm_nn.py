@@ -25,29 +25,34 @@ class MetaHeuristicAlgorithm:
             current_bracket = self.population
 
         self.current_bracket = current_bracket
+        workers = dict()
+        available_thread_count = multiprocessing.cpu_count() - 1
+        lock = multiprocessing.Lock()
 
         matchups = determine_matchups( 
             fitness_score, 
             current_bracket = current_bracket 
         )
 
-        workers = []
-        available_thread_count = multiprocessing.cpu_count() - 1
-        manager = multiprocessing.Manager()
-        return_dict = manager.dict()
         num_of_matchups_per_core = math.floor( 
             len( matchups) /
             available_thread_count
         )
 
+        return_list = {
+            i: multiprocessing.Manager().Value( 'i', 0 )
+            for i in range( len( self.current_bracket ) )
+        }
+
         for i in range(0, len( matchups ), num_of_matchups_per_core ):
 
             matchups_arg = matchups[ i : num_of_matchups_per_core + i ] 
-            # for ex in blondie24, this provides 21 matchups 
-            # for the multi_core_compete function 
-            # to complete in each core
-
-            args = [ fitness_score ] + [ matchups_arg ] + [ return_dict ] 
+            args = [ 
+                fitness_score, 
+                matchups_arg, 
+                return_list, 
+                lock 
+            ] 
 
             worker = multiprocessing.Process( 
                 target = self.multi_core_compete, 
@@ -55,17 +60,14 @@ class MetaHeuristicAlgorithm:
             )
 
             worker.start()
-            workers.append( worker )
+            workers[ i ] = worker
 
-        for worker in workers:
+        for worker in workers.values():
             worker.join()
-            # must call .join() to make sure
-            # the compete function is complete
-            # before moving on to cutoffs
             
-        for i, worker_return in return_dict.items():
+        for i, worker_return in enumerate( return_list.values() ):
 
-            self.current_bracket[ i ][ 'score' ] = worker_return
+            self.current_bracket[ i ][ 'score' ] = int( worker_return.value )
 
         if fitness_score == 'bracket' and len( matchups ) > 1:
 
@@ -83,24 +85,24 @@ class MetaHeuristicAlgorithm:
         
         if cutoff_type == 'hard cutoff':
             self.fittest_chromosomes = hard_cutoff( 
-            self.population,
-            self.breedable_population_size
+                self.population,
+                self.breedable_population_size
             ) 
         elif cutoff_type == 'stochastic':
             self.fittest_chromosomes = stochastic( 
-            self.population,
-            self.breedable_population_size
+                self.population,
+                self.breedable_population_size
             )
         elif cutoff_type == 'tournament':
             self.fittest_chromosomes = tournament( 
-            self.population,
-            self.breedable_population_size
+                self.population,
+                self.breedable_population_size
             )
 
         for chromosome in self.population:
             chromosome[ 'score' ] = 0
 
-    def multi_core_compete( self, fitness_score, matchups, return_dict ): # nasty
+    def multi_core_compete( self, fitness_score, matchups, return_dict, lock ): # nasty
 
         for (i, j) in matchups:
 
@@ -120,10 +122,14 @@ class MetaHeuristicAlgorithm:
                         chromosome_one
                     ) # reverse matchup and if its still a draw these two dont move on
 
-        for (i, j) in matchups:
+        lock.acquire()
 
-            return_dict[ i ] = self.current_bracket[ i ][ 'score' ]
-            return_dict[ j ] = self.current_bracket[ j ][ 'score' ]
+        for (i, j) in matchups:            
+
+            return_dict[ i ].value += self.current_bracket[ i ][ 'score' ]
+            return_dict[ j ].value += self.current_bracket[ j ][ 'score' ]
+
+        lock.release()
 
     def breed( self, mutation_rate = 0.001, crossover_type = 'random', crossover_genes_indices = list() ):
 
@@ -243,7 +249,7 @@ class MetaHeuristicAlgorithm:
                 for _ in range( input_size_int )
             ] + [ 
                 lambda x: tanh(x) 
-                for _ in range( sum( layer_sizes )) 
+                for _ in range( sum( layer_sizes ) + 3 ) 
             ]
 
             activation_derivatives = [
@@ -251,7 +257,7 @@ class MetaHeuristicAlgorithm:
                 for _ in range( input_size_int )
             ] + [ 
                 lambda x: sech(x) ** 2
-                for _ in range( sum( layer_sizes )) 
+                for _ in range( sum( layer_sizes ) + 3 ) 
             ]
 
             new_chromosome = {
@@ -323,9 +329,14 @@ def sech( x ):
 
 def nn_chromosome(chromosome):
 
-    evaluation_function = lambda board_state: chromosome['genes'].calc_prediction(
+    evaluation_function = lambda board_state, current_player: chromosome['genes'].calc_prediction(
         {
-            'input': list( board_state )
+            'input': [ 
+                { 0: 0, 1: 2, 2: 1 }[ space ] # double checking if 
+                if current_player == 2 else   # board state  is in 
+                { 0: 0, 1: 1, 2: 2 }[ space ] # current player format
+                for space in self.board
+            ]
         }
     )
 
@@ -339,10 +350,10 @@ def minimax_function( board_state, evaluation_function, current_player ):
     minimax = Minimax()
     
     minimax.generate_tree(
-        Game( None, None ), 
+        Game( None, None, current_player = current_player ), 
         current_player, 
         root_board_state = board_state, 
-        max_depth = 4
+        max_depth = 5
     )
 
     minimax.evaluate_game_tree(

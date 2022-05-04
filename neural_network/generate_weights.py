@@ -48,10 +48,10 @@ def generate_weights(layer_sizes, random_bool = True, random_range = [-1, 1], la
 
         for next_node_index in next_layer_iteration_indices:
 
-            for curandom_rangeent_node_index in current_layer_iteration_indices:
+            for current_node_index in current_layer_iteration_indices:
 
                 edge = ( 
-                    curandom_rangeent_node_index, 
+                    current_node_index, 
                     next_node_index 
                 )
 
@@ -185,7 +185,7 @@ def get_random_weight( random_bool, random_range ): # random_bool is random bool
     # random_bool's we have the meats
     if not random_bool:
 
-        weight = 1
+        weight = 0.01
         
     else:
 

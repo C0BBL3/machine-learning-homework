@@ -2,9 +2,9 @@ import math
 import sys
 import filecmp
 import time
+from pyvis.network import Network
 from numpy import random
 import multiprocessing
-from multiprocessing import Pool
 import matplotlib.pyplot as plt
 
 from metaheuristic_algorithm_nn import MetaHeuristicAlgorithm, nn_chromosome
@@ -33,7 +33,7 @@ def sech( x ):
     e_x = math.e ** x
     e_neg_x = math.e ** ( - x )
     denominator = e_x + e_neg_x
-    return (2 / denominator) ** 2
+    return (2 / denominator) ** 2 
 
 weights = generate_weights(
         layer_sizes,
@@ -57,6 +57,19 @@ NN = NeuralNetwork(
 print(NN.calc_prediction( { 'input': [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ] } ) )
 
 print(NN.calc_prediction( { 'input': [ 1, -1, 0, 0, 0, 0, 0, 0, 0 ] } ) )
+
+net = Network( '1500px', '1500px' )
+
+for node in NN.nodes:
+
+    net.add_node( node.index, label = 'Index: {}, Value: {}'.format( node.index, node.value ) )
+
+for edge in NN.weights.keys():
+
+    net.add_edge( edge[ 0 ], edge[ 1 ] )
+    
+net.show_buttons( filter_ = True )
+net.show( 'nodes.html' )
 
 print(NN.calc_prediction( { 'input': [ 0, 0, 0, -1, 0, 0, 0, 0, 1 ] } ) )
 

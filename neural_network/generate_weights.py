@@ -185,7 +185,7 @@ def get_random_weight( random_bool, random_range ): # random_bool is random bool
     # random_bool's we have the meats
     if not random_bool:
 
-        weight = 0.01
+        weight = 1
         
     else:
 

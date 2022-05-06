@@ -139,12 +139,19 @@ class MetaHeuristicAlgorithm:
             
             for chromosome in self.fittest_chromosomes:
                 
-                offspring.append(
-                    {
+                child = {
+                    'genes': chromosome[ 'genes' ].mitosis(),
+                    'score': 0
+                }
+
+                while child in offspring or child in self.population:
+
+                    child = {
                         'genes': chromosome[ 'genes' ].mitosis(),
                         'score': 0
                     }
-                )
+                
+                offspring.append( child )
 
         else: # genetic breeding (two parents producing two offspring)
 
@@ -218,7 +225,7 @@ class MetaHeuristicAlgorithm:
 
         return result
 
-    def read_chromosomes( self, generate_weights_function, layer_sizes, layers_with_bias_nodes, population_size = 64, breedable_population_size = None, input_size = list(), random_bool = True, random_range = [-1.0, 1.0] ): # the ttc_chromosome_genes_file is a readlines() file
+    def read_chromosomes( self, generate_weights_function, layer_sizes, layers_with_bias_nodes, population_size = 64, breedable_population_size = None, input_size = list(), random_bool = True, random_range = [ -1.0, 1.0 ] ): # the ttc_chromosome_genes_file is a readlines() file
 
         if breedable_population_size is None:
         
@@ -353,7 +360,7 @@ def minimax_function( board_state, evaluation_function, current_player ):
         Game( None, None, current_player = current_player ), 
         current_player, 
         root_board_state = board_state, 
-        max_depth = 5
+        max_depth = 4
     )
 
     minimax.evaluate_game_tree(

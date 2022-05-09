@@ -9,6 +9,7 @@ class Minimax:
         self.initial_player = int( current_player )
         self.prune_bool = prune
         self.max_depth = max_depth
+        self.edges = list()
 
         if root_board_state is None:
 
@@ -89,6 +90,7 @@ class Minimax:
             player = player
         )
         self.nodes[ new_node_index ] = new_node
+        self.edges.append( [ root.index, new_node_index ] )
         root.append_child( new_node )
 
     def prune( self, similar_nodes, root, current_depth ):
@@ -118,9 +120,9 @@ class Minimax:
 
             node = self.nodes[ node_index ]
 
-            if node.children == list():
+            if node.children == set():
 
-                node.value = evaluation_function( node.board_state, self.nodes[ 0 ].player )  
+                node.value = evaluation_function( node.board_state, self.nodes[ 0 ].player )
                 continue
 
             for child_index in node.children:

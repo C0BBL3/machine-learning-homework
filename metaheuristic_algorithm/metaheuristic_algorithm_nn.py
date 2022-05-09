@@ -27,12 +27,14 @@ class MetaHeuristicAlgorithm:
         self.current_bracket = current_bracket
         workers = dict()
         available_thread_count = multiprocessing.cpu_count() - 1
-        lock = multiprocessing.Lock()
+        #lock = multiprocessing.Lock()
 
         matchups = determine_matchups( 
             fitness_score, 
             current_bracket = current_bracket 
         )
+
+        random.shuffle( matchups )
 
         num_of_matchups_per_core = math.floor( 
             len( matchups) /
@@ -50,8 +52,8 @@ class MetaHeuristicAlgorithm:
             args = [ 
                 fitness_score, 
                 matchups_arg, 
-                return_list, 
-                lock 
+                return_list#, 
+                #lock 
             ] 
 
             worker = multiprocessing.Process( 
@@ -98,13 +100,17 @@ class MetaHeuristicAlgorithm:
                 self.population,
                 self.breedable_population_size
             )
-
+            
+        temp = int()
         for chromosome in self.population:
-            chromosome[ 'score' ] = 0
+            temp += chromosome[ 'score' ]
+            chromosome[ 'score' ] = int()
 
-    def multi_core_compete( self, fitness_score, matchups, return_dict, lock ): # nasty
+        print('score distribution', temp)
 
-        for (i, j) in matchups:
+    def multi_core_compete( self, fitness_score, matchups, return_dict ): # nasty
+
+        for ( i, j ) in matchups:
 
             chromosome_one = self.current_bracket[ i ]
             chromosome_two = self.current_bracket[ j ]
@@ -116,20 +122,16 @@ class MetaHeuristicAlgorithm:
 
             if fitness_score == 'bracket':
 
-                if result[0] is False or result[1] == 'Draw':
+                if result[ 0 ] is False or result[ 1 ] == 'Draw':
                     self.compete( 
                         chromosome_two, 
                         chromosome_one
                     ) # reverse matchup and if its still a draw these two dont move on
 
-        lock.acquire()
-
         for (i, j) in matchups:            
 
             return_dict[ i ].value += self.current_bracket[ i ][ 'score' ]
             return_dict[ j ].value += self.current_bracket[ j ][ 'score' ]
-
-        lock.release()
 
     def breed( self, mutation_rate = 0.001, crossover_type = 'random', crossover_genes_indices = list() ):
 
@@ -141,14 +143,14 @@ class MetaHeuristicAlgorithm:
                 
                 child = {
                     'genes': chromosome[ 'genes' ].mitosis(),
-                    'score': 0
+                    'score': int()
                 }
 
                 while child in offspring or child in self.population:
 
                     child = {
                         'genes': chromosome[ 'genes' ].mitosis(),
-                        'score': 0
+                        'score': int()
                     }
                 
                 offspring.append( child )
@@ -342,7 +344,7 @@ def nn_chromosome(chromosome):
                 { 0: 0, 1: 2, 2: 1 }[ space ] # double checking if 
                 if current_player == 2 else   # board state  is in 
                 { 0: 0, 1: 1, 2: 2 }[ space ] # current player format
-                for space in self.board
+                for space in board_state
             ]
         }
     )

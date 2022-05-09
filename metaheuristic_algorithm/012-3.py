@@ -285,7 +285,8 @@ if __name__ == '__main__':
         population_size = 30, # instead of 20 cause im lazy
         breedable_population_size = 15,
         layers_with_bias_nodes = [ True, True, True ],
-        input_size = [ 3, 3 ] # must be square
+        input_size = [ 3, 3 ], # must be square
+        random_range = [ 0, 0.1 ]
     )
 
     def random_function( board_state, current_player ):

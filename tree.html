@@ -1,0 +1,121 @@
+<html>
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis-network.min.js"> </script>
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+
+<style type="text/css">
+
+        #mynetwork {
+            width: 1500px;
+            height: 1500px;
+            background-color: #ffffff;
+            border: 1px solid lightgray;
+            position: relative;
+            float: left;
+        }
+
+        
+
+        
+        #config {
+            float: left;
+            width: 400px;
+            height: 600px;
+        }
+        
+
+        
+</style>
+
+</head>
+
+<body>
+<div id = "mynetwork"></div>
+
+
+<div id = "config"></div>
+
+<script type="text/javascript">
+
+    // initialize global variables.
+    var edges;
+    var nodes;
+    var network; 
+    var container;
+    var options, data;
+
+    
+    // This method is responsible for drawing the graph, returns the drawn network
+    function drawGraph() {
+        var container = document.getElementById('mynetwork');
+        
+        
+
+        // parsing and collecting nodes and edges from the python
+        nodes = new vis.DataSet([{"id": 0, "label": "Index: 0, Board State: [0, 0, 0, 0, 0, 0, 0, 0, 0]", "shape": "dot"}, {"id": 1, "label": "Index: 1, Board State: [2, 0, 0, 0, 0, 0, 0, 0, 0]", "shape": "dot"}, {"id": 2, "label": "Index: 2, Board State: [0, 2, 0, 0, 0, 0, 0, 0, 0]", "shape": "dot"}, {"id": 3, "label": "Index: 3, Board State: [0, 0, 2, 0, 0, 0, 0, 0, 0]", "shape": "dot"}, {"id": 4, "label": "Index: 4, Board State: [0, 0, 0, 2, 0, 0, 0, 0, 0]", "shape": "dot"}, {"id": 5, "label": "Index: 5, Board State: [0, 0, 0, 0, 2, 0, 0, 0, 0]", "shape": "dot"}, {"id": 6, "label": "Index: 6, Board State: [0, 0, 0, 0, 0, 2, 0, 0, 0]", "shape": "dot"}, {"id": 7, "label": "Index: 7, Board State: [0, 0, 0, 0, 0, 0, 2, 0, 0]", "shape": "dot"}, {"id": 8, "label": "Index: 8, Board State: [0, 0, 0, 0, 0, 0, 0, 2, 0]", "shape": "dot"}, {"id": 9, "label": "Index: 9, Board State: [0, 0, 0, 0, 0, 0, 0, 0, 2]", "shape": "dot"}, {"id": 10, "label": "Index: 10, Board State: [2, 3, 0, 0, 0, 0, 0, 0, 0]", "shape": "dot"}, {"id": 11, "label": "Index: 11, Board State: [2, 0, 3, 0, 0, 0, 0, 0, 0]", "shape": "dot"}, {"id": 12, "label": "Index: 12, Board State: [2, 0, 0, 3, 0, 0, 0, 0, 0]", "shape": "dot"}, {"id": 13, "label": "Index: 13, Board State: [2, 0, 0, 0, 3, 0, 0, 0, 0]", "shape": "dot"}, {"id": 14, "label": "Index: 14, Board State: [2, 0, 0, 0, 0, 3, 0, 0, 0]", "shape": "dot"}, {"id": 15, "label": "Index: 15, Board State: [2, 0, 0, 0, 0, 0, 3, 0, 0]", "shape": "dot"}, {"id": 16, "label": "Index: 16, Board State: [2, 0, 0, 0, 0, 0, 0, 3, 0]", "shape": "dot"}, {"id": 17, "label": "Index: 17, Board State: [2, 0, 0, 0, 0, 0, 0, 0, 3]", "shape": "dot"}, {"id": 18, "label": "Index: 18, Board State: [3, 2, 0, 0, 0, 0, 0, 0, 0]", "shape": "dot"}, {"id": 19, "label": "Index: 19, Board State: [0, 2, 3, 0, 0, 0, 0, 0, 0]", "shape": "dot"}, {"id": 20, "label": "Index: 20, Board State: [0, 2, 0, 3, 0, 0, 0, 0, 0]", "shape": "dot"}, {"id": 21, "label": "Index: 21, Board State: [0, 2, 0, 0, 3, 0, 0, 0, 0]", "shape": "dot"}, {"id": 22, "label": "Index: 22, Board State: [0, 2, 0, 0, 0, 3, 0, 0, 0]", "shape": "dot"}, {"id": 23, "label": "Index: 23, Board State: [0, 2, 0, 0, 0, 0, 3, 0, 0]", "shape": "dot"}, {"id": 24, "label": "Index: 24, Board State: [0, 2, 0, 0, 0, 0, 0, 3, 0]", "shape": "dot"}, {"id": 25, "label": "Index: 25, Board State: [0, 2, 0, 0, 0, 0, 0, 0, 3]", "shape": "dot"}, {"id": 26, "label": "Index: 26, Board State: [3, 0, 2, 0, 0, 0, 0, 0, 0]", "shape": "dot"}, {"id": 27, "label": "Index: 27, Board State: [0, 3, 2, 0, 0, 0, 0, 0, 0]", "shape": "dot"}, {"id": 28, "label": "Index: 28, Board State: [0, 0, 2, 3, 0, 0, 0, 0, 0]", "shape": "dot"}, {"id": 29, "label": "Index: 29, Board State: [0, 0, 2, 0, 3, 0, 0, 0, 0]", "shape": "dot"}, {"id": 30, "label": "Index: 30, Board State: [0, 0, 2, 0, 0, 3, 0, 0, 0]", "shape": "dot"}, {"id": 31, "label": "Index: 31, Board State: [0, 0, 2, 0, 0, 0, 3, 0, 0]", "shape": "dot"}, {"id": 32, "label": "Index: 32, Board State: [0, 0, 2, 0, 0, 0, 0, 3, 0]", "shape": "dot"}, {"id": 33, "label": "Index: 33, Board State: [0, 0, 2, 0, 0, 0, 0, 0, 3]", "shape": "dot"}, {"id": 34, "label": "Index: 34, Board State: [3, 0, 0, 2, 0, 0, 0, 0, 0]", "shape": "dot"}, {"id": 35, "label": "Index: 35, Board State: [0, 3, 0, 2, 0, 0, 0, 0, 0]", "shape": "dot"}, {"id": 36, "label": "Index: 36, Board State: [0, 0, 3, 2, 0, 0, 0, 0, 0]", "shape": "dot"}, {"id": 37, "label": "Index: 37, Board State: [0, 0, 0, 2, 3, 0, 0, 0, 0]", "shape": "dot"}, {"id": 38, "label": "Index: 38, Board State: [0, 0, 0, 2, 0, 3, 0, 0, 0]", "shape": "dot"}, {"id": 39, "label": "Index: 39, Board State: [0, 0, 0, 2, 0, 0, 3, 0, 0]", "shape": "dot"}, {"id": 40, "label": "Index: 40, Board State: [0, 0, 0, 2, 0, 0, 0, 3, 0]", "shape": "dot"}, {"id": 41, "label": "Index: 41, Board State: [0, 0, 0, 2, 0, 0, 0, 0, 3]", "shape": "dot"}, {"id": 42, "label": "Index: 42, Board State: [3, 0, 0, 0, 2, 0, 0, 0, 0]", "shape": "dot"}, {"id": 43, "label": "Index: 43, Board State: [0, 3, 0, 0, 2, 0, 0, 0, 0]", "shape": "dot"}, {"id": 44, "label": "Index: 44, Board State: [0, 0, 3, 0, 2, 0, 0, 0, 0]", "shape": "dot"}, {"id": 45, "label": "Index: 45, Board State: [0, 0, 0, 3, 2, 0, 0, 0, 0]", "shape": "dot"}, {"id": 46, "label": "Index: 46, Board State: [0, 0, 0, 0, 2, 3, 0, 0, 0]", "shape": "dot"}, {"id": 47, "label": "Index: 47, Board State: [0, 0, 0, 0, 2, 0, 3, 0, 0]", "shape": "dot"}, {"id": 48, "label": "Index: 48, Board State: [0, 0, 0, 0, 2, 0, 0, 3, 0]", "shape": "dot"}, {"id": 49, "label": "Index: 49, Board State: [0, 0, 0, 0, 2, 0, 0, 0, 3]", "shape": "dot"}, {"id": 50, "label": "Index: 50, Board State: [3, 0, 0, 0, 0, 2, 0, 0, 0]", "shape": "dot"}, {"id": 51, "label": "Index: 51, Board State: [0, 3, 0, 0, 0, 2, 0, 0, 0]", "shape": "dot"}, {"id": 52, "label": "Index: 52, Board State: [0, 0, 3, 0, 0, 2, 0, 0, 0]", "shape": "dot"}, {"id": 53, "label": "Index: 53, Board State: [0, 0, 0, 3, 0, 2, 0, 0, 0]", "shape": "dot"}, {"id": 54, "label": "Index: 54, Board State: [0, 0, 0, 0, 3, 2, 0, 0, 0]", "shape": "dot"}, {"id": 55, "label": "Index: 55, Board State: [0, 0, 0, 0, 0, 2, 3, 0, 0]", "shape": "dot"}, {"id": 56, "label": "Index: 56, Board State: [0, 0, 0, 0, 0, 2, 0, 3, 0]", "shape": "dot"}, {"id": 57, "label": "Index: 57, Board State: [0, 0, 0, 0, 0, 2, 0, 0, 3]", "shape": "dot"}, {"id": 58, "label": "Index: 58, Board State: [3, 0, 0, 0, 0, 0, 2, 0, 0]", "shape": "dot"}, {"id": 59, "label": "Index: 59, Board State: [0, 3, 0, 0, 0, 0, 2, 0, 0]", "shape": "dot"}, {"id": 60, "label": "Index: 60, Board State: [0, 0, 3, 0, 0, 0, 2, 0, 0]", "shape": "dot"}, {"id": 61, "label": "Index: 61, Board State: [0, 0, 0, 3, 0, 0, 2, 0, 0]", "shape": "dot"}, {"id": 62, "label": "Index: 62, Board State: [0, 0, 0, 0, 3, 0, 2, 0, 0]", "shape": "dot"}, {"id": 63, "label": "Index: 63, Board State: [0, 0, 0, 0, 0, 3, 2, 0, 0]", "shape": "dot"}, {"id": 64, "label": "Index: 64, Board State: [0, 0, 0, 0, 0, 0, 2, 3, 0]", "shape": "dot"}, {"id": 65, "label": "Index: 65, Board State: [0, 0, 0, 0, 0, 0, 2, 0, 3]", "shape": "dot"}, {"id": 66, "label": "Index: 66, Board State: [3, 0, 0, 0, 0, 0, 0, 2, 0]", "shape": "dot"}, {"id": 67, "label": "Index: 67, Board State: [0, 3, 0, 0, 0, 0, 0, 2, 0]", "shape": "dot"}, {"id": 68, "label": "Index: 68, Board State: [0, 0, 3, 0, 0, 0, 0, 2, 0]", "shape": "dot"}, {"id": 69, "label": "Index: 69, Board State: [0, 0, 0, 3, 0, 0, 0, 2, 0]", "shape": "dot"}, {"id": 70, "label": "Index: 70, Board State: [0, 0, 0, 0, 3, 0, 0, 2, 0]", "shape": "dot"}, {"id": 71, "label": "Index: 71, Board State: [0, 0, 0, 0, 0, 3, 0, 2, 0]", "shape": "dot"}, {"id": 72, "label": "Index: 72, Board State: [0, 0, 0, 0, 0, 0, 3, 2, 0]", "shape": "dot"}, {"id": 73, "label": "Index: 73, Board State: [0, 0, 0, 0, 0, 0, 0, 2, 3]", "shape": "dot"}, {"id": 74, "label": "Index: 74, Board State: [3, 0, 0, 0, 0, 0, 0, 0, 2]", "shape": "dot"}, {"id": 75, "label": "Index: 75, Board State: [0, 3, 0, 0, 0, 0, 0, 0, 2]", "shape": "dot"}, {"id": 76, "label": "Index: 76, Board State: [0, 0, 3, 0, 0, 0, 0, 0, 2]", "shape": "dot"}, {"id": 77, "label": "Index: 77, Board State: [0, 0, 0, 3, 0, 0, 0, 0, 2]", "shape": "dot"}, {"id": 78, "label": "Index: 78, Board State: [0, 0, 0, 0, 3, 0, 0, 0, 2]", "shape": "dot"}, {"id": 79, "label": "Index: 79, Board State: [0, 0, 0, 0, 0, 3, 0, 0, 2]", "shape": "dot"}, {"id": 80, "label": "Index: 80, Board State: [0, 0, 0, 0, 0, 0, 3, 0, 2]", "shape": "dot"}, {"id": 81, "label": "Index: 81, Board State: [0, 0, 0, 0, 0, 0, 0, 3, 2]", "shape": "dot"}]);
+        edges = new vis.DataSet([{"from": 0, "to": 1}, {"from": 0, "to": 2}, {"from": 0, "to": 3}, {"from": 0, "to": 4}, {"from": 0, "to": 5}, {"from": 0, "to": 6}, {"from": 0, "to": 7}, {"from": 0, "to": 8}, {"from": 0, "to": 9}, {"from": 1, "to": 10}, {"from": 1, "to": 11}, {"from": 1, "to": 12}, {"from": 1, "to": 13}, {"from": 1, "to": 14}, {"from": 1, "to": 15}, {"from": 1, "to": 16}, {"from": 1, "to": 17}, {"from": 2, "to": 18}, {"from": 2, "to": 19}, {"from": 2, "to": 20}, {"from": 2, "to": 21}, {"from": 2, "to": 22}, {"from": 2, "to": 23}, {"from": 2, "to": 24}, {"from": 2, "to": 25}, {"from": 3, "to": 26}, {"from": 3, "to": 27}, {"from": 3, "to": 28}, {"from": 3, "to": 29}, {"from": 3, "to": 30}, {"from": 3, "to": 31}, {"from": 3, "to": 32}, {"from": 3, "to": 33}, {"from": 4, "to": 34}, {"from": 4, "to": 35}, {"from": 4, "to": 36}, {"from": 4, "to": 37}, {"from": 4, "to": 38}, {"from": 4, "to": 39}, {"from": 4, "to": 40}, {"from": 4, "to": 41}, {"from": 5, "to": 42}, {"from": 5, "to": 43}, {"from": 5, "to": 44}, {"from": 5, "to": 45}, {"from": 5, "to": 46}, {"from": 5, "to": 47}, {"from": 5, "to": 48}, {"from": 5, "to": 49}, {"from": 6, "to": 50}, {"from": 6, "to": 51}, {"from": 6, "to": 52}, {"from": 6, "to": 53}, {"from": 6, "to": 54}, {"from": 6, "to": 55}, {"from": 6, "to": 56}, {"from": 6, "to": 57}, {"from": 7, "to": 58}, {"from": 7, "to": 59}, {"from": 7, "to": 60}, {"from": 7, "to": 61}, {"from": 7, "to": 62}, {"from": 7, "to": 63}, {"from": 7, "to": 64}, {"from": 7, "to": 65}, {"from": 8, "to": 66}, {"from": 8, "to": 67}, {"from": 8, "to": 68}, {"from": 8, "to": 69}, {"from": 8, "to": 70}, {"from": 8, "to": 71}, {"from": 8, "to": 72}, {"from": 8, "to": 73}, {"from": 9, "to": 74}, {"from": 9, "to": 75}, {"from": 9, "to": 76}, {"from": 9, "to": 77}, {"from": 9, "to": 78}, {"from": 9, "to": 79}, {"from": 9, "to": 80}, {"from": 9, "to": 81}]);
+
+        // adding nodes and edges to the graph
+        data = {nodes: nodes, edges: edges};
+
+        var options = {
+    "configure": {
+        "enabled": true,
+        "filter": true
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": false,
+            "type": "continuous"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+        
+        
+
+        
+        // if this network requires displaying the configure window,
+        // put it in its div
+        options.configure["container"] = document.getElementById("config");
+        
+
+        network = new vis.Network(container, data, options);
+	 
+        
+
+
+        
+
+        return network;
+
+    }
+
+    drawGraph();
+
+</script>
+</body>
+</html>

@@ -6,9 +6,19 @@ class Game:
 
         self.board = [ 0 for _ in range( 9 ) ]
         self.strategies = [ strategy_one, strategy_two ] 
-        # ^^^^^^ [ function, function]
+        # ^^^^^^          [   function  ,   function   ]
         self.state()
         self.current_player = current_player
+        self.all_possible_winning_combinations = [
+            [ 1, 2, 3 ], 
+            [ 4, 5, 6 ], 
+            [ 7, 8, 9 ], 
+            [ 1, 4, 7 ], 
+            [ 2, 5, 8 ],
+            [ 3, 6, 9 ],
+            [ 1, 5, 9 ],
+            [ 3, 5, 7 ]
+        ]
 
     def play( self ):
 
@@ -26,6 +36,7 @@ class Game:
         return winner
         
     def place( self, player, index ): # 1 or 2 for player, and index is 0-9
+
         try:
 
             if self.board[ index ] == 0: 
@@ -44,13 +55,10 @@ class Game:
 
     def state( self, current_player = 1 ):
         switcher = { 0: 0, 1: 1, 2: 2 }
-        if current_player == 2: 
+        if current_player == 2:
             switcher = { 0: 0, 1: 2, 2: 1 }
         return ''.join( [ str( switcher[ space ] ) for space in self.board ] )
 
-    def get_next_player( self, current_player ):
-        return 2 if current_player == 1 else 1
-    
     def get_possible_branches( self, board_state, current_player ):
         
         possible_branches = [ i for i in range( 9 ) if int( board_state[ i ] ) == 0 ]
@@ -65,43 +73,42 @@ class Game:
 
         if board_state is None:
             board_state = self.board
-
-        # horizontal
-        if board_state[ 0 ] == board_state[ 1 ] == board_state[ 2 ] != 0: 
-            return ( True, board_state[ 0 ] ) 
-        if board_state[ 3 ] == board_state[ 4 ] == board_state[ 5 ] != 0: 
-            return ( True, board_state[ 3 ] )
-        if board_state[ 6 ] == board_state[ 7 ] == board_state[ 8 ] != 0: 
-            return ( True, board_state[ 6 ] )
-
-        # vertical
-        if board_state[ 0 ] == board_state[ 3 ] == board_state[ 6 ] != 0: 
-            return ( True, board_state[ 0 ] )
-        if board_state[ 1 ] == board_state[ 4 ] == board_state[ 7 ] != 0: 
-            return ( True, board_state[ 1 ] )
-        if board_state[ 2 ] == board_state[ 5 ] == board_state[ 8 ] != 0: 
-            return ( True, board_state[ 2 ] )
-
-        # diagonal
-        if board_state[ 0 ] == board_state[ 4 ] == board_state[ 8 ] != 0: 
-            return ( True, board_state[ 0 ] ) 
         
-        # backwards diagonal
-        if board_state[ 2 ] == board_state[ 4 ] == board_state[ 6 ] != 0: 
-            return ( True, board_state[ 2 ] ) 
+        next_player = get_next_player( self.current_player )
 
-        if board_state.count( 0 ) == 0:
-            return ( False, None )
+        for indices in self.all_possible_winning_combinations:
+
+            if all( index in board_state[ self.current_player ] for index in indices ):
+
+                return ( True, current_player )      
+
+            if all( index in board_state[ self.next_player ] for index in indices ):
+
+                return ( True, next_player )
 
         return ( False, None )
 
-    def evaluate( self, board_state, player ):
+    def evaluate( board_state, player ):
 
         win = num_wins( board_state, player )
-        lose = num_wins( board_state, self.get_next_player( player ) )
+        lose = num_wins( board_state, get_next_player( player ) )
 
-        # total possible wins - total possible losses
-        return win - lose
+        return ( win - lose )  / ( win + lose )
+
+    def num_wins( self, board_state, player ): # not cringe
+
+        wins = int()
+
+        for indices in self.all_possible_winning_combinations:
+
+            if all( index in board_state[ self.current_player ] for index in indices ):
+
+                wins += 1
+
+        return wins
+
+def get_next_player( current_player ):
+        return 2 if current_player == 1 else 1
 
 def plots_3_and_4( board_state, player ): # cringe
 
@@ -169,32 +176,3 @@ def plots_3_and_4( board_state, player ): # cringe
 
     return len( moves ) > 0, moves
 
-def num_wins( board_state, player ): # cringe
-
-    wins = int()
-
-    #horizontal
-    if board_state[ 0 ] == board_state[ 1 ] == board_state[ 2 ] == player: 
-        wins += 1
-    if board_state[ 3 ] == board_state[ 4 ] == board_state[ 5 ] == player: 
-        wins += 1
-    if board_state[ 6 ] == board_state[ 7 ] == board_state[ 8 ] == player: 
-        wins += 1
-
-    #vertical
-    if board_state[ 0 ] == board_state[ 3 ] == board_state[ 6 ] == player: 
-        wins += 1
-    if board_state[ 1 ] == board_state[ 4 ] == board_state[ 7 ] == player: 
-        wins += 1
-    if board_state[ 2 ] == board_state[ 5 ] == board_state[ 8 ] == player:
-        wins += 1
-
-    #diagonal
-    if board_state[ 0 ] == board_state[ 4 ] == board_state[ 8 ] == player: 
-        wins += 1
-
-    #backwards diagonal
-    if board_state[ 2 ] == board_state[ 4 ] == board_state[ 6 ] == player: 
-        wins += 1
-
-    return wins

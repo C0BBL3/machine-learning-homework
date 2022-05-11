@@ -27,7 +27,7 @@ class MetaHeuristicAlgorithm:
         self.current_bracket = current_bracket
         workers = dict()
         available_thread_count = multiprocessing.cpu_count() - 1
-        #lock = multiprocessing.Lock()
+        lock = multiprocessing.Lock()
 
         matchups = determine_matchups( 
             fitness_score, 
@@ -52,8 +52,8 @@ class MetaHeuristicAlgorithm:
             args = [ 
                 fitness_score, 
                 matchups_arg, 
-                return_list#, 
-                #lock 
+                return_list, 
+                lock 
             ] 
 
             worker = multiprocessing.Process( 
@@ -108,7 +108,7 @@ class MetaHeuristicAlgorithm:
 
         print('score distribution', temp)
 
-    def multi_core_compete( self, fitness_score, matchups, return_dict ): # nasty
+    def multi_core_compete( self, fitness_score, matchups, return_dict, lock ): # nasty
 
         for ( i, j ) in matchups:
 
@@ -128,10 +128,14 @@ class MetaHeuristicAlgorithm:
                         chromosome_one
                     ) # reverse matchup and if its still a draw these two dont move on
 
+        lock.acquire()
+        
         for (i, j) in matchups:            
 
             return_dict[ i ].value += self.current_bracket[ i ][ 'score' ]
             return_dict[ j ].value += self.current_bracket[ j ][ 'score' ]
+
+        lock.release()
 
     def breed( self, mutation_rate = 0.001, crossover_type = 'random', crossover_genes_indices = list() ):
 
@@ -341,9 +345,9 @@ def nn_chromosome(chromosome):
     evaluation_function = lambda board_state, current_player: chromosome['genes'].calc_prediction(
         {
             'input': [ 
-                { 0: 0, 1: 2, 2: 1 }[ space ] # double checking if 
+                { 0: 0, 1: -1, 2: 1 }[ space ] # double checking if 
                 if current_player == 2 else   # board state  is in 
-                { 0: 0, 1: 1, 2: 2 }[ space ] # current player format
+                { 0: 0, 1: 1, 2: -1 }[ space ] # current player format
                 for space in board_state
             ]
         }
@@ -362,7 +366,7 @@ def minimax_function( board_state, evaluation_function, current_player ):
         Game( None, None, current_player = current_player ), 
         current_player, 
         root_board_state = board_state, 
-        max_depth = 4
+        max_depth = 5
     )
 
     minimax.evaluate_game_tree(

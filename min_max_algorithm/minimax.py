@@ -131,13 +131,13 @@ class Minimax:
 
     def get_best_move( self, root_board_state ):
 
-        first_layer_nodes = [
+        self.first_layer_nodes = [
             node 
             for node in self.nodes.values()
             if node.depth == 1
         ]
 
-        best_node = max( first_layer_nodes, key = lambda node: node.value )
+        best_node = max( self.first_layer_nodes, key = lambda node: node.value )
         
         for move, i in enumerate( root_board_state ):
             

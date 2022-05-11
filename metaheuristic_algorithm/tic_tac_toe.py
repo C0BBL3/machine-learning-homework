@@ -10,15 +10,16 @@ class Game:
         self.state()
         self.current_player = current_player
         self.all_possible_winning_combinations = [
-            [ 1, 2, 3 ], 
-            [ 4, 5, 6 ], 
-            [ 7, 8, 9 ], 
-            [ 1, 4, 7 ], 
+            [ 0, 1, 2 ], 
+            [ 3, 4, 5 ], 
+            [ 6, 7, 8 ], 
+            [ 0, 3, 6 ], 
+            [ 1, 4, 7 ],
             [ 2, 5, 8 ],
-            [ 3, 6, 9 ],
-            [ 1, 5, 9 ],
-            [ 3, 5, 7 ]
+            [ 0, 4, 8 ],
+            [ 2, 4, 6 ]
         ]
+        self.logs = list()
 
     def play( self ):
 
@@ -28,6 +29,7 @@ class Game:
             current_move = self.strategies[ self.current_player - 1 ]( self.board, self.current_player )
             self.place( self.current_player, current_move )
             self.current_player = self.get_next_player( self.current_player )
+            self.logs.append( self.state() )
 
         winner = self.game_finished()
 
@@ -74,26 +76,28 @@ class Game:
         if board_state is None:
             board_state = self.board
         
-        next_player = get_next_player( self.current_player )
+        next_player = self.get_next_player( self.current_player )
 
         for indices in self.all_possible_winning_combinations:
 
-            if all( index in board_state[ self.current_player ] for index in indices ):
+            if all( self.current_player == board_state[ index ] for index in indices ):
 
-                return ( True, current_player )      
+                return ( True, self.current_player )      
 
-            if all( index in board_state[ self.next_player ] for index in indices ):
+            if all( next_player == board_state[ index ] for index in indices ):
 
                 return ( True, next_player )
 
         return ( False, None )
 
-    def evaluate( board_state, player ):
+    def evaluate( self, board_state, player ):
 
-        win = num_wins( board_state, player )
-        lose = num_wins( board_state, get_next_player( player ) )
+        win = self.num_wins( board_state, player )
+        lose = self.num_wins( board_state, self.get_next_player( player ) )
 
-        return ( win - lose )  / ( win + lose )
+        if win + lose == 0: return 0
+
+        return win / ( win + lose )
 
     def num_wins( self, board_state, player ): # not cringe
 
@@ -101,14 +105,14 @@ class Game:
 
         for indices in self.all_possible_winning_combinations:
 
-            if all( index in board_state[ self.current_player ] for index in indices ):
+            if all( player == board_state[ index ] for index in indices ):
 
                 wins += 1
 
         return wins
 
-def get_next_player( current_player ):
-        return 2 if current_player == 1 else 1
+    def get_next_player( self, current_player ):
+            return 2 if current_player == 1 else 1
 
 def plots_3_and_4( board_state, player ): # cringe
 

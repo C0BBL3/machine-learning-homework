@@ -21,56 +21,63 @@ if __name__ == '__main__':
 
     def calculate_score( fittest_chromosomes, population, num_games, return_int, lock, time ):
 
-        result = float()
+        result = int()
+        ties = int()
+        bitch = int()
         random.seed(time)
 
         fittest_chromosome_indices =  random.randint(
             len( fittest_chromosomes ), 
             size = num_games 
         )
-
-        print('fittest_chromosome_indices', fittest_chromosome_indices)
 
         population_indices = random.randint(
             len( population ), 
             size = num_games 
         )
 
-        print('population_indices', population_indices)
-        
         for i in range( num_games ):
-
+            
             chromosome_one = fittest_chromosomes[ fittest_chromosome_indices[ i ] ]
             chromosome_two = population[ population_indices[ i ] ]
 
             game = Game( nn_chromosome( chromosome_one ), nn_chromosome( chromosome_two ) )
-
-            if game.play()[ 1 ] == 1: 
+            temp_1 = game.play()[ 1 ]
+            if temp_1 == 1: 
                 result += 1
-            
-            game = Game( nn_chromosome( chromosome_two ), nn_chromosome( chromosome_one ) )
+            elif temp_1 == 'Draw':
+                ties += 1
 
-            if game.play()[ 1 ] == 2: 
+            game = Game( nn_chromosome( chromosome_two ), nn_chromosome( chromosome_one ) )
+            temp_2 = game.play()[ 1 ]
+
+            if temp_2 == 2: 
                 result += 1 
+            elif temp_2 == 'Draw':
+                ties += 1
+
+            if temp_1 == temp_2: bitch += 1
 
         lock.acquire()
 
-        return_int.value += result / ( 2 * num_games )
-        #print(result / num_games)
+        return_int.value += result / ( 2 * num_games - ties )
+        print('fuck', bitch, 2 * num_games, ties)
+        if bitch == 10:
+            print(game.logs)
 
         lock.release()
             
     def calculate_score_random( fittest_chromosomes, random_function, num_games, return_int, lock, time ):
 
-        result = float()
+        result = int()
+        ties = int()
+        bitch = int()
         random.seed(time)
 
         fittest_chromosome_indices =  random.randint(
             len( fittest_chromosomes ), 
-            size = num_games 
+            size = num_games
         )
-
-        print('fittest_chromosome_indices', fittest_chromosome_indices)
 
         for i in range( num_games ):
 
@@ -78,18 +85,28 @@ if __name__ == '__main__':
 
             game = Game( nn_chromosome( chromosome_one ), random_function )
             
-            if game.play()[ 1 ] == 1: 
+            temp_1 = game.play()[ 1 ]
+            
+            if temp_1 == 1: 
                 result += 1
+            elif temp_1 == 'Draw':
+                ties += 1
             
             game = Game( random_function, nn_chromosome( chromosome_one ) )
             
-            if game.play()[ 1 ] == 2: 
-                result += 1
+            temp_2 = game.play()[ 1 ]
+            
+            if temp_2 == 2: 
+                result += 1 
+            elif temp_2 == 'Draw':
+                ties += 1
+
+            if temp_1 == temp_2: bitch += 1
 
         lock.acquire()
 
-        return_int.value += result / ( 2 * num_games )
-        #print(result / num_games)
+        return_int.value += result / ( 2 * num_games - ties )
+        print('fuck', bitch, 2 * num_games, ties)
 
         lock.release()
 
@@ -359,7 +376,7 @@ if __name__ == '__main__':
 
             num_of_plotted_generations += 1
 
-        print( '\nEvolution Complete!' )
+    print( '\nEvolution Complete!' )
 
     print('\n\tSaving Best Neural Network')
     neural_network_file = open('metaheuristic_algorithm/ttt_board_states/best_neural_network.txt', 'w')

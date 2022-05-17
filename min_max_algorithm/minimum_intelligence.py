@@ -67,7 +67,7 @@ while not game.game_finished()[ 0 ] and game.board.count( 0 ) > 0:
         game.place( game.current_player, current_move )
     game.current_player = game.get_next_player( game.current_player )
     if isinstance(current_move, tuple):
-        game.logs.append( 
+        game.logs.append(
             (
                 temp, [
                     [

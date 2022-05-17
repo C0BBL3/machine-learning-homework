@@ -133,18 +133,6 @@ class Game:
  
             return 0
 
-    def num_wins( self, board_state, player ): # not cringe
-
-        wins = int()
-
-        for indices in self.all_possible_winning_combinations:
-
-            if all( player == board_state[ index ] for index in indices ):
-
-                wins += 1
-
-        return wins
-
     def get_next_player( self, current_player ):
             return { 1 : 2, 2 : 1 }[ current_player ]
 

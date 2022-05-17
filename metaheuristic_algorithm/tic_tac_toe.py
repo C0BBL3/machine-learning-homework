@@ -9,6 +9,7 @@ class Game:
         # ^^^^^^          [   function  ,   function   ]
         self.state()
         self.current_player = current_player
+        self.logs = list()
         self.all_possible_winning_combinations = [
             [ 0, 1, 2 ], 
             [ 3, 4, 5 ], 
@@ -19,11 +20,25 @@ class Game:
             [ 0, 4, 8 ],
             [ 2, 4, 6 ]
         ]
-        self.logs = list()
+        
+        self.winning_board_states = { 
+            line.strip( '\n' ) 
+            for line in open( 'metaheuristic_algorithm/ttt_board_states/winning_board_states.txt', 'r' ).readlines() 
+        } # make set for fast
+
+        self.losing_board_states = { 
+            line.strip( '\n' ) 
+            for line in open( 'metaheuristic_algorithm/ttt_board_states/losing_board_states.txt', 'r' ).readlines() 
+        }
+
+        self.tieing_board_states = { 
+            line.strip( '\n' ) 
+            for line in open( 'metaheuristic_algorithm/ttt_board_states/tieing_board_states.txt', 'r' ).readlines() 
+        }
 
     def play( self ):
 
-        while not self.game_finished()[ 0 ] and self.board.count( 0 ) > 0:
+        while not self.game_finished()[ 0 ]:
 
             current_state = self.state( current_player = self.current_player )
             current_move = self.strategies[ self.current_player - 1 ]( self.board, self.current_player )
@@ -76,28 +91,47 @@ class Game:
         if board_state is None:
             board_state = self.board
         
-        next_player = self.get_next_player( self.current_player )
+        string_board_state = ''.join( 
+            [ 
+                str( space ) 
+                for space in board_state 
+            ]
+        )
 
-        for indices in self.all_possible_winning_combinations:
-
-            if all( self.current_player == board_state[ index ] for index in indices ):
-
-                return ( True, self.current_player )      
-
-            if all( next_player == board_state[ index ] for index in indices ):
-
-                return ( True, next_player )
-
-        return ( False, None )
+        if string_board_state in self.winning_board_states:
+            return ( 
+                True, 
+                self.current_player 
+            )
+        elif string_board_state in self.losing_board_states:
+            return ( 
+                True, 
+                self.get_next_player( self.current_player ) 
+            )
+        elif string_board_state in self.tieing_board_states:
+            return (
+                True,
+                'Draw'
+            )
+        else:
+            return ( False, True )
 
     def evaluate( self, board_state, player ):
 
-        win = self.num_wins( board_state, player )
-        lose = self.num_wins( board_state, self.get_next_player( player ) )
+        temp = self.game_finished( board_state = board_state )
+        next_player = self.get_next_player( player )
 
-        if win + lose == 0: return 0
+        if temp[ 0 ] and temp[ 1 ] == player:
+            
+            return 1
 
-        return win / ( win + lose )
+        elif temp[ 0 ] and temp[ 1 ] == next_player:
+
+            return -1
+
+        elif temp[ 0 ] and temp[ 1 ] == 'Draw':
+ 
+            return 0
 
     def num_wins( self, board_state, player ): # not cringe
 
@@ -112,7 +146,7 @@ class Game:
         return wins
 
     def get_next_player( self, current_player ):
-            return 2 if current_player == 1 else 1
+            return { 1 : 2, 2 : 1 }[ current_player ]
 
 def plots_3_and_4( board_state, player ): # cringe
 

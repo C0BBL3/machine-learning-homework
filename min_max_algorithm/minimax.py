@@ -80,7 +80,7 @@ class Minimax:
 
                     self.prune( similar_nodes, root, current_depth )
 
-    def create_children( self, root, branch, current_nodes, depth = int(), player = None ):
+    def create_children( self, root, branch, current_nodes, depth, player ):
 
         new_node_index = len( self.nodes )
         new_node = Node( 
@@ -122,12 +122,25 @@ class Minimax:
 
             if node.children == set():
 
-                node.value = evaluation_function( node.board_state, self.nodes[ 0 ].player )
+                node.value = evaluation_function( 
+                    node.board_state, 
+                    self.initial_player
+                )
+
                 continue
 
-            for child_index in node.children:
-                
-                node.value += self.nodes[ child_index ].value
+            if node.player == self.initial_player:
+                best_child_index = min( 
+                    node.children, 
+                    key = lambda child_index: self.nodes[ child_index ].value 
+                )
+            else:
+                best_child_index = max( 
+                    node.children, 
+                    key = lambda child_index: self.nodes[ child_index ].value 
+                )
+
+            node.value = self.nodes[ best_child_index ].value
 
     def get_best_move( self, root_board_state ):
 
@@ -148,12 +161,12 @@ class Minimax:
         return None
 
 class Node:
-    def __init__( self, board_state = list(), value = int(), index = int(), depth = int(), player = None ):
+    def __init__( self, board_state = list(), value = int(), index = int(), depth = int(), player = int() ):
         self.board_state = board_state
         self.value = value
         self.index = index
         self.depth = depth
-        self.player = None
+        self.player = player
         self.parents = set()
         self.children = set()
 

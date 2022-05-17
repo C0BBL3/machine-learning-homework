@@ -49,6 +49,8 @@ while not game.game_finished()[ 0 ] and game.board.count( 0 ) > 0:
                 ]
             )
         )
+    else:
+        game.logs.append(game.state())
 
 print(game.logs)
 
@@ -57,6 +59,7 @@ game = Game( stoopid, minimax_function )
 while not game.game_finished()[ 0 ] and game.board.count( 0 ) > 0:
 
     current_state = game.state( current_player = game.current_player )
+    temp = game.state()
     current_move = game.strategies[ game.current_player - 1 ]( game.board, game.current_player )
     if game.current_player == 2:
         game.place( game.current_player, current_move[ 0 ] )
@@ -66,7 +69,7 @@ while not game.game_finished()[ 0 ] and game.board.count( 0 ) > 0:
     if isinstance(current_move, tuple):
         game.logs.append( 
             (
-                game.state(), [
+                temp, [
                     [
                         node.board_state, 
                         node.value
@@ -75,5 +78,7 @@ while not game.game_finished()[ 0 ] and game.board.count( 0 ) > 0:
                 ]
             )
         )
+    else:
+        game.logs.append(game.state())
 
 print(game.logs)

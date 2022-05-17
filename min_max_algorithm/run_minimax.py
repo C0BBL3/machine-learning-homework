@@ -13,3 +13,16 @@ print( time.time() - start )
 print( len( minimax.nodes ) )
 print( len( minimax.leaf_nodes ) )
 
+W = 0
+T = 0
+L = 0
+
+for node in minimax.nodes.values():
+    if node.value == 1: W += 1
+    if node.value == 0: T += 1
+    if node.value == -1: L += 1
+
+print('W', W)
+print('T', T)
+print('L', L)
+print(minimax.nodes[ 10 ].player)

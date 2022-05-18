@@ -9,10 +9,10 @@ minimax = Minimax()
 def minimax_function( board_state, current_player ):
     minimax = Minimax()
 
-    #if current_player == 2:
-        #switcher = { 0: 0, 1: 2, 2: 1 }
-        #board_state = [ switcher[ space ] for space in board_state ]
-        #current_player = 1
+    if current_player == 2:
+        switcher = { 0: 0, 1: 2, 2: 1 }
+        board_state = [ switcher[ space ] for space in board_state ]
+        current_player = 1
 
     minimax.generate_tree(
         Game( None, None, current_player = current_player ), 

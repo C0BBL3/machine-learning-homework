@@ -40,7 +40,7 @@ class Game:
 
         while not self.game_finished()[ 0 ]:
 
-            current_state = self.state( current_player = self.current_player )
+            self.state( current_player = self.current_player )
             current_move = self.strategies[ self.current_player - 1 ]( self.board, self.current_player )
             self.place( self.current_player, current_move )
             self.current_player = self.get_next_player( self.current_player )
@@ -66,7 +66,7 @@ class Game:
 
         except ValueError as va:
 
-            print( "Player", player, "tried to cheat by placing a piece on space", player )
+            print( "Player", player, "tried to cheat by placing a piece on space", index )
             print( "Board state", self.state() )
             exit()
 

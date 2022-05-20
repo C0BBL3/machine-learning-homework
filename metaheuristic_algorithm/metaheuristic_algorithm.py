@@ -4,7 +4,6 @@ import time
 import ast
 import math
 import multiprocessing
-from multiprocessing import Pool
 from tic_tac_toe import Game
 import sys
 sys.path.append('neural_network/')
@@ -16,6 +15,68 @@ from minimax import Minimax
 class MetaHeuristicAlgorithm:
     def __init__( self ):
         self.population = list()
+
+    def pre_train_state( self, num_of_pre_train_generations = 50, board_states_path = 'ttt_board_states', print_progress = False ):
+
+        file_path = 'metaheuristic_algorithm/' + board_states_path
+
+        files = {
+            result: open( file_path + '/' + result + '_board_states.txt', 'r' )
+            for result in [ 'winning', 'losing', 'tieing' ]
+        }
+
+        board_states = {
+            result: [ line.strip( '\n' ) for line in files[ result ] ]
+            for result in [ 'winning', 'losing', 'tieing' ]
+        }
+
+        results = {
+            'winning': 1,
+            'losing': 0,
+            'tieing': -1
+        }
+
+        # score will be rss for each chromosome
+        
+        for generation in range( num_of_pre_train_generations ): 
+
+            if print_progress and ( generation < 5 or generation % 5 == 4 ):
+
+                print( '\n\tPre-Evolving Generation: {}...'.format( generation + 1 ) )
+
+            for chromosome in self.population:
+
+                for result, board_states_list in board_states.items():
+
+                    for board_state in board_states_list:
+
+                        temp = [
+                            float( space ) 
+                            for space in board_state
+                        ]
+
+                        chromosome[ 'score' ] += ( results[ result ] - chromosome[ 'genes' ].calc_prediction(
+                            {
+                                'input': temp
+                            }
+                        ) ) ** 2
+
+            self.population = sorted(
+                copy_population( self.population ), 
+                key = lambda chromosome: chromosome[ 'score' ], 
+                reverse = True
+            )
+
+            self.population += [ 
+                {
+                    'genes': chromosome[ 'genes' ].mitosis(), 
+                    'score': 0 
+                } 
+                for chromosome in self.population 
+            ]
+
+            if print_progress and ( generation < 5 or generation % 5 == 4 ):
+                print( '\n\tGeneration: {} Pre-Evolution Completed!'.format( generation + 1 ) )
 
     def determine_fitness( self, fitness_score = 'round robin', cutoff_type = 'hard cutoff', current_bracket = None, round_number = 1, breedable_population_size = int() ):
         
@@ -29,10 +90,7 @@ class MetaHeuristicAlgorithm:
         available_thread_count = multiprocessing.cpu_count() - 1
         lock = multiprocessing.Lock()
 
-        matchups = determine_matchups( 
-            fitness_score, 
-            current_bracket = current_bracket 
-        )
+        matchups = self.determine_matchups()
 
         random.shuffle( matchups )
 
@@ -85,60 +143,17 @@ class MetaHeuristicAlgorithm:
                 round_number = round_number + 1 
             )
         
-        if cutoff_type == 'hard cutoff':
-            self.fittest_chromosomes = hard_cutoff( 
-                self.population,
-                self.breedable_population_size
-            ) 
-        elif cutoff_type == 'stochastic':
-            self.fittest_chromosomes = stochastic( 
-                self.population,
-                self.breedable_population_size
-            )
+        if cutoff_type == 'stochastic':
+            cutoff_function = stochastic
         elif cutoff_type == 'tournament':
-            self.fittest_chromosomes = tournament( 
-                self.population,
-                self.breedable_population_size
-            )
-            
-        temp = int()
-        print('\n', len(self.population))
-        for chromosome in self.population:
-            temp += chromosome[ 'score' ]
-            print( chromosome[ 'score' ] )
-            chromosome[ 'score' ] = int()
+            cutoff_function = tournament
+        else:
+            cutoff_function = hard_cutoff
 
-        print('score distribution', temp)
-
-    def multi_core_compete( self, fitness_score, matchups, return_dict, lock ): # nasty
-        
-        for ( i, j ) in matchups:
-            
-            result = self.compete( 
-                self.population[ i ],
-                self.population[ j ]
-            )
-
-            if fitness_score == 'bracket':
-
-                if result[ 0 ] is False or result[ 1 ] == 'Draw':
-                    self.compete(
-                        self.population[ j ],
-                        self.population[ i ]
-                    ) # reverse matchup and if its still a draw these two dont move on
-
-        lock.acquire()
-        temp = int()
-        
-        for ( i, j ) in matchups:            
-
-            temp += self.population[ i ][ 'score' ]
-            temp += self.population[ j ][ 'score' ]
-            return_dict[ i ].value += self.population[ i ][ 'score' ]
-            return_dict[ j ].value += self.population[ j ][ 'score' ]
-
-        print(temp)
-        lock.release()
+        self.fittest_chromosomes = cutoff_function( 
+            self.population,
+            self.breedable_population_size
+        )
 
     def breed( self, mutation_rate = 0.001, crossover_type = 'random', crossover_genes_indices = list() ):
 
@@ -238,6 +253,32 @@ class MetaHeuristicAlgorithm:
 
         return result
 
+    def multi_core_compete( self, fitness_score, matchups, return_dict, lock ): # nasty
+        
+        for ( i, j ) in matchups:
+            
+            result = self.compete( 
+                self.population[ i ],
+                self.population[ j ]
+            )
+
+            if fitness_score == 'bracket':
+
+                if result[ 0 ] is False or result[ 1 ] == 'Draw':
+                    self.compete(
+                        self.population[ j ],
+                        self.population[ i ]
+                    ) # reverse matchup and if its still a draw these two dont move on
+
+        lock.acquire()
+        
+        for ( i, j ) in matchups:            
+
+            return_dict[ i ].value += self.population[ i ][ 'score' ]
+            return_dict[ j ].value += self.population[ j ][ 'score' ]
+
+        lock.release()
+
     def read_chromosomes( self, generate_weights_function, layer_sizes, layers_with_bias_nodes, population_size = 64, breedable_population_size = None, input_size = list(), random_bool = True, random_range = [ -1.0, 1.0 ] ): # the ttc_chromosome_genes_file is a readlines() file
 
         if breedable_population_size is None:
@@ -260,7 +301,7 @@ class MetaHeuristicAlgorithm:
             lambda x: x
             for _ in range( input_size_int )
         ] + [ 
-            lambda x: tanh(x) 
+            lambda x: math.tanh(x) 
             for _ in range( sum( layer_sizes ) + bias_shift ) 
         ]
 
@@ -296,57 +337,44 @@ class MetaHeuristicAlgorithm:
         self.number_of_genes = len( genes )
         self.original_population = copy_population( self.population ) # create a copy of population for original population
 
-def determine_matchups(fitness_score, current_bracket = None):
+    def determine_matchups( self):
 
-    matchups = list()
+        matchups = list()
 
-    if fitness_score == 'round robin':
+        if self.fitness_score == 'round robin':
 
-        for i in range( len( current_bracket ) ):
+            for i in range( len( self.current_bracket ) ):
 
-            for j in range( len( current_bracket ) ):
+                for j in range( len( self.current_bracket ) ):
 
-                if i != j and [ i, j ] not in matchups:
+                    if i != j and [ i, j ] not in matchups:
 
-                    matchups.append( [ i, j ] )
+                        matchups.append( [ i, j ] )
 
-    elif fitness_score == 'bracket':
+        elif self.fitness_score == 'bracket':
 
-        for i in range( 0,  len( current_bracket ) - 1, 2 ):
+            for i in range( 0,  len( self.current_bracket ) - 1, 2 ):
 
-            matchups.append( [ i, i + 1 ] )
+                matchups.append( [ i, i + 1 ] )
 
-    elif fitness_score == 'blondie24':
+        elif self.fitness_score == 'blondie24':
 
-        for i in range( len( current_bracket ) ):
+            for i in range( len( self.current_bracket ) ):
 
-            for _ in range( 5 ):
-            
-                j = random.choice( list( range( len( current_bracket ) ) ) )
+                for _ in range( 5 ):
+                
+                    j = random.choice( list( range( len( self.current_bracket ) ) ) )
 
-                while [i, j] in matchups and [j, i] in matchups: 
+                    while [i, j] in matchups and [j, i] in matchups: 
 
-                    # re-roll j so we dont have two of the same games 
-                    # with the same players (order doesnt matter)
+                        # re-roll j so we dont have two of the same games 
+                        # with the same players (order doesnt matter)
 
-                    j = random.choice( list( range( len( current_bracket ) ) ) )
+                        j = random.choice( list( range( len( self.current_bracket ) ) ) )
 
-                matchups.append( [i, j] )
+                    matchups.append( [i, j] )
 
-    return matchups
-
-def tanh( x ):
-    e_x = math.e ** x
-    e_neg_x = math.e ** ( - x )
-    numerator = e_x - e_neg_x
-    denominator = e_x + e_neg_x
-    return numerator / denominator
-
-def sech( x ):
-    e_x = math.e ** x
-    e_neg_x = math.e ** ( - x )
-    denominator = e_x + e_neg_x
-    return 2 / denominator
+        return matchups
 
 def nn_chromosome(chromosome):
 
@@ -388,7 +416,7 @@ def get_crossover_indices( number_of_genes, mutation_rate, crossover_type = 'ran
 
     if crossover_type == 'random': 
         
-        # random indices
+        # random indices for crossover
         crossover_genes_indices = random.choice( 
             range( number_of_genes ), 
             round( number_of_genes * mutation_rate ), 
@@ -402,7 +430,7 @@ def get_crossover_indices( number_of_genes, mutation_rate, crossover_type = 'ran
         
         if crossover_type == 'alternating': 
 
-            # every even is a crossover
+            # every even is crossovered
             crossover_genes_indices = list ( map( 
                 lambda x: 2 * x, 
                 first_half_of_genes_indices 
@@ -410,15 +438,15 @@ def get_crossover_indices( number_of_genes, mutation_rate, crossover_type = 'ran
 
         elif crossover_type == 'fiftyfifty':
 
-            # first half is a crossover
+            # first half is crossovered
             crossover_genes_indices = first_half_of_genes_indices
 
     return crossover_genes_indices
 
-def hard_cutoff( population, breedable_population_size ):
+def hard_cutoff( population, breedable_population_size, key = lambda chromosome: chromosome[ 'score' ] ):
 
     population.sort( 
-        key = lambda chromosome: chromosome[ 'score' ], 
+        key = key, 
         reverse = True 
     )
 
@@ -513,12 +541,9 @@ def copy_population( population ):
 
         copy_chromosome = {
             'genes': NeuralNetwork( 
-                chromosome[ 'genes' ].weights,
-                data_type = chromosome[ 'genes' ].data_type,
-                functions = chromosome[ 'genes' ].functions,
-                derivatives = chromosome[ 'genes' ].derivatives,
-                alpha = chromosome[ 'genes' ].alpha
-
+                weights = dict( chromosome[ 'genes' ].weights ),
+                functions = list( chromosome[ 'genes' ].functions ),
+                alpha = float( chromosome[ 'genes' ].alpha )
             ),
             'score': int()
         }

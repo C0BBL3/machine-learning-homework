@@ -7,7 +7,7 @@ from numpy import random
 import multiprocessing
 import matplotlib.pyplot as plt
 
-from metaheuristic_algorithm_nn import MetaHeuristicAlgorithm, nn_chromosome
+from metaheuristic_algorithm import MetaHeuristicAlgorithm, nn_chromosome
 from tic_tac_toe import Game, plots_3_and_4
 
 import sys
@@ -22,19 +22,6 @@ from minimax import Minimax
 layer_sizes = [ 14, 8, 4, 1 ]
 input_size = [ 3, 3 ]
 
-def tanh( x ):
-    e_x = math.e ** x
-    e_neg_x = math.e ** ( - x )
-    numerator = e_x - e_neg_x
-    denominator = e_x + e_neg_x
-    return numerator / denominator
-
-# def sech( x ):
-#     e_x = math.e ** x
-#     e_neg_x = math.e ** ( - x )
-#     denominator = e_x + e_neg_x
-#     return (2 / denominator) ** 2 
-
 weights = generate_weights(
         layer_sizes,
         random_bool = False, 
@@ -48,7 +35,7 @@ activation_functions = [
     lambda x: x
     for _ in range( 9 )
 ] + [ 
-    lambda x: tanh(x) 
+    lambda x: math.tanh(x) 
     for _ in range( sum( layer_sizes ) + bias_shift ) 
 ]
 

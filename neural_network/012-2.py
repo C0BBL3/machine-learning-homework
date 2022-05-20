@@ -3,19 +3,6 @@ import sys
 from generate_weights import generate_weights
 from neural_network import NeuralNetwork
 
-def tanh( x ):
-    e_x = math.e ** x
-    e_neg_x = math.e ** ( - x )
-    numerator = e_x - e_neg_x
-    denominator = e_x + e_neg_x
-    return numerator / denominator
-
-def sech( x ):
-    e_x = math.e ** x
-    e_neg_x = math.e ** ( - x )
-    denominator = e_x + e_neg_x
-    return 2 / denominator
-
 dataset = [ 
     (0.0 , 7.0), 
     (0.2 , 5.6), 
@@ -81,19 +68,13 @@ for _ in range( 30 ):
     )
 
     activation_functions = [ lambda x: x ] + [ 
-        tanh 
+        lambda x: math.tanh( x ) 
         for _ in range( len( weights ) - 2 )
     ] + [ lambda x: x ]
-
-    activation_function_derivatives = [lambda x: 1 ] + [
-        lambda x: sech(x) ** 2 
-        for _ in range( len( weights ) - 2 )
-    ] + [ lambda x: 1 ]
 
     nn = NeuralNetwork(
         weights, 
         functions = activation_functions, 
-        derivatives = activation_function_derivatives,
         alpha = 0.01
     )
 

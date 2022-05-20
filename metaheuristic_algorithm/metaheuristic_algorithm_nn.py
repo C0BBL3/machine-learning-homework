@@ -50,11 +50,11 @@ class MetaHeuristicAlgorithm:
 
             matchups_arg = matchups[ i : num_of_matchups_per_core + i ] 
             args = [ 
-                fitness_score, 
+                fitness_score,
                 matchups_arg, 
                 return_list, 
-                lock 
-            ] 
+                lock
+            ]
 
             worker = multiprocessing.Process( 
                 target = self.multi_core_compete, 
@@ -102,39 +102,42 @@ class MetaHeuristicAlgorithm:
             )
             
         temp = int()
+        print('\n', len(self.population))
         for chromosome in self.population:
             temp += chromosome[ 'score' ]
+            print( chromosome[ 'score' ] )
             chromosome[ 'score' ] = int()
 
         print('score distribution', temp)
 
     def multi_core_compete( self, fitness_score, matchups, return_dict, lock ): # nasty
-
+        
         for ( i, j ) in matchups:
-
-            chromosome_one = self.current_bracket[ i ]
-            chromosome_two = self.current_bracket[ j ]
             
             result = self.compete( 
-                chromosome_one, 
-                chromosome_two
+                self.population[ i ],
+                self.population[ j ]
             )
 
             if fitness_score == 'bracket':
 
                 if result[ 0 ] is False or result[ 1 ] == 'Draw':
-                    self.compete( 
-                        chromosome_two, 
-                        chromosome_one
+                    self.compete(
+                        self.population[ j ],
+                        self.population[ i ]
                     ) # reverse matchup and if its still a draw these two dont move on
 
         lock.acquire()
+        temp = int()
         
-        for (i, j) in matchups:            
+        for ( i, j ) in matchups:            
 
-            return_dict[ i ].value += self.current_bracket[ i ][ 'score' ]
-            return_dict[ j ].value += self.current_bracket[ j ][ 'score' ]
+            temp += self.population[ i ][ 'score' ]
+            temp += self.population[ j ][ 'score' ]
+            return_dict[ i ].value += self.population[ i ][ 'score' ]
+            return_dict[ j ].value += self.population[ j ][ 'score' ]
 
+        print(temp)
         lock.release()
 
     def breed( self, mutation_rate = 0.001, crossover_type = 'random', crossover_genes_indices = list() ):
@@ -190,8 +193,8 @@ class MetaHeuristicAlgorithm:
                         ]
                         
                         gene = [ 
-                            check_mutation( gene[0], edge, mutated_genes_indices[0] ),
-                            check_mutation( gene[1], edge, mutated_genes_indices[1] ) 
+                            check_mutation( gene[ 0 ], edge, mutated_genes_indices[ 0 ] ),
+                            check_mutation( gene[ 1 ], edge, mutated_genes_indices[ 1 ] ) 
                         ]
                         
                         if edge_index in crossover_genes_indices:
@@ -219,7 +222,11 @@ class MetaHeuristicAlgorithm:
 
     def compete( self, chromosome_one, chromosome_two ):
         
-        game = Game( nn_chromosome( chromosome_one ), nn_chromosome( chromosome_two ) )
+        game = Game( 
+            nn_chromosome( chromosome_one ), 
+            nn_chromosome( chromosome_two ) 
+        )
+
         result = game.play()
 
         if result[ 1 ] == 1: # chromosome 1 won
@@ -236,7 +243,9 @@ class MetaHeuristicAlgorithm:
         if breedable_population_size is None:
         
             self.breedable_population_size = math.floor( 
-                math.sqrt( population_size ) 
+                math.sqrt( 
+                    population_size 
+                ) 
             )
             
         else:
@@ -244,6 +253,24 @@ class MetaHeuristicAlgorithm:
             self.breedable_population_size = breedable_population_size
 
         self.population_size = population_size
+        input_size_int = input_size[ 0 ] * input_size[ 1 ]
+        bias_shift = layers_with_bias_nodes.count( True )
+
+        activation_functions = [ 
+            lambda x: x
+            for _ in range( input_size_int )
+        ] + [ 
+            lambda x: tanh(x) 
+            for _ in range( sum( layer_sizes ) + bias_shift ) 
+        ]
+
+        bias_node_indices = [ 
+            9 + sum( layer_sizes[ 0 : i ] ) + i - 1 
+            for i in range( 1, len( layer_sizes ) ) 
+        ]
+
+        for bias_node_index in bias_node_indices:
+            activation_functions[ bias_node_index ] = lambda x: x
         
         for _ in range( self.population_size ):
 
@@ -255,29 +282,10 @@ class MetaHeuristicAlgorithm:
                 input_size = input_size
             )
 
-            input_size_int = input_size[ 0 ] * input_size[ 1 ]
-            
-            activation_functions = [ 
-                lambda x: x
-                for _ in range( input_size_int )
-            ] + [ 
-                lambda x: tanh(x) 
-                for _ in range( sum( layer_sizes ) + 3 ) 
-            ]
-
-            activation_derivatives = [
-                lambda x: 1
-                for _ in range( input_size_int )
-            ] + [ 
-                lambda x: sech(x) ** 2
-                for _ in range( sum( layer_sizes ) + 3 ) 
-            ]
-
             new_chromosome = {
                 'genes': NeuralNetwork( 
                     genes, # weights
                     functions = activation_functions, 
-                    derivatives = activation_derivatives,
                     alpha = 0.01
                 ),
                 'score': 0

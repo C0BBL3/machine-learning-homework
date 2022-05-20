@@ -303,7 +303,7 @@ if __name__ == '__main__':
         breedable_population_size = 15,
         layers_with_bias_nodes = [ True, True, True ],
         input_size = [ 3, 3 ], # must be square
-        random_range = [ 0, 0.1 ]
+        random_range = [ -0.1, 0.1 ]
     )
 
     def random_function( board_state, current_player ):

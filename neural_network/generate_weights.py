@@ -3,7 +3,7 @@ import math
 import time
 import random
 
-def generate_weights(layer_sizes, random_bool = True, random_range = [-1, 1], layers_with_bias_nodes = list(), input_size = [ 0, 0 ] ):
+def generate_weights(layer_sizes, random_bool = True, random_range = [-1, 1], layers_with_bias_nodes = list(), input_size = [ 0, 0 ], default_weight = 0.1 ):
 
     if input_size[ 0 ] != input_size[ 1 ]:
         print( '\nInput Sizes differ, please make board a square. Input Sizes:', input_size)
@@ -20,7 +20,8 @@ def generate_weights(layer_sizes, random_bool = True, random_range = [-1, 1], la
             input_size, 
             shift, 
             random_bool, 
-            random_range
+            random_range,
+            default_weight
         )
         
     for layer_index, layer_size in enumerate( layer_sizes[ : -1 ] ):
@@ -55,9 +56,10 @@ def generate_weights(layer_sizes, random_bool = True, random_range = [-1, 1], la
                     next_node_index 
                 )
 
-                weights[ edge ] = get_random_weight( 
+                weights[ edge ] = get_weight( 
                     random_bool, 
-                    random_range 
+                    random_range,
+                    default_weight
                 )
 
         if layers_with_bias_nodes[ layer_index ]:
@@ -71,9 +73,10 @@ def generate_weights(layer_sizes, random_bool = True, random_range = [-1, 1], la
                     next_node_index 
                 )
                 
-                weights[ edge ] = get_random_weight( 
+                weights[ edge ] = get_weight( 
                     random_bool, 
-                    random_range 
+                    random_range,
+                    default_weight
                 )
 
     return weights
@@ -103,7 +106,7 @@ def get_iteration_indices( layer_sizes, layer_index, layers_with_bias_nodes, bia
         ) 
     ]
 
-def get_input_weights( layer_sizes, input_size, shift, random_bool, random_range, ):
+def get_input_weights( layer_sizes, input_size, shift, random_bool, random_range, default_weight):
 
     weights = {}
 
@@ -142,9 +145,10 @@ def get_input_weights( layer_sizes, input_size, shift, random_bool, random_range
 
         for edge in edges: 
 
-            weights[ edge ] = get_random_weight( 
+            weights[ edge ] = get_weight( 
                 random_bool, 
-                random_range 
+                random_range,
+                default_weight
             )
             
     return weights
@@ -180,12 +184,12 @@ def get_all_possible_quadrant_indices( shift, input_size ):
 
     return all_possible_quadrants
     
-def get_random_weight( random_bool, random_range ): # random_bool is random bool  and random_range is random range
+def get_weight( random_bool, random_range, default_weight ): # random_bool is random bool  and random_range is random range
 
     # random_bool's we have the meats
     if not random_bool:
 
-        weight = 1
+        weight = default_weight
         
     else:
 

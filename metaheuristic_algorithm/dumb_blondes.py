@@ -29,11 +29,11 @@ def tanh( x ):
     denominator = e_x + e_neg_x
     return numerator / denominator
 
-def sech( x ):
-    e_x = math.e ** x
-    e_neg_x = math.e ** ( - x )
-    denominator = e_x + e_neg_x
-    return (2 / denominator) ** 2 
+# def sech( x ):
+#     e_x = math.e ** x
+#     e_neg_x = math.e ** ( - x )
+#     denominator = e_x + e_neg_x
+#     return (2 / denominator) ** 2 
 
 weights = generate_weights(
         layer_sizes,
@@ -42,21 +42,37 @@ weights = generate_weights(
         input_size = [ 3, 3 ]
     )
 
+bias_shift = [ True, True, True ].count( True )
+
+activation_functions = [ 
+    lambda x: x
+    for _ in range( 9 )
+] + [ 
+    lambda x: tanh(x) 
+    for _ in range( sum( layer_sizes ) + bias_shift ) 
+]
+
+bias_node_indices = [ 
+    9 + sum( layer_sizes[ 0 : i ] ) + i - 1 
+    for i in range( 1, len( layer_sizes ) ) 
+]
+
+for bias_node_index in bias_node_indices:
+    activation_functions[ bias_node_index ] = lambda x: x
+
 NN = NeuralNetwork( 
     weights, 
-    functions = [ 
-        lambda x: x
-        for _ in range( 9 )
-    ] + [ 
-        tanh
-        for _ in range( sum(layer_sizes) + 3 ) 
-    ],
+    functions = activation_functions,
     alpha = 0.01
 )
 
 print(NN.calc_prediction( { 'input': [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ] } ) )
 
-print(NN.calc_prediction( { 'input': [ 1, -1, 0, 0, 0, 0, 0, 0, 0 ] } ) )
+print(NN.calc_prediction( { 'input': [ -1, -1, -1, -1, -1, -1, -1, -1, -1 ] } ) )
+
+print(NN.calc_prediction( { 'input': [ 1, 1, 1, 1, 1, 1, 1, 1, 1 ] } ) )
+
+print(NN.calc_prediction( { 'input': [ +1, +1, +1, -1, -1, -1, 0, 0, 0 ] } ) )
 
 net = Network( '1500px', '1500px' )
 
@@ -70,14 +86,6 @@ for edge in NN.weights.keys():
     
 net.show_buttons( filter_ = True )
 net.show( 'nodes.html' )
-
-print(NN.calc_prediction( { 'input': [ 0, 0, 0, -1, 0, 0, 0, 0, 1 ] } ) )
-
-print(NN.calc_prediction( { 'input': [ 1, 0, -1, 0, 1, 0, -1, 0, -1 ] } ) )
-
-print(NN.calc_prediction( { 'input': [ 1, 1, 1, 1, 1, 1, 1, 1, 1 ] } ) )
-
-print(NN.calc_prediction( { 'input': [ -1, -1, -1, -1, -1, -1, -1, -1, -1 ] } ) )
 
 def minimax_function( board_state, current_player ):
     minimax = Minimax()
@@ -97,26 +105,6 @@ def minimax_function( board_state, current_player ):
     return minimax.get_best_move( board_state )
 
 game = Game( minimax_function, minimax_function ) # depth 9
-print(game.play())
-
-def minimax_function( board_state, current_player ):
-    minimax = Minimax()
-
-    minimax.generate_tree(
-        Game( None, None ), 
-        current_player, 
-        root_board_state = board_state, 
-        max_depth = 3
-    )
-
-    minimax.evaluate_game_tree(
-        Game( None, None ), 
-        game.evaluate
-    )
-    
-    return minimax.get_best_move( board_state )
-
-game = Game( minimax_function, minimax_function ) # depth 4
 print(game.play())
 
     

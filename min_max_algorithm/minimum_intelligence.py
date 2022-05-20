@@ -87,3 +87,4 @@ while not game_2.game_finished()[ 0 ] and game_2.board.count( 0 ) > 0:
         game_2.logs.append(game_2.state())
 
 print(game_2.logs)
+

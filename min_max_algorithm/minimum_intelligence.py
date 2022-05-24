@@ -4,6 +4,7 @@ import sys
 sys.path.append('metaheuristic_algorithm/')
 from tic_tac_toe import Game
 
+
 minimax = Minimax()
 
 def minimax_function( board_state, current_player ):

@@ -184,7 +184,7 @@ def get_all_possible_quadrant_indices( shift, input_size ):
 
     return all_possible_quadrants
     
-def get_weight( random_bool, random_range, default_weight ): # random_bool is random bool  and random_range is random range
+def get_weight( random_bool, random_range, default_weight = 0.1 ): # random_bool is random bool  and random_range is random range
 
     # random_bool's we have the meats
     if not random_bool:

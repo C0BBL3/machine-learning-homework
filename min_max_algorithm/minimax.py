@@ -160,13 +160,13 @@ class Minimax:
 
             node.value = self.nodes[ best_child_index ].value
 
-    def get_best_move( self, current_node_board_state ):
-
         self.first_layer_nodes = [
             node 
             for node in self.nodes.values()
             if node.depth == 1
         ]
+
+    def get_best_move( self, current_node_board_state ):
 
         best_node = max( self.first_layer_nodes, key = lambda node: node.value )
         

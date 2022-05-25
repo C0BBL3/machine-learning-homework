@@ -16,7 +16,7 @@ class MetaHeuristicAlgorithm:
     def __init__( self ):
         self.population = list()
 
-    def pre_train_state( self, num_of_pre_train_generations = 50, board_states_path = 'ttt_board_states', print_progress = False ):
+    def pre_train_state( self, iterations = 50, board_states_path = 'ttt_board_states', print_progress = False ):
 
         file_path = 'metaheuristic_algorithm/' + board_states_path
 
@@ -38,7 +38,7 @@ class MetaHeuristicAlgorithm:
 
         # score will be rss for each chromosome
         
-        for generation in range( num_of_pre_train_generations ): 
+        for generation in range( iterations ): 
 
             if print_progress and ( generation < 5 or generation % 5 == 4 ):
 
@@ -65,7 +65,7 @@ class MetaHeuristicAlgorithm:
                 copy_population( self.population ), 
                 key = lambda chromosome: chromosome[ 'score' ], 
                 reverse = True
-            )
+            )[ : len( self.population ) // 2 ]
 
             self.population += [ 
                 {
@@ -80,6 +80,8 @@ class MetaHeuristicAlgorithm:
 
     def determine_fitness( self, fitness_score = 'round robin', cutoff_type = 'hard cutoff', current_bracket = None, round_number = 1, breedable_population_size = int() ):
         
+        self.fitness_score = fitness_score
+        self.cutoff_type = cutoff_type
         self.fittest_chromosomes = list()
 
         if current_bracket is None: 

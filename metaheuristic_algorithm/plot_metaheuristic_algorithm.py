@@ -1,8 +1,17 @@
 from numpy import random
+import math
+import time
 import multiprocessing
 import matplotlib.pyplot as plt
 from metaheuristic_algorithm import nn_chromosome
 from tic_tac_toe import Game
+
+def random_function( board_state, current_player ):
+    return random.choice( [ 
+        i 
+        for i in range( 9 ) 
+        if int( board_state[ i ] ) == 0 
+    ] )
 
 def calculate_score( fittest_chromosomes, population, num_games, return_int, lock, time ):
 
@@ -19,6 +28,7 @@ def calculate_score( fittest_chromosomes, population, num_games, return_int, loc
             size = num_games 
         )
 
+        temp = 0
         for i in range( num_games ):
             
             chromosome_one = fittest_chromosomes[ fittest_chromosome_indices[ i ] ]
@@ -29,13 +39,17 @@ def calculate_score( fittest_chromosomes, population, num_games, return_int, loc
             game = Game( *args )
             if game.play()[ 1 ] == 1: 
                 result += 1
+                temp += 1
 
             game = Game( *args[ : : -1 ] )
             if game.play()[ 1 ] == 2: 
                 result += 1
+            else:
+                temp -= 1
 
         lock.acquire()
 
+        print(temp)
         return_int.value += result / ( 2 * num_games )
 
         lock.release()
@@ -50,6 +64,7 @@ def calculate_score_random( fittest_chromosomes, random_function, num_games, ret
         size = num_games
     )
 
+    temp = 0
     for i in range( num_games ):
 
         chromosome_one = fittest_chromosomes[ fittest_chromosome_indices[ i ] ]
@@ -59,14 +74,18 @@ def calculate_score_random( fittest_chromosomes, random_function, num_games, ret
         game = Game( *args )
         if game.play()[ 1 ] == 1: 
             result += 1
+            temp += 1
 
         game = Game( *args[ : : -1 ] )
         if game.play()[ 1 ] == 2: 
             result += 1
+        else:
+            temp -= 1
 
     lock.acquire()
 
     return_int.value += result / ( 2 * num_games )
+    print(temp)
 
     lock.release()
 
@@ -141,14 +160,14 @@ def plot_win_loss_tie( MHA, plotted_generation_num, random_average_score, origin
         print( return_dict[ name ].value / 5 )
         plot.append( return_dict[ name ].value / 5 )
     
-    plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), random_average_score )
-    plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), original_average_score )
-    plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), previous_average_score )
+    plt.plot( list( range( 1, plotted_generation_num + 2 ) ), random_average_score )
+    plt.plot( list( range( 1, plotted_generation_num + 2 ) ), original_average_score )
+    plt.plot( list( range( 1, plotted_generation_num + 2 ) ), previous_average_score )
     plt.legend( [ 'Random', 'Original', 'Previous' ] )
     plt.savefig( 'images/012-3-1.png' )
     plt.clf()
 
-def plot_state_value( MHA, num_of_plotted_generations, win_prediction_score, lose_prediction_score, tie_prediction_score ):
+def plot_state_value( MHA, plotted_generation_num, win_prediction_score, lose_prediction_score, tie_prediction_score ):
 
     file_path = 'metaheuristic_algorithm/ttt_board_states'
 
@@ -204,15 +223,15 @@ def plot_state_value( MHA, num_of_plotted_generations, win_prediction_score, los
     lose_prediction_score.append( lose_predictions / num_lose_predictions )
     tie_prediction_score.append( tie_predictions / num_tie_predictions )
 
-    plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), win_prediction_score )
-    plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), lose_prediction_score )
-    plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), tie_prediction_score )
+    plt.plot( list( range( 1, plotted_generation_num + 2 ) ), win_prediction_score )
+    plt.plot( list( range( 1, plotted_generation_num + 2 ) ), lose_prediction_score )
+    plt.plot( list( range( 1, plotted_generation_num + 2 ) ), tie_prediction_score )
 
     plt.legend( [ 'Win', 'Lose', 'Tie' ] )
     plt.savefig( 'images/012-3-2.png' )
     plt.clf()
 
-def plot_strategy_effectiveness( MHA, num_of_plotted_generations, win_capture_score, loss_prevention_score ):
+def plot_strategy_effectiveness( MHA, plotted_generation_num, win_capture_score, loss_prevention_score ):
 
     winnable_board_states = [ line.strip( '\n' ) for line in open( 'metaheuristic_algorithm/ttt_board_states/winnable_board_states.txt', 'r' ).readlines() ]
     losable_board_states = [ line.strip( '\n' ) for line in open( 'metaheuristic_algorithm/ttt_board_states/losable_board_states.txt', 'r' ).readlines() ]
@@ -254,8 +273,8 @@ def plot_strategy_effectiveness( MHA, num_of_plotted_generations, win_capture_sc
     win_capture_score.append( will_win_score / can_win_score )
     loss_prevention_score.append( will_block_score / can_block_score )
 
-    plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), win_capture_score )
-    plt.plot( list( range( 1, num_of_plotted_generations + 2 ) ), loss_prevention_score )
+    plt.plot( list( range( 1, plotted_generation_num + 2 ) ), win_capture_score )
+    plt.plot( list( range( 1, plotted_generation_num + 2 ) ), loss_prevention_score )
     plt.legend( [ 'Win Rate', 'Lose Rate' ] )
     plt.savefig( 'images/012-3-3.png' )
     plt.clf()

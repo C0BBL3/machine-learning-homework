@@ -40,13 +40,6 @@ if __name__ == '__main__':
         random_range = [ -0.1, 0.1 ]
     )
 
-    def random_function( board_state, current_player ):
-        return random.choice( [ 
-            i 
-            for i in range( 9 ) 
-            if int( board_state[ i ] ) == 0 
-        ] )
-
     num_of_plotted_generations = 0
     game = Game( None, None )
 
@@ -54,7 +47,7 @@ if __name__ == '__main__':
 
     print( '\nPre-Evolving...')
 
-    MHA.pre_train_state( print_progress = True )
+    MHA.pre_train_state( iterations = 10, print_progress = True )
 
     print( '\nPre-Evolution Complete!')
 

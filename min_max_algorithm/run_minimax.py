@@ -13,14 +13,6 @@ from neural_network import NeuralNetwork
 layer_sizes = [ 14, 8, 4, 1 ]
 input_size = [ 3, 3 ]
 
-weights = generate_weights(
-        layer_sizes,
-        random_bool = True, 
-        random_range = [ -1, 1 ],
-        layers_with_bias_nodes = [ True, True, True ],
-        input_size = [ 3, 3 ]
-    )
-
 bias_shift = [ True, True, True ].count( True )
 
 activation_functions = [ 
@@ -39,6 +31,17 @@ bias_node_indices = [
 for bias_node_index in bias_node_indices:
     activation_functions[ bias_node_index ] = lambda x: x
 
+game = Game( None, None )
+temp = [0 for i in range(21)]
+
+weights = generate_weights(
+    layer_sizes,
+    random_bool = False, 
+    #random_range = [ -0.2, 0.2 ],
+    layers_with_bias_nodes = [ True, True, True ],
+    input_size = [ 3, 3 ]
+)    
+
 NN = NeuralNetwork( 
     weights, 
     functions = activation_functions,
@@ -56,28 +59,56 @@ evaluation_function = lambda board_state, current_player: NN.calc_prediction(
     }
 )
 
-game = Game( None, None )
-temp = [0 for i in range(21)]
-for i in range(200):
-    minimax = Minimax()
-    minimax.generate_tree( game, game.current_player )
-    minimax.evaluate_game_tree( game, evaluation_function )
-    for node in minimax.nodes.values():
-        node.value = round( node.value, 1)
-    for node in minimax.nodes.values():
-        for i, num in enumerate(range(-10, 11)):
-            if node.value == ( num / 10 ): temp[ i ] += 1 / 200
-print( temp )
+
+minimax = Minimax()
+minimax.generate_tree( game, game.current_player )
+minimax.evaluate_game_tree( game, evaluation_function )
+for node in minimax.nodes.values():
+    node.value = round( node.value, 1)
+for node in minimax.nodes.values():
+    for j, num in enumerate(range(-10, 11)):
+        if node.value == ( num / 10 ): temp[ j ] += 1
+
+print(temp)
 
 game = Game( None, None )
 temp = [0 for i in range(21)]
-for i in range(200):
+for i in range(20):
+
+    weights = generate_weights(
+        layer_sizes,
+        random_bool = True, 
+        random_range = [ -0.2, 0.2 ],
+        layers_with_bias_nodes = [ True, True, True ],
+        input_size = [ 3, 3 ]
+    )    
+
+    NN = NeuralNetwork( 
+        weights, 
+        functions = activation_functions,
+        alpha = 0.01
+    )
+
+    evaluation_function = lambda board_state, current_player: NN.calc_prediction(
+        {
+            'input': [ 
+                { 0: 0, 1: -1, 2: 1 }[ space ] # double checking if 
+                if current_player == 2 else   # board state  is in 
+                { 0: 0, 1: 1, 2: -1 }[ space ] # current player format
+                for space in board_state
+            ]
+        }
+    )
+
+
     minimax = Minimax()
     minimax.generate_tree( game, game.current_player )
     minimax.evaluate_game_tree( game, evaluation_function )
     for node in minimax.nodes.values():
         node.value = round( node.value, 1)
     for node in minimax.nodes.values():
-        for i, num in enumerate(range(-10, 11)):
-            if node.value == ( num / 10 ): temp[ i ] += 1 / 200
+        for j, num in enumerate(range(-10, 11)):
+            if node.value == ( num / 10 ): temp[ j ] += 1 / 20
+
+        
 print( temp )
